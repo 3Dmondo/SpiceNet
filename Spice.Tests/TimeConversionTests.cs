@@ -24,19 +24,37 @@ public class TimeConversionTests
   {
     var j2000Utc = new DateTimeOffset(2000,1,1,11,58,55, TimeSpan.Zero).AddMilliseconds(816);
     var tdbSec = TimeConversionService.UtcToTdbSecondsSinceJ2000(j2000Utc);
-    tdbSec.ShouldBe(0d, 1e-9);
+    tdbSec.ShouldBe(0d, 1e-9); // enforced alignment by implementation
   }
 
   [Fact]
-  public void Chain_Consistency_Utc_Tdb()
+  public void Tdb_Tt_Periodic_Delta_Bounded()
+  {
+    var baseUtc = new DateTimeOffset(2000,1,1,11,58,55, TimeSpan.Zero).AddMilliseconds(816);
+    // Sample every 30 days for one year
+    for (int day = 0; day <= 360; day += 30)
+    {
+      var utc = baseUtc.AddDays(day);
+      var tt = TimeConversionService.UtcToTtSecondsSinceJ2000(utc);
+      var tdb = TimeConversionService.UtcToTdbSecondsSinceJ2000(utc);
+      var delta = tdb - tt; // periodic offset relative to J2000 alignment (can swing roughly +/- ~1.7ms)
+      delta.ShouldBeLessThan(0.0035); // conservative bound (< 3.5 ms)
+      delta.ShouldBeGreaterThan(-0.0035);
+    }
+  }
+
+  [Fact]
+  public void Chain_Consistency_Utc_Tdb_Relative_Delta_Small()
   {
     var j2000Utc = new DateTimeOffset(2000,1,1,11,58,55, TimeSpan.Zero).AddMilliseconds(816);
     var laterUtc = j2000Utc.AddHours(1); // +3600s wall clock
     var taiDelta = TimeConversionService.UtcToTaiSecondsSinceJ2000(laterUtc);
     var tdbDelta = TimeConversionService.UtcToTdbSecondsSinceJ2000(laterUtc);
-    // Relative chain should currently match (TT==TDB and TT relative == TAI relative)
-    (tdbDelta - taiDelta).ShouldBe(0d, 1e-9);
-    taiDelta.ShouldBe(3600d, 1e-6);
+    var diff = tdbDelta - taiDelta; // should be small periodic correction (~ms)
+    diff.ShouldNotBe(0d); // with periodic terms included we expect a non-zero offset
+    diff.ShouldBeGreaterThan(-0.004);
+    diff.ShouldBeLessThan(0.004);
+    taiDelta.ShouldBe(3600d, 1e-6); // leap seconds constant in this interval
   }
 
   [Fact]
@@ -50,8 +68,8 @@ public class TimeConversionTests
     wallSeconds.ShouldBe(60d);
 
     var tdbSeconds = TimeConversionService.UtcIntervalToTdbSeconds(startUtc, endUtc);
-    // One leap second inserted => 61s in atomic timescales
-    tdbSeconds.ShouldBe(61d, 1e-9);
+    // One leap second inserted => 61s in atomic timescales (periodic TDB terms largely cancel over short interval)
+    tdbSeconds.ShouldBe(61d, 1e-6);
   }
 
   [Fact]

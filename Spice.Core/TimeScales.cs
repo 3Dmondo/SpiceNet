@@ -1,8 +1,4 @@
 // CSPICE Port Reference: N/A (original managed design)
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace Spice.Core;
 
 /// <summary>
@@ -39,7 +35,8 @@ public sealed record LskKernel(IReadOnlyList<LeapSecondEntry> Entries)
 public readonly record struct LeapSecondEntry(DateTimeOffset EffectiveUtc, double TaiMinusUtcSeconds);
 
 /// <summary>
-/// Time conversion utilities. Placeholder implementation: TT == TDB. Instant uses whole-second precision.
+/// Time conversion utilities. Adds analytic approximation for TT->TDB using standard low-order periodic terms.
+/// Instant uses whole-second precision for now.
 /// NOTE: We compute relative seconds since J2000 so constant TT-TAI offset (32.184s) cancels and is omitted.
 /// </summary>
 public static partial class TimeConversionService
@@ -49,6 +46,20 @@ public static partial class TimeConversionService
 
   static LskKernel? _lsk;
   static double _taiMinusUtcAtJ2000; // cached from installed kernel
+
+  // Constants for TT->TDB approximation (see NAIF Frames / TDB required reading simplified formula).
+  // TDB - TT ? 0.001657 sin(g) + 0.00001385 sin(2g)  (seconds)
+  // g = 357.53° + 0.9856003° * (JD_TT - 2451545.0)
+  const double Deg2Rad = Math.PI / 180.0;
+  const double G0 = 357.53;        // degrees at J2000
+  const double G_RATE = 0.9856003;  // degrees per day
+  const double TERM1 = 0.001657;    // seconds
+  const double TERM2 = 0.00001385;  // seconds
+  const double JD_J2000 = 2451545.0; // Julian Day at J2000 TT
+  const double SecondsPerDay = 86400.0;
+
+  static bool _tdbOffsetInitialized;
+  static double _deltaTdbAtJ2000; // periodic term value at J2000 (removed to keep epoch alignment)
 
   /// <summary>Install leap second kernel for subsequent conversions.</summary>
   public static void SetLeapSeconds(LskKernel kernel)
@@ -91,10 +102,31 @@ public static partial class TimeConversionService
   /// <summary>Convert UTC to TT seconds since J2000 (relative), constant 32.184s cancels in relative measure so identical to TAI value.</summary>
   public static double UtcToTtSecondsSinceJ2000(DateTimeOffset utc) => UtcToTaiSecondsSinceJ2000(utc);
 
-  /// <summary>Placeholder identity conversion TT -> TDB (future refinement will add periodic terms).</summary>
-  public static double TtToTdbSecondsSinceJ2000(double ttSecondsSinceJ2000) => ttSecondsSinceJ2000;
+  static double ComputePeriodicDelta(double ttSecondsSinceJ2000)
+  {
+    double jdTt = JD_J2000 + ttSecondsSinceJ2000 / SecondsPerDay;
+    double daysFromJ2000 = jdTt - JD_J2000;
+    double gDeg = G0 + G_RATE * daysFromJ2000; // mean anomaly of the Sun
+    double g = gDeg * Deg2Rad;
+    return TERM1 * Math.Sin(g) + TERM2 * Math.Sin(2 * g); // seconds
+  }
 
-  /// <summary>Convert UTC to TDB seconds since J2000 (UTC -> TT -> TDB chain simplified).</summary>
+  /// <summary>
+  /// Approximate TT->TDB conversion adding periodic relativistic terms. Accuracy ~<2 ms, suitable for many ephemeris uses.
+  /// Ensures TDB==TT at J2000 by subtracting the J2000 periodic value.
+  /// </summary>
+  public static double TtToTdbSecondsSinceJ2000(double ttSecondsSinceJ2000)
+  {
+    if (!_tdbOffsetInitialized)
+    {
+      _deltaTdbAtJ2000 = ComputePeriodicDelta(0);
+      _tdbOffsetInitialized = true;
+    }
+    double delta = ComputePeriodicDelta(ttSecondsSinceJ2000) - _deltaTdbAtJ2000;
+    return ttSecondsSinceJ2000 + delta; // relative epoch shift with J2000 alignment
+  }
+
+  /// <summary>Convert UTC to TDB seconds since J2000 (UTC -> TT -> TDB chain).</summary>
   public static double UtcToTdbSecondsSinceJ2000(DateTimeOffset utc)
   {
     var tt = UtcToTtSecondsSinceJ2000(utc);

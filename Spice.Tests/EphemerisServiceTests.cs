@@ -1,7 +1,6 @@
 using Shouldly;
 using Spice.Core;
 using Spice.Ephemeris;
-using Spice.Kernels;
 
 namespace Spice.Tests;
 

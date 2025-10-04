@@ -29,11 +29,11 @@ DELTET/DELTA_AT = ( 32, @1999-JAN-01
     var post2006 = new DateTimeOffset(2006,1,1,0,0,0, TimeSpan.Zero);
     TimeConversionService.GetTaiMinusUtc(post2006).ShouldBe(33);
 
-    // Interval across leap second (adds an extra atomic second)
+    // Interval across leap second (adds an extra atomic second). Allow small tolerance for TT->TDB periodic terms.
     var startUtc = new DateTimeOffset(2005,12,31,23,59,30, TimeSpan.Zero);
     var endUtc = new DateTimeOffset(2006,1,1,0,0,30, TimeSpan.Zero);
     var tdbSeconds = TimeConversionService.UtcIntervalToTdbSeconds(startUtc, endUtc);
-    tdbSeconds.ShouldBe(61d, 1e-9);
+    tdbSeconds.ShouldBe(61d, 1e-6);
   }
 
   [Fact]
