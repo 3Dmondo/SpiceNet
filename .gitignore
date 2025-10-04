@@ -1,0 +1,47 @@
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / Rider
+.vs/
+.idea/
+
+# Logs
+*.log
+
+# Dotnet tools
+.dotnet-tools/
+
+# Test results / coverage
+TestResult*/
+*.coverage
+*.coverageinfo
+coverage/
+
+# Packages
+*.nupkg
+
+# Generated
+Generated/**
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Resharper
+_ReSharper*/
+
+# CSPICE extracted distribution directories (not versioned)
+/data/
+/doc/
+/etc/
+/exe/
+/include/
+/lib/
+/src/
