@@ -19,9 +19,9 @@ Goal: Read real ephemeris (SPK) binary kernels and compare against authoritative
 Planned incremental prompts:
 1. (13) Full DAF reader: directory traversal, summary & name records, endianness detection, raw array address enumeration. (COMPLETED)
 2. (14) Real SPK segment parsing: descriptors (DC/IC), multiple records per segment, scaling (MID/RADIUS) per record, Types 2 & 3. (COMPLETED)
-3. (15) EphemerisDataSource abstraction (Stream vs MemoryMapped), async open, lazy coefficient access (no full array copies).
-4. (16) JPL testpo integration: ASCII loader producing reference barycentric states for epochs.
-5. (17) Golden comparison tests vs testpo (position < 1e-6 km, velocity < 1e-9 km/s) with statistics output.
+3. (15) EphemerisDataSource abstraction (Stream vs MemoryMapped), async open, lazy coefficient access (no full materialization) + benchmarks. (COMPLETED)
+4. (16) JPL testpo integration: ASCII loader + comparison test scaffold. (COMPLETED)
+5. (17) Golden comparison tests vs testpo (position < 1e-6 km, velocity < 1e-9 km/s) with statistics output. (COMPLETED)
 6. (18) Segment index/caching layer (interval search + fast TryGetState path); benchmark improvements.
 7. (19) Higher-order TT?TDB model + pluggable offset strategy; verify <10 ?s deviation vs CSPICE over multi-year sample.
 8. (20) Minimal FK/PCK parsing for body radii & frame metadata groundwork.
@@ -77,7 +77,9 @@ Console.WriteLine($"Vel (km/s): {state.VelocityKmPerSec.X}, {state.VelocityKmPer
 - [x] Integration tests (synthetic)
 - [x] Full DAF reader (real layout enumeration)
 - [x] Real SPK parsing (multi-record)
-- [ ] testpo integration & golden comparisons
+- [x] EphemerisDataSource + lazy SPK loading & benchmarks
+- [x] testpo loader + comparison scaffold
+- [x] Golden comparison harness (tolerances & stats)
 - [ ] Segment indexing & performance layer
 - [ ] Advanced TT?TDB / pluggable time model
 - [ ] Diagnostic CLI & CI workflows

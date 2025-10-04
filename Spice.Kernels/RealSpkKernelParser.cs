@@ -15,15 +15,13 @@ namespace Spice.Kernels;
 ///    Type 3: (MID,RADIUS) + 6*(DEG+1) doubles
 /// 4. Populate <see cref="SpkSegment"/> with per-record MID/RADIUS arrays enabling precise sub-interval evaluation.
 ///
-/// NOTE: This implementation keeps coefficients fully materialized (eager). Prompt 15 will introduce lazy /
-/// memory-mapped access via an EphemerisDataSource abstraction.
+/// NOTE: This implementation keeps coefficients fully materialized unless using <see cref="ParseLazy"/>, where
+/// only per-record MID/RADIUS values are read and the remainder is fetched on demand through an <see cref="IEphemerisDataSource"/>.
 /// </summary>
 public static class RealSpkKernelParser
 {
   /// <summary>
-  /// Parse an SPK kernel stream producing an <see cref="SpkKernel"/> comprised of supported segments.
-  /// The stream must remain readable and seekable for the duration of parsing; it is left open on completion.
-  /// Unsupported segment types are skipped silently for now (future: diagnostics/logging).
+  /// Parse an SPK kernel stream producing an <see cref="SpkKernel"/> comprised of supported segments (eager load).
   /// </summary>
   public static SpkKernel Parse(Stream stream)
   {
@@ -32,8 +30,7 @@ public static class RealSpkKernelParser
 
     foreach (var seg in daf.EnumerateSegments())
     {
-      if (seg.Dc.Length < 2 || seg.Ic.Length < 6)
-        continue; // malformed summary
+      if (seg.Dc.Length < 2 || seg.Ic.Length < 6) continue;
       double start = seg.Dc[0];
       double stop = seg.Dc[1];
       int target = seg.Ic[0];
@@ -42,13 +39,11 @@ public static class RealSpkKernelParser
       int type = seg.Ic[3];
       int initial = seg.Ic[4];
       int final = seg.Ic[5];
-
-      if (type is not (2 or 3)) continue; // unsupported type
-      if (initial <= 0 || final < initial) continue;
+      if (type is not (2 or 3) || initial <= 0 || final < initial) continue;
 
       var coeffs = ReadDoubleRange(stream, initial, final);
       var meta = InferRecordStructure(type, coeffs.Length);
-      if (meta.RecordCount == 0) continue; // inference failed
+      if (meta.RecordCount == 0) continue;
 
       double[] recordMids = new double[meta.RecordCount];
       double[] recordRadii = new double[meta.RecordCount];
@@ -61,24 +56,63 @@ public static class RealSpkKernelParser
       }
 
       segments.Add(new SpkSegment(
-        new BodyId(target),
-        new BodyId(center),
-        new FrameId(frame),
-        type,
-        start,
-        stop,
-        initial - 1, // zero-based coefficient offset (double index) relative to file global addressing
-        coeffs.Length,
-        coeffs,
-        meta.RecordCount,
-        meta.Degree,
-        recordMids,
-        recordRadii,
-        meta.ComponentsPerSet,
-        meta.RecordSizeDoubles
-      ));
+        new BodyId(target), new BodyId(center), new FrameId(frame), type,
+        start, stop, initial - 1, coeffs.Length, coeffs,
+        meta.RecordCount, meta.Degree, recordMids, recordRadii, meta.ComponentsPerSet, meta.RecordSizeDoubles));
     }
+    return new SpkKernel(segments);
+  }
 
+  /// <summary>
+  /// Parse an SPK file lazily using an ephemeris data source. Coefficients are not fully materialized; only
+  /// MID/RADIUS pairs are read for each record. Remaining coefficients are pulled on-demand during evaluation.
+  /// </summary>
+  public static SpkKernel ParseLazy(string filePath, bool memoryMap = true)
+  {
+    IEphemerisDataSource dataSource = memoryMap ? EphemerisDataSource.MemoryMapped(filePath) : EphemerisDataSource.FromStream(File.OpenRead(filePath));
+    using var fs = File.OpenRead(filePath);
+    using var daf = FullDafReader.Open(fs, leaveOpen: true);
+
+    var segments = new List<SpkSegment>();
+    double[] header = new double[2]; // reusable buffer for MID/RADIUS
+
+    foreach (var seg in daf.EnumerateSegments())
+    {
+      if (seg.Dc.Length < 2 || seg.Ic.Length < 6) continue;
+      double start = seg.Dc[0];
+      double stop = seg.Dc[1];
+      int target = seg.Ic[0];
+      int center = seg.Ic[1];
+      int frame = seg.Ic[2];
+      int type = seg.Ic[3];
+      int initial = seg.Ic[4];
+      int final = seg.Ic[5];
+      if (type is not (2 or 3) || initial <= 0 || final < initial) continue;
+
+      int totalDoubles = final - initial + 1;
+      var meta = InferRecordStructure(type, totalDoubles);
+      if (meta.RecordCount == 0) continue;
+
+      double[] recordMids = new double[meta.RecordCount];
+      double[] recordRadii = new double[meta.RecordCount];
+
+      for (int r = 0; r < meta.RecordCount; r++)
+      {
+        long recordStart = initial + r * meta.RecordSizeDoubles;
+        dataSource.ReadDoubles(recordStart, header);
+        recordMids[r] = header[0];
+        recordRadii[r] = header[1];
+      }
+
+      segments.Add(new SpkSegment(
+        new BodyId(target), new BodyId(center), new FrameId(frame), type,
+        start, stop,
+        initial - 1,
+        totalDoubles,
+        Array.Empty<double>(),
+        meta.RecordCount, meta.Degree, recordMids, recordRadii, meta.ComponentsPerSet, meta.RecordSizeDoubles,
+        dataSource, initial, final, Lazy: true));
+    }
     return new SpkKernel(segments);
   }
 
@@ -87,11 +121,11 @@ public static class RealSpkKernelParser
     if (!stream.CanSeek) throw new InvalidOperationException("Stream must be seekable");
     int count = finalAddress - initialAddress + 1;
     var result = new double[count];
-    byte[] buf = new byte[8]; // allocate once outside loop (avoid CA2014 stackalloc in loop)
+    byte[] buf = new byte[8];
     for (int i = 0; i < count; i++)
     {
       int address = initialAddress + i; // 1-based
-      long recordIndex = (address - 1) / 128; // 128 double words per 1024-byte record
+      long recordIndex = (address - 1) / 128;
       int wordInRecord = (address - 1) % 128;
       long byteOffset = recordIndex * 1024 + wordInRecord * 8;
       stream.Seek(byteOffset, SeekOrigin.Begin);
@@ -122,7 +156,6 @@ public static class RealSpkKernelParser
         return new RecordInference(records, deg, k, per);
       }
     }
-    // fallback: single-record synthetic layout (legacy)
     if (type == 2 && totalDoubles % 3 == 0)
     {
       int n1 = totalDoubles / 3;

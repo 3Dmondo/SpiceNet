@@ -1,5 +1,6 @@
 // CSPICE Port Reference: N/A (original managed design)
 using Spice.Core;
+using Spice.IO;
 
 namespace Spice.Kernels;
 
@@ -8,9 +9,12 @@ namespace Spice.Kernels;
 /// Supports data types 2 (position; velocity derived) and 3 (position & velocity) for:
 ///  - Synthetic single-record segments (Phase 1)
 ///  - Real multi-record segments (Phase 2) using per-record MID/RADIUS scaling values.
+///  - Lazy multi-record segments where coefficient records are fetched on-demand from an <see cref="IEphemerisDataSource"/>.
 /// </summary>
 public static class SpkSegmentEvaluator
 {
+  static readonly ThreadLocal<double[]> Scratch = new(() => Array.Empty<double>());
+
   /// <summary>Evaluate state at epoch <paramref name="t"/> (TDB seconds since J2000) for the supplied segment.</summary>
   public static StateVector EvaluateState(SpkSegment seg, Instant t)
   {
@@ -43,23 +47,46 @@ public static class SpkSegmentEvaluator
     if (recIndex < 0)
       throw new InvalidOperationException("No record covers the requested epoch (gap in segment records).");
 
-    int offset = recIndex * seg.RecordSizeDoubles;
-    var recordSpan = seg.Coefficients.AsSpan(offset, seg.RecordSizeDoubles);
-    // Layout per record: MID, RADIUS, then components* (DEG+1) coefficients; components=3(type2) or 6(type3)
-    double rMid = recordSpan[0];
-    double rRad = recordSpan[1];
+    double rMid = seg.RecordMids[recIndex];
+    double rRad = seg.RecordRadii[recIndex];
     double tauRec = rRad == 0 ? 0 : (et - rMid) / rRad;
 
-    int comp = seg.ComponentsPerSet;
     int n1 = seg.Degree + 1;
-    var coeffBlock = recordSpan.Slice(2); // exclude MID/RADIUS
 
-    return seg.DataType switch
+    if (!seg.Lazy)
     {
-      2 => EvaluateType2Multi(coeffBlock, n1, tauRec, rRad),
-      3 => EvaluateType3Multi(coeffBlock, n1, tauRec),
-      _ => throw new NotSupportedException($"Unsupported data type {seg.DataType} in evaluator")
-    };
+      // Slice into already materialized coefficients.
+      int per = seg.RecordSizeDoubles;
+      int offset = recIndex * per + 2; // skip MID,RADIUS
+      var block = seg.Coefficients.AsSpan(offset, seg.ComponentsPerSet * n1);
+      return seg.DataType switch
+      {
+        2 => EvaluateType2Multi(block, n1, tauRec, rRad),
+        3 => EvaluateType3Multi(block, n1, tauRec),
+        _ => throw new NotSupportedException($"Unsupported data type {seg.DataType} in evaluator")
+      };
+    }
+    else
+    {
+      if (seg.DataSource is null) throw new InvalidOperationException("Lazy segment missing data source");
+      // Fetch only the needed record coefficient block (excluding MID/RADIUS).
+      int coeffCount = seg.ComponentsPerSet * n1;
+      var scratch = Scratch.Value!;
+      if (scratch.Length < coeffCount)
+        Scratch.Value = scratch = new double[coeffCount];
+
+      // Record start address (1-based) = initial + recIndex*RecordSizeDoubles.
+      long recordStartAddress = seg.DataSourceInitialAddress + recIndex * (long)seg.RecordSizeDoubles;
+      long coeffStartAddress = recordStartAddress + 2; // skip MID, RADIUS
+      seg.DataSource.ReadDoubles(coeffStartAddress, scratch.AsSpan(0, coeffCount));
+      var coeffSpan = scratch.AsSpan(0, coeffCount);
+      return seg.DataType switch
+      {
+        2 => EvaluateType2Multi(coeffSpan, n1, tauRec, rRad),
+        3 => EvaluateType3Multi(coeffSpan, n1, tauRec),
+        _ => throw new NotSupportedException($"Unsupported data type {seg.DataType} in evaluator")
+      };
+    }
   }
 
   static StateVector EvaluateType2Single(SpkSegment seg, double tau, double radius)
@@ -98,7 +125,6 @@ public static class SpkSegmentEvaluator
 
   static StateVector EvaluateType2Multi(ReadOnlySpan<double> coeffBlock, int n1, double tau, double radius)
   {
-    // coeffBlock layout: X(n1), Y(n1), Z(n1)
     var x = coeffBlock.Slice(0, n1);
     var y = coeffBlock.Slice(n1, n1);
     var z = coeffBlock.Slice(2 * n1, n1);
