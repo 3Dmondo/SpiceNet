@@ -18,7 +18,7 @@ Goal: Read real ephemeris (SPK) binary kernels and compare against authoritative
 
 Planned incremental prompts:
 1. (13) Full DAF reader: directory traversal, summary & name records, endianness detection, raw array address enumeration. (COMPLETED)
-2. (14) Real SPK segment parsing: descriptors (DC/IC), multiple records per segment, scaling (MID/RADIUS) per record, Types 2 & 3.
+2. (14) Real SPK segment parsing: descriptors (DC/IC), multiple records per segment, scaling (MID/RADIUS) per record, Types 2 & 3. (COMPLETED)
 3. (15) EphemerisDataSource abstraction (Stream vs MemoryMapped), async open, lazy coefficient access (no full array copies).
 4. (16) JPL testpo integration: ASCII loader producing reference barycentric states for epochs.
 5. (17) Golden comparison tests vs testpo (position < 1e-6 km, velocity < 1e-9 km/s) with statistics output.
@@ -28,7 +28,7 @@ Planned incremental prompts:
 9. (21) Diagnostic CLI tool (segment inventory, coverage, CSV export of states).
 10. (22) CI workflow (build/test/optional benchmark) + artifact publication & small test data caching.
 11. (23) TimeConversionService refactor to provider interfaces (ILeapSecondProvider, ITdbOffsetModel) for extensibility.
-12. (24) Structured logging (ILogger) for kernel load + selection decisions; in-memory capture for tests.
+12. (24) Structured logging (ILogger) for kernel load + segment selection decisions; in-memory capture for tests.
 13. (25) Performance consolidation: vectorized Chebyshev (SIMD), pooled scratch buffers, bounds-check minimization; document before/after metrics.
 
 ## Future / Stretch Goals
@@ -76,7 +76,7 @@ Console.WriteLine($"Vel (km/s): {state.VelocityKmPerSec.X}, {state.VelocityKmPer
 - [x] Meta-kernel + service orchestration
 - [x] Integration tests (synthetic)
 - [x] Full DAF reader (real layout enumeration)
-- [ ] Real SPK parsing (multi-record)
+- [x] Real SPK parsing (multi-record)
 - [ ] testpo integration & golden comparisons
 - [ ] Segment indexing & performance layer
 - [ ] Advanced TT?TDB / pluggable time model
