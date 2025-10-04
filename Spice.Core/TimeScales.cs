@@ -1,3 +1,8 @@
+// CSPICE Port Reference: N/A (original managed design)
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace Spice.Core;
 
 /// <summary>

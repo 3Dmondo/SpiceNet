@@ -95,6 +95,8 @@ Honor existing .editorconfig:
   - After any automated edits the agent MUST build (dotnet build) and run tests (dotnet test); failures must be fixed before responding completion.
   - Implicit usings are enabled; do NOT add explicit using directives for namespaces already covered by implicit usings unless required for disambiguation.
   - Prefer collection expressions / collection initializers (e.g., `[1.0, 2.0]`, `[]`, or `new() { ... }`) for simple array/list construction as shown in tests (e.g., DafReaderTests) to improve readability.
+  - When porting logic directly from a CSPICE C source file, add a header comment at the very top of the generated C# file in the form: `// CSPICE Port Reference: <relative-path-from-cspice-root>`.
+    If the implementation is an original .NET design (no direct one-to-one source file), use: `// CSPICE Port Reference: N/A (original managed design)`.
 
 ============================================================
 SECTION: DOMAIN MODEL (INITIAL SKETCH)
@@ -211,7 +213,7 @@ PROMPT 4:
 "In Spice.IO implement a DAFReader capable of: (a) validating file identification word (e.g., 'DAF/SPK '), (b) reading ND, NI, RECORDS counts, (c) enumerating summaries returning raw double/int arrays, (d) extracting segment metadata blocks into a neutral structure. Use Span<byte>, BinaryPrimitives for endianness. Provide tests with a minimal handcrafted binary fixture (create test builder)."
 
 PROMPT 5:
-"In Spice.Kernels implement SpkKernelParser that consumes a Stream and yields SpkKernel with SpkSegments (generic interim representation capturing: Target, Center, Frame, DataType, StartTdbSec, StopTdbSec, RecordStart, RecordEnd, etc.). For now support Type 2 & Type 3 only with raw coefficient blocks stored as double[] slices. Add tests using a small synthetic SPK built by a test helper that encodes one segment and one record."
+"In Spice.Kernels implement SpkKernelParser that consumes a Stream and yields SpkKernel with SpkSegments (generic interim representation capturing: Target, Center, Frame, DataType, StartTdbSec, StopTdbSec, RecordStart, RecordEnd, etc.). For now support Type 2 & 3 only with raw coefficient blocks stored as double[] slices. Add tests using a small synthetic SPK built by a test helper that encodes one segment and one record."
 
 PROMPT 6:
 "Extend Chebyshev logic to compute position (and velocity if Type 3) from coefficient record given evaluation epoch. Implement SpkSegmentEvaluator with method EvaluateState(SpkSegment seg, Instant t) returning StateVector. Add tests verifying exact reconstruction of polynomial used to build synthetic segment."

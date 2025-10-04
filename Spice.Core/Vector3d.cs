@@ -1,3 +1,4 @@
+// CSPICE Port Reference: N/A (original managed design)
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 namespace Spice.Core;

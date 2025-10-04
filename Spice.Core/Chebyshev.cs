@@ -1,3 +1,4 @@
+// CSPICE Port Reference: N/A (original managed design)
 namespace Spice.Core;
 
 /// <summary>
