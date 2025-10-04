@@ -92,6 +92,7 @@ Honor existing .editorconfig:
   - Use 'checked' context only where overflow risk requires detection.
   - Avoid unnecessary heap allocations; prefer Span/ReadOnlySpan for transient buffers.
   - Central Package Management (CPM) via Directory.Packages.props for all NuGet versions; individual project files must omit Version attributes.
+  - After any automated edits the agent MUST build (dotnet build) and run tests (dotnet test); failures must be fixed before responding completion.
 
 ============================================================
 SECTION: DOMAIN MODEL (INITIAL SKETCH)
@@ -263,6 +264,10 @@ SECTION: CONTRIBUTION WORKFLOW (FUTURE)
 ============================================================
 - Enforce analyzers: Microsoft + recommended Roslyn, treat warnings as errors (except specific numeric precision warnings if noisy).
 - Add GitHub Actions: build, test, (optional) benchmark diff summary.
+- After any automated code edits, the agent must:
+  1. Run a full solution build (dotnet build) and ensure success.
+  2. Run all tests (dotnet test) and ensure success.
+  3. If failures occur, iterate with further edits until green before replying completion.
 
 ============================================================
 END OF MANIFEST
