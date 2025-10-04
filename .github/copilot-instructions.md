@@ -93,6 +93,8 @@ Honor existing .editorconfig:
   - Avoid unnecessary heap allocations; prefer Span/ReadOnlySpan for transient buffers.
   - Central Package Management (CPM) via Directory.Packages.props for all NuGet versions; individual project files must omit Version attributes.
   - After any automated edits the agent MUST build (dotnet build) and run tests (dotnet test); failures must be fixed before responding completion.
+  - Implicit usings are enabled; do NOT add explicit using directives for namespaces already covered by implicit usings unless required for disambiguation.
+  - Prefer collection expressions / collection initializers (e.g., `[1.0, 2.0]`, `[]`, or `new() { ... }`) for simple array/list construction as shown in tests (e.g., DafReaderTests) to improve readability.
 
 ============================================================
 SECTION: DOMAIN MODEL (INITIAL SKETCH)
