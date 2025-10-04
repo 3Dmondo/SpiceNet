@@ -14,16 +14,16 @@ Phase 1 (synthetic kernel support) complete:
 - Initial benchmarks project scaffold present
 
 ## Phase 2 Roadmap (Real Kernel Support)
-Goal: Read real ephemeris (SPK) binary kernels and compare against authoritative reference data (JPL testpo files & CSPICE). Next immediate objective: implement a full DAF reader for genuine SPK layout (Prompt 13).
+Goal: Read real ephemeris (SPK) binary kernels and compare against authoritative reference data (JPL testpo files & CSPICE).
 
 Planned incremental prompts:
-1. (13) Full DAF reader: directory traversal, summary & name records, endianness detection, raw array address enumeration.
+1. (13) Full DAF reader: directory traversal, summary & name records, endianness detection, raw array address enumeration. (COMPLETED)
 2. (14) Real SPK segment parsing: descriptors (DC/IC), multiple records per segment, scaling (MID/RADIUS) per record, Types 2 & 3.
 3. (15) EphemerisDataSource abstraction (Stream vs MemoryMapped), async open, lazy coefficient access (no full array copies).
 4. (16) JPL testpo integration: ASCII loader producing reference barycentric states for epochs.
 5. (17) Golden comparison tests vs testpo (position < 1e-6 km, velocity < 1e-9 km/s) with statistics output.
 6. (18) Segment index/caching layer (interval search + fast TryGetState path); benchmark improvements.
-7. (19) Higher-order TT?TDB model + pluggable offset strategy; verify <10 µs deviation vs CSPICE over multi-year sample.
+7. (19) Higher-order TT?TDB model + pluggable offset strategy; verify <10 ?s deviation vs CSPICE over multi-year sample.
 8. (20) Minimal FK/PCK parsing for body radii & frame metadata groundwork.
 9. (21) Diagnostic CLI tool (segment inventory, coverage, CSV export of states).
 10. (22) CI workflow (build/test/optional benchmark) + artifact publication & small test data caching.
@@ -75,7 +75,7 @@ Console.WriteLine($"Vel (km/s): {state.VelocityKmPerSec.X}, {state.VelocityKmPer
 - [x] LSK parser & time conversion (basic + periodic TDB terms)
 - [x] Meta-kernel + service orchestration
 - [x] Integration tests (synthetic)
-- [ ] Full DAF reader (real layout)
+- [x] Full DAF reader (real layout enumeration)
 - [ ] Real SPK parsing (multi-record)
 - [ ] testpo integration & golden comparisons
 - [ ] Segment indexing & performance layer

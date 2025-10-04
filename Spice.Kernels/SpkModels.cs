@@ -9,11 +9,14 @@ using Spice.Core;
 public sealed record SpkKernel(IReadOnlyList<SpkSegment> Segments);
 
 /// <summary>
-/// Generic interim SPK segment representation (Types 2 & 3 for MVP) exposing raw coefficient block.
-/// Times are TDB seconds past J2000 (same scale as Instant).
-/// Coefficient layout (synthetic test format):
-///   Type 2: 3*(N+1) doubles => X(c0..cN), Y(c0..cN), Z(c0..cN)
-///   Type 3: 6*(N+1) doubles => PosX,PosY,PosZ then VelX,VelY,VelZ (each (N+1) Chebyshev series)
+/// SPK segment representation supporting both synthetic single-record segments (Phase 1) and
+/// real multi-record segments (Phase 2) for data types 2 and 3.
+/// Coefficient layout:
+///   Type 2 (position only): per record => MID, RADIUS, then 3*(DEG+1) Chebyshev coeffs (X, Y, Z sequences).
+///   Type 3 (position+velocity): per record => MID, RADIUS, then 6*(DEG+1) coeffs (pos then vel components).
+/// For single-record synthetic segments the evaluator derives MID/RADIUS from Start/Stop and ignores Record* fields.
+/// For multi-record segments RecordMids/RecordRadii length equals RecordCount. Coefficients contain concatenated
+/// records (including their MID/RADIUS leading values) with uniform RecordSizeDoubles.
 /// </summary>
 public sealed record SpkSegment(
   BodyId Target,
@@ -22,7 +25,14 @@ public sealed record SpkSegment(
   int DataType,
   double StartTdbSec,
   double StopTdbSec,
-  int CoefficientOffset, // offset (in doubles) from start of coefficient area
-  int CoefficientCount,  // number of doubles for this segment
-  double[] Coefficients  // materialized coefficient slice (length == CoefficientCount)
+  int CoefficientOffset,
+  int CoefficientCount,
+  double[] Coefficients,
+  // Multi-record metadata (null for single record synthetic segments)
+  int RecordCount = 1,
+  int Degree = 0,
+  double[]? RecordMids = null,
+  double[]? RecordRadii = null,
+  int ComponentsPerSet = 0, // 3 (type2) or 6 (type3) when multi-record
+  int RecordSizeDoubles = 0  // total doubles per record including MID & RADIUS
 );
