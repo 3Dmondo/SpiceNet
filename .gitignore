@@ -46,3 +46,6 @@ _ReSharper*/
 /lib/
 /src/
 /makeall.bat
+
+# Integration test download cache (ephemeris & testpo files)
+Spice.IntegrationTests/TestData/cache/
