@@ -9,12 +9,6 @@ public class RealSpkKernelParserTests
   [Fact]
   public void Parses_MultiRecord_Type2_Segment_And_Evaluates()
   {
-    // Build a minimal real-layout DAF with one type 2 segment spanning -100 .. 200 split into two records.
-    // Segment coefficients chosen so that for each record (with MID, RADIUS = 100):
-    //   X(tau) = tau
-    //   Y(tau) = tau^2
-    //   Z(tau) = 5
-    // (degree 2 Chebyshev, coeff sets length 3)
     var ms = BuildMinimalSpkType2MultiRecord();
     ms.Position = 0;
 
@@ -26,6 +20,9 @@ public class RealSpkKernelParserTests
     seg.Degree.ShouldBe(2);
     seg.RecordMids!.ShouldBe([0d, 100d]);
     seg.RecordRadii!.ShouldBe([100d, 100d]);
+    seg.TrailerRecordSize.ShouldBe(11);
+    seg.TrailerRecordCount.ShouldBe(2);
+    seg.IntervalLength.ShouldBe(200d); // each record spans 200 seconds (-100..100, 0..200)
 
     // Evaluate at t=0 (first record mid)
     var state0 = SpkSegmentEvaluator.EvaluateState(seg, new Core.Instant(0));
@@ -56,18 +53,28 @@ public class RealSpkKernelParserTests
     const int frame = 1;
 
     // Two records, degree 2 -> per record doubles = 2 (MID,RADIUS) + 3*(2+1)=2+9=11
-    // Total doubles = 22.
+    // Total record payload doubles = 22. Trailer adds 4 -> 26.
     double[] record1 = BuildRecord(mid:0, radius:100);
     double[] record2 = BuildRecord(mid:100, radius:100);
-    double[] coeffs = new double[record1.Length + record2.Length];
-    record1.CopyTo(coeffs, 0);
-    record2.CopyTo(coeffs, record1.Length);
+    double[] coeffPayload = new double[record1.Length + record2.Length];
+    record1.CopyTo(coeffPayload, 0);
+    record2.CopyTo(coeffPayload, record1.Length);
+
+    // Trailer: INIT, INTLEN, RSIZE, N
+    // INIT = start of first record coverage (mid - radius) = -100
+    // INTLEN = 2*radius = 200
+    // RSIZE = 11, N = 2
+    double[] trailer = [-100d, 200d, 11d, 2d];
+
+    double[] fullData = new double[coeffPayload.Length + trailer.Length];
+    coeffPayload.CopyTo(fullData, 0);
+    trailer.CopyTo(fullData, coeffPayload.Length);
 
     // Place coefficients starting at record 4 (records are 1-based). Each record is 128 doubles.
     int initialAddress = (4 - 1) * 128 + 1; // first double in record 4 => address 385
-    int finalAddress = initialAddress + coeffs.Length - 1;
+    int finalAddress = initialAddress + fullData.Length - 1;
 
-    // Allocate file big enough for: file record (1), summary (2), name (3), data (4)
+    // Allocate file big enough for: file record (1), summary (2), name (3), data (4) single record suffices
     byte[] file = new byte[1024 * 4];
 
     // File record
@@ -84,13 +91,10 @@ public class RealSpkKernelParserTests
     WriteInt(file, summaryBase + 8, 0); // PREV
     WriteInt(file, summaryBase + 16, 1); // NSUM=1
 
-    // Summary words start at word index 3
     int wordIndex = 3;
-    // DC: start & stop
     double segStart = -100; double segStop = 200;
     WriteDouble(file, summaryBase + wordIndex * 8, segStart); wordIndex++;
     WriteDouble(file, summaryBase + wordIndex * 8, segStop); wordIndex++;
-    // IC packed two per word: target, center, frame, type, initial, final
     WritePackedInts(file, summaryBase + wordIndex * 8, target, center); wordIndex++;
     WritePackedInts(file, summaryBase + wordIndex * 8, frame, type); wordIndex++;
     WritePackedInts(file, summaryBase + wordIndex * 8, initialAddress, finalAddress); wordIndex++;
@@ -99,10 +103,10 @@ public class RealSpkKernelParserTests
     int nameBase = 1024 * (3 - 1);
     WriteAscii(file, nameBase + 0, "TYPE2_MULTI".PadRight(40));
 
-    // Data (record 4) write coefficients sequentially starting at first double.
+    // Data (record 4) write payload+trailer sequentially
     int dataBase = 1024 * (4 - 1);
-    for (int i = 0; i < coeffs.Length; i++)
-      WriteDouble(file, dataBase + i * 8, coeffs[i]);
+    for (int i = 0; i < fullData.Length; i++)
+      WriteDouble(file, dataBase + i * 8, fullData[i]);
 
     return new MemoryStream(file, writable: false);
   }

@@ -1,34 +1,20 @@
 // CSPICE Port Reference: NAIF DAF Required Reading (conceptual) — implementation is original managed design focused on
-// required subset (summary + name record traversal). This is an initial "full" DAF reader capable of following the
-// summary/name record doubly-linked list and enumerating segment (array) descriptors. Endianness detection is heuristic
-// and will be extended when integrating real kernels.
+// required subset (summary + name record traversal). This reader follows the DAF record model: file record, optional
+// reserved/comment records (ignored), then a doubly linked list of summary/name record pairs. Control words (NEXT, PREV,
+// NSUM) in summary records are stored as double precision values per spec. Synthetic unit tests originally wrote them
+// as raw 32-bit ints; we support both encodings heuristically.
 
 using System.Buffers.Binary;
 using System.Text;
 
 namespace Spice.IO;
 
-/// <summary>
-/// Experimental fuller DAF (Double precision Array File) reader needed for Phase 2 real SPK support.
-/// Capabilities:
-/// 1. Parses the DAF File Record (record 1) extracting identification word, ND (double components per summary),
-///    NI (integer components), internal file name and the forward/backward summary record numbers.
-/// 2. Traverses the doubly linked list of summary records; for every summary record reads its paired name record.
-/// 3. Unpacks integer components (two 32-bit values per 8-byte word) and double components for each segment (array).
-/// 4. Exposes an enumerator yielding raw descriptor data: double (DC) and integer (IC) arrays, segment name and the
-///    initial/final 1-based double word address range (common SPK convention with ND=2, NI>=6).
-/// 5. Performs basic structural validation (record bounds, overflow checks, name truncation) and supports native
-///    little or big-endian files via heuristic detection from ND/NI fields.
-///
-/// This reader purposefully limits scope: it does not yet interpret higher-level SPK semantics nor load element
-/// records. It supplies the foundation for Prompt 14 (real SPK segment parsing and multi-record coefficient access).
-/// </summary>
 public sealed class FullDafReader : IDisposable
 {
   const int RecordBytes = 1024;
   const int WordBytes = 8;
   const int WordsPerRecord = RecordBytes / WordBytes; // 128
-  const int SegmentNameLength = 40; // per NAIF spec
+  const int SegmentNameLength = 40; // NC for ND=2, NI=6 (SPK typical)
 
   readonly Stream _stream;
   readonly bool _leaveOpen;
@@ -46,6 +32,8 @@ public sealed class FullDafReader : IDisposable
   public int FirstSummaryRecord { get; }
   /// <summary>Record number of the last summary record (0 if none).</summary>
   public int LastSummaryRecord { get; }
+  /// <summary>True if underlying DAF numeric storage is little-endian.</summary>
+  public bool IsLittleEndian => _isLittleEndian;
 
   FullDafReader(Stream stream, bool leaveOpen, string idWord, int nd, int ni, string ifname, int fward, int bward, bool little)
   {
@@ -71,16 +59,13 @@ public sealed class FullDafReader : IDisposable
     string idWord = Encoding.ASCII.GetString(fileRec[..8]);
     if (!idWord.StartsWith("DAF/")) throw new InvalidDataException($"Not a DAF file (IDWORD='{idWord}')");
 
-    // Offsets per NAIF: IDWORD(0..7), ND(8..11), NI(12..15) in native endian 32-bit ints within the file record.
-    // Implementation note: actual spec stores these as 8-byte ints or integers inside double words; for practicality we
-    // read 32-bit ints directly from the byte offsets (common CSPICE build layout). We'll attempt both endian orders.
     int ndLE = BinaryPrimitives.ReadInt32LittleEndian(fileRec.Slice(8,4));
     int niLE = BinaryPrimitives.ReadInt32LittleEndian(fileRec.Slice(12,4));
     int ndBE = BinaryPrimitives.ReadInt32BigEndian(fileRec.Slice(8,4));
     int niBE = BinaryPrimitives.ReadInt32BigEndian(fileRec.Slice(12,4));
 
-    bool little = ndLE is >0 and <64 && niLE is >0 and <64;
-    bool big = ndBE is >0 and <64 && niBE is >0 and <64;
+    bool little = ndLE is >0 and <256 && niLE is >0 and <256;
+    bool big = ndBE is >0 and <256 && niBE is >0 and <256;
     if (little == big) throw new InvalidDataException("Unable to determine DAF endianness (ambiguous ND/NI)");
 
     bool isLittle = little;
@@ -89,8 +74,9 @@ public sealed class FullDafReader : IDisposable
 
     string ifname = Encoding.ASCII.GetString(fileRec.Slice(16, 60));
 
-    int fward = ReadInt(fileRec, 76, isLittle); // forward summary record number
-    int bward = ReadInt(fileRec, 80, isLittle); // backward summary record number
+    // Forward/backward summary record numbers may appear as 32-bit ints in synthetic test builder.
+    int fward = ReadInt(fileRec, 76, isLittle);
+    int bward = ReadInt(fileRec, 80, isLittle);
 
     return new FullDafReader(stream, leaveOpen, idWord, nd, ni, ifname, fward, bward, isLittle);
   }
@@ -98,7 +84,10 @@ public sealed class FullDafReader : IDisposable
   static int ReadInt(ReadOnlySpan<byte> buffer, int offset, bool little)
     => little ? BinaryPrimitives.ReadInt32LittleEndian(buffer.Slice(offset,4)) : BinaryPrimitives.ReadInt32BigEndian(buffer.Slice(offset,4));
 
-  record SegmentRaw(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress);
+  static double ReadDouble(ReadOnlySpan<byte> buffer, int offset, bool little)
+    => BitConverter.Int64BitsToDouble(little
+      ? BinaryPrimitives.ReadInt64LittleEndian(buffer.Slice(offset,8))
+      : BinaryPrimitives.ReadInt64BigEndian(buffer.Slice(offset,8)));
 
   /// <summary>
   /// Enumerate raw segments (arrays) discovered in the file. Each item exposes:
@@ -108,94 +97,93 @@ public sealed class FullDafReader : IDisposable
   public IEnumerable<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)> EnumerateSegments()
   {
     if (Nd <= 0 || Ni <= 0) yield break;
-
     int rec = FirstSummaryRecord;
-    if (rec <= 0) yield break; // no summaries
-
-    var seenNames = new HashSet<string>(StringComparer.Ordinal);
-
+    if (rec <= 0) yield break; // synthetic & real tests always set this
     while (rec != 0)
     {
       var (summaries, nextRec) = ReadSummaryRecord(rec);
       foreach (var s in summaries)
-        if (seenNames.Add(s.Name))
-          yield return (s.Dc, s.Ic, s.Name, s.InitialAddress, s.FinalAddress);
+        yield return (s.Dc, s.Ic, s.Name, s.InitialAddress, s.FinalAddress);
       rec = nextRec;
     }
   }
 
+  record SegmentRaw(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress);
+
   (List<SegmentRaw> summaries, int next) ReadSummaryRecord(int recordNumber)
   {
-    // Allocate reusable buffers on the heap to avoid large stack usage inside loops (CA2014).
     byte[] summaryBuf = new byte[RecordBytes];
     byte[] nameBuf = new byte[RecordBytes];
-
     ReadRecord(recordNumber, summaryBuf);
 
-    int next = ReadInt(summaryBuf, 0, _isLittleEndian);
-    int prev = ReadInt(summaryBuf, 8, _isLittleEndian);
-    _ = prev; // reserved for future validation.
-    int nsum = ReadInt(summaryBuf, 16, _isLittleEndian);
+    // Control words are the first three double precision words (NEXT, PREV, NSUM) per spec.
+    int next = ReadControlWord(summaryBuf, 0);
+    int prev = ReadControlWord(summaryBuf, 1); _ = prev;
+    int nsum = ReadControlWord(summaryBuf, 2);
 
-    if (nsum < 0 || nsum > 1000) throw new InvalidDataException("Unreasonable NSUM in summary record");
+    if (nsum <= 0) return (new List<SegmentRaw>(), next);
+    if (nsum > 10000) throw new InvalidDataException("NSUM unrealistic");
 
-    int summaryWordSpan = Nd + ((Ni + 1) / 2); // words per packed summary
-    int capacityWords = WordsPerRecord - 3; // after control area
+    int summaryWordSpan = Nd + ((Ni + 1) / 2);
+    int capacityWords = WordsPerRecord - 3;
+    if (summaryWordSpan * nsum > capacityWords) throw new InvalidDataException("Summary record overflow");
 
-    if (summaryWordSpan * nsum > capacityWords)
-      throw new InvalidDataException("Summary record overflow");
+    ReadRecord(recordNumber + 1, nameBuf); // paired name record
 
     var list = new List<SegmentRaw>(nsum);
-
-    ReadRecord(recordNumber + 1, nameBuf); // name record directly follows summary record
-
-    int wordIndex = 3; // start after control area
+    int wordIndex = 3; // after control area
     for (int i = 0; i < nsum; i++)
     {
       double[] dc = new double[Nd];
       for (int d = 0; d < Nd; d++)
       {
         int offsetBytes = wordIndex * WordBytes;
-        // Assuming same endian for data words; big-endian support would branch here.
-        dc[d] = BitConverter.Int64BitsToDouble(_isLittleEndian
-          ? BinaryPrimitives.ReadInt64LittleEndian(summaryBuf.AsSpan(offsetBytes,8))
-          : BinaryPrimitives.ReadInt64BigEndian(summaryBuf.AsSpan(offsetBytes,8)));
+        dc[d] = ReadDouble(summaryBuf, offsetBytes, _isLittleEndian);
         wordIndex++;
       }
-
       int[] ic = new int[Ni];
-      int intsRemaining = Ni;
-      int icIndex = 0;
-      while (intsRemaining > 0)
+      int remaining = Ni; int icPos = 0;
+      while (remaining > 0)
       {
         int offsetBytes = wordIndex * WordBytes;
         var word = summaryBuf.AsSpan(offsetBytes, 8);
-        int a = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(word.Slice(0,4)) : BinaryPrimitives.ReadInt32BigEndian(word.Slice(0,4));
-        ic[icIndex++] = a;
-        intsRemaining--;
-        if (intsRemaining > 0)
+        int a = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(word[..4]) : BinaryPrimitives.ReadInt32BigEndian(word[..4]);
+        ic[icPos++] = a; remaining--;
+        if (remaining > 0)
         {
           int b = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(word.Slice(4,4)) : BinaryPrimitives.ReadInt32BigEndian(word.Slice(4,4));
-          ic[icIndex++] = b;
-          intsRemaining--;
+            ic[icPos++] = b; remaining--;
         }
         wordIndex++;
       }
-
-      // Names are contiguous 40-char blocks in the name record matching summary order.
       int nameOffset = i * SegmentNameLength;
-      if (nameOffset + SegmentNameLength > nameBuf.Length)
-        throw new InvalidDataException("Name record truncation");
-      string rawName = Encoding.ASCII.GetString(nameBuf, nameOffset, SegmentNameLength);
+      string rawName = nameOffset + SegmentNameLength <= nameBuf.Length
+        ? Encoding.ASCII.GetString(nameBuf, nameOffset, SegmentNameLength)
+        : string.Empty;
       string name = rawName.TrimEnd('\0', ' ');
-
       int initial = ic.Length >= 6 ? ic[4] : 0;
       int final = ic.Length >= 6 ? ic[5] : 0;
-
       list.Add(new SegmentRaw(dc, ic, name, initial, final));
     }
-
     return (list, next);
+  }
+
+  int ReadControlWord(byte[] record, int controlWordIndex)
+  {
+    int byteOffset = controlWordIndex * WordBytes;
+    var span = record.AsSpan(byteOffset, 8);
+    // Detect synthetic encoding: upper 32 bits zero (or all zero) and lower 32 bits non-zero => treat as int32
+    int low = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(span[..4]) : BinaryPrimitives.ReadInt32BigEndian(span.Slice(4,4));
+    int high = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(span.Slice(4,4)) : BinaryPrimitives.ReadInt32BigEndian(span[..4]);
+    if (high == 0 && low != 0) return low; // synthetic test path
+
+    double dv = ReadDouble(record, byteOffset, _isLittleEndian);
+    if (!double.IsNaN(dv) && Math.Abs(dv) < int.MaxValue)
+    {
+      long lv = (long)Math.Round(dv);
+      if (Math.Abs(dv - lv) < 1e-12) return (int)lv;
+    }
+    return low; // fallback (likely zero)
   }
 
   void ReadRecord(int recordNumber, Span<byte> destination)

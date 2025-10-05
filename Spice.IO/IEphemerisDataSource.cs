@@ -10,10 +10,14 @@ namespace Spice.IO;
 /// </summary>
 public interface IEphemerisDataSource : IDisposable
 {
-  /// <summary>Read a single double at 1-based DAF address.</summary>
   double ReadDouble(long address1Based);
-  /// <summary>Read sequential doubles starting at 1-based address into destination span.</summary>
   void ReadDoubles(long address1Based, Span<double> destination);
+  bool LittleEndian { get; }
+}
+
+static class Endian
+{
+  public static double ToDouble(long rawBits, bool little) => BitConverter.Int64BitsToDouble(little ? rawBits : BinaryPrimitives.ReverseEndianness(rawBits));
 }
 
 /// <summary>Stream based implementation using a seekable readable <see cref="Stream"/>.</summary>
@@ -22,19 +26,20 @@ internal sealed class StreamEphemerisDataSource : IEphemerisDataSource
   readonly Stream _stream;
   readonly bool _leaveOpen;
   readonly byte[] _buffer8 = new byte[8];
+  public bool LittleEndian { get; }
 
-  public StreamEphemerisDataSource(Stream stream, bool leaveOpen = false)
+  public StreamEphemerisDataSource(Stream stream, bool littleEndian, bool leaveOpen = false)
   {
     if (!stream.CanSeek || !stream.CanRead) throw new ArgumentException("Stream must be seekable & readable");
-    _stream = stream; _leaveOpen = leaveOpen;
+    _stream = stream; _leaveOpen = leaveOpen; LittleEndian = littleEndian;
   }
 
   public double ReadDouble(long address1Based)
   {
     Seek(address1Based);
     if (_stream.Read(_buffer8,0,8) != 8) throw new EndOfStreamException();
-    long bits = BinaryPrimitives.ReadInt64LittleEndian(_buffer8);
-    return BitConverter.Int64BitsToDouble(bits);
+    long bits = BinaryPrimitives.ReadInt64LittleEndian(_buffer8); // raw bytes as little layout
+    return Endian.ToDouble(bits, LittleEndian);
   }
 
   public void ReadDoubles(long address1Based, Span<double> destination)
@@ -44,7 +49,7 @@ internal sealed class StreamEphemerisDataSource : IEphemerisDataSource
     {
       if (_stream.Read(_buffer8,0,8)!=8) throw new EndOfStreamException();
       long bits = BinaryPrimitives.ReadInt64LittleEndian(_buffer8);
-      destination[i]=BitConverter.Int64BitsToDouble(bits);
+      destination[i]=Endian.ToDouble(bits, LittleEndian);
     }
   }
 
@@ -65,9 +70,11 @@ internal sealed class MemoryMappedEphemerisDataSource : IEphemerisDataSource
 {
   readonly MemoryMappedFile _mmf;
   readonly MemoryMappedViewAccessor _acc;
+  public bool LittleEndian { get; }
 
-  public MemoryMappedEphemerisDataSource(string filePath)
+  public MemoryMappedEphemerisDataSource(string filePath, bool littleEndian)
   {
+    LittleEndian = littleEndian;
     _mmf = MemoryMappedFile.CreateFromFile(filePath, FileMode.Open, null, 0, MemoryMappedFileAccess.Read);
     _acc = _mmf.CreateViewAccessor(0,0,MemoryMappedFileAccess.Read);
   }
@@ -76,16 +83,16 @@ internal sealed class MemoryMappedEphemerisDataSource : IEphemerisDataSource
   {
     long byteOffset = (address1Based - 1) * 8;
     long bits = _acc.ReadInt64(byteOffset);
-    return BitConverter.Int64BitsToDouble(bits);
+    return Endian.ToDouble(bits, LittleEndian);
   }
 
   public void ReadDoubles(long address1Based, Span<double> destination)
   {
-    long byteOffset = (address1Based - 1) * 8;
+    long baseOffset = (address1Based - 1) * 8;
     for (int i=0;i<destination.Length;i++)
     {
-      long bits = _acc.ReadInt64(byteOffset + i*8);
-      destination[i] = BitConverter.Int64BitsToDouble(bits);
+      long bits = _acc.ReadInt64(baseOffset + i*8);
+      destination[i] = Endian.ToDouble(bits, LittleEndian);
     }
   }
 
@@ -99,13 +106,13 @@ internal sealed class MemoryMappedEphemerisDataSource : IEphemerisDataSource
 /// <summary>Factory helpers.</summary>
 public static class EphemerisDataSource
 {
-  public static IEphemerisDataSource FromStream(Stream stream, bool leaveOpen=false) => new StreamEphemerisDataSource(stream, leaveOpen);
-  public static IEphemerisDataSource MemoryMapped(string filePath) => new MemoryMappedEphemerisDataSource(filePath);
-  public static ValueTask<IEphemerisDataSource> FromStreamAsync(string filePath, bool memoryMap=false, CancellationToken ct=default)
+  public static IEphemerisDataSource FromStream(Stream stream, bool littleEndian, bool leaveOpen=false) => new StreamEphemerisDataSource(stream, littleEndian, leaveOpen);
+  public static IEphemerisDataSource MemoryMapped(string filePath, bool littleEndian) => new MemoryMappedEphemerisDataSource(filePath, littleEndian);
+  public static ValueTask<IEphemerisDataSource> FromStreamAsync(string filePath, bool littleEndian, bool memoryMap=false, CancellationToken ct=default)
   {
     if (memoryMap)
-      return ValueTask.FromResult<IEphemerisDataSource>(MemoryMapped(filePath));
+      return ValueTask.FromResult<IEphemerisDataSource>(MemoryMapped(filePath, littleEndian));
     var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, FileOptions.Asynchronous|FileOptions.SequentialScan);
-    return ValueTask.FromResult<IEphemerisDataSource>(FromStream(fs));
+    return ValueTask.FromResult<IEphemerisDataSource>(FromStream(fs, littleEndian));
   }
 }
