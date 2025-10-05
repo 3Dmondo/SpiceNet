@@ -22,13 +22,7 @@ public class TestPoComparisonTests
     var entry = EphemerisCatalog.All.First(e => e.Number == ephNumber);
     var cache = EphemerisDataCache.CreateDefault();
     var ensured = await cache.EnsureAsync(entry);
-    if (ensured == null)
-    {
-      // Treat skipped download/large kernel as inconclusive failure to encourage explicit opt-in if needed.
-      true.ShouldBeTrue($"Skipped ephemeris de{ephNumber} (not downloaded or disallowed)." );
-      return;
-    }
-
+    ensured.ShouldNotBeNull($"Failed to ensure ephemeris de{ephNumber} (download or cache failure).");
     var (testpoPath, bspPath) = ensured.Value;
     using var fs = File.OpenRead(bspPath);
     var kernel = RealSpkKernelParser.Parse(fs);
