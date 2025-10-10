@@ -41,7 +41,7 @@ try
   // If user only wants comments, do that early for .bsp
   if (showComments && Path.GetExtension(file).Equals(".bsp", StringComparison.OrdinalIgnoreCase))
   {
-    var (comments, symbols) = DafCommentUtility.Extract(file);
+    var (comments, symbols, _) = DafCommentUtility.Extract(file);
     Console.WriteLine("-- COMMENT AREA (filtered printable lines) --");
     if (comments.Length == 0) Console.WriteLine("(no comments)");
     else foreach (var c in comments) Console.WriteLine(c);
