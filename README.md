@@ -21,46 +21,52 @@ Goal: Read real ephemeris (SPK) binary kernels and compare against authoritative
 | 13 | Full DAF low-level reader (summary/name traversal, endianness) | ? Done | `FullDafReader` spec-compliant, dual-encoding fallback |
 | 14 | Real SPK parsing (multi-record Type 2 & 3) | ? Done | Trailer parsing; per-record MID/RADIUS captured |
 | 15 | EphemerisDataSource (stream/mmapped, lazy) | ? Done | Endianness-aware; lazy coeff fetch |
-| 16 | testpo integration (initial) | ? Partial | Basic parser + download cache; semantics/mapping pending |
-| 16a | testpo code/center inventory & JSON report | ?? Planned | Distill distinct (target,center) pairs |
-| 16b | Provisional testpo?NAIF ID mapping layer | ?? Planned | Heuristic + override file `testpo_mapping.json` |
-| 16c | Relative state resolver (barycentric chaining) | ? Done | Implemented in `EphemerisService` (target,center via SSB) |
-| 16d | Integration test refactor using relative states | ?? Planned | Positions only until semantics validated |
-| 16e | Diagnostic CLI: testpo-diagnose (path + residuals) | ?? Planned | Extend benchmarks/tooling project |
-| 16f | Velocity semantics validation & enable vel asserts | ?? Planned | Compare derived vs reference or CSPICE |
-| 17 | Golden comparison tests (strict tolerances) | ?? Planned | After 16a–f completion |
-| 18 | Segment indexing / fast lookup | ? Partial | Per-(target,center) binary search index implemented; perf tests pending |
-| 19 | Higher-order TT?TDB model, pluggable strategies | ?? Planned | Keep current analytic as default |
-| 20 | Minimal FK/PCK parsing (body radii, frames) | ?? Planned | Foundation for frames/orientation |
-| 21 | Diagnostic CLI tool (coverage, CSV export) | ?? Planned | Will absorb testpo diagnostics |
-| 22 | CI workflow & artifacts | ?? Planned | Add caching & optional benchmarks |
-| 23 | Time conversion strategy interfaces | ?? Planned | `ILeapSecondProvider`, `ITdbOffsetModel` |
-| 24 | Structured logging (segment selection trace) | ?? Planned | In-memory logger for tests |
-| 25 | Performance consolidation (SIMD, pooling) | ?? Planned | Document gains in `docs/perf.md` |
+| 16 | testpo integration (initial) | ? In Progress | Parser + cache + comparison harness active |
+| 16a | testpo code/center inventory & JSON report | ? Planned | Distill distinct (target,center) pairs |
+| 16b | testpo?NAIF ID mapping layer | Partial | Provisional mapping 3?399, 10?301 |
+| 16c | Relative state resolver (barycentric chaining) | ? Done | Implemented in `EphemerisService` |
+| 16d | Integration test refactor (relative states) | In Progress | Positions + velocities validated in AU domain |
+| 16e | Diagnostic CLI: testpo-diagnose | Planned | Extend benchmarks/tooling project |
+| 16f | Velocity semantics validation | Planned | Cross-check vs CSPICE |
+| 17 | Golden comparison tests (strict tolerances) | Partial | Dynamic tolerance regime implemented |
+| 18 | Segment indexing / fast lookup | ? Partial | Binary search per (target,center) |
+| 19-25 | Remaining roadmap items | Planned | See manifest |
 
 ## Implementation Notes (Current)
 - **DAF Reader**: Reads control words as double precision (NEXT, PREV, NSUM) with fallback to legacy synthetic 32?bit form. Big & little endian supported.
 - **Addressing**: 1-based word addresses ? `(recordIndex * 1024) + wordIndex*8` bytes; record = 128 words (1024 bytes).
 - **SPK Types 2 & 3**: Multi-record Chebyshev + 4-double trailer `[INIT, INTLEN, RSIZE, N]`; degree validated via `RSIZE = 2 + K*(DEG+1)` (K=3 or 6).
 - **Lazy Loading**: MID/RADIUS eagerly; coefficients on demand via `IEphemerisDataSource` (stream or memory-mapped).
-- **Endianness**: Automatic detection; coefficient words byte-swapped when needed.
-- **Segment Index**: Per (target, center) sorted array with binary search for latest-start covering segment (Prompt 18 partial).
-- **Relative State Composition**: Implemented barycentric chaining (target vs center via SSB=0) enabling indirect state queries when direct segment absent (Prompt 16c).
-- **testpo Integration (Early)**: Downloader, caching, line-by-line component parser (positions & velocities) present; semantic mapping and golden validation pending 16a–f.
+- **Earth/Moon Special Handling**: `EphemerisService` derives Earth & Moon barycentric states through EMB + EMRAT relation when required (Earth=EMB?Moon_geo/(1+EMRAT), Moon_bary=Earth+Moon_geo) using EMRAT extracted from BSP comment area.
+- **testpo Integration**: Reference values parsed; Earth (3) mapped to 399, Moon (10) to 301 prior to lookup.
+
+## Current Golden Comparison Tolerances
+Comparison is performed in astronomical units (AU for position, AU/day for velocity) matching testpo output, after dividing km and km/s results by AU and AU/day (AU/86400). Strict regime used when AU constant ("AU") is found in BSP comment area; otherwise tolerances relax.
+
+Strict (AU constant present):
+- Position: 1e-13 AU  (? 1.50e-5 km ? 1.5 cm)
+- Velocity: 1e-16 AU/day (? 1.73e-13 km/s)
+
+Relaxed (AU constant missing): ×10,000
+- Position: 1e-9 AU  (? 149.6 m)
+- Velocity: 1e-12 AU/day (? 1.73e-9 km/s)
+
+Additional early ephemeris relaxation (ephemeris number starting with '2'): extra ×100 (overall ×1,000,000 vs strict)
+- Position: 1e-7 AU (? 14.96 km)
+- Velocity: 1e-10 AU/day (? 1.73e-11 km/s)
+
+Target parity objective remains <1e-6 km and <1e-9 km/s (?6.6846e-12 AU, 1.15e-14 AU/day) once all scaling paths are verified and legacy relaxation removed.
 
 ## Upcoming Focus (Revised)
-1. testpo code/center inventory & mapping heuristics (16a,16b).
-2. Refactor integration tests to exercise relative state resolution & positions only (16d).
-3. Diagnostic CLI additions (coverage & testpo-diagnose) (16e / 21 synergy).
-4. Velocity semantics confirmation & enable velocity assertions (16f).
-5. Golden tolerance harness (17) with summary JSON artifact.
-6. Higher-order time conversion model & pluggable providers (19/23).
+1. Finalize mapping & inventory (16a/16b) and codify mapping file.
+2. Add diagnostic CLI (16e) for residual path tracing.
+3. Confirm velocity parity vs CSPICE (16f) and tighten velocity tolerance.
+4. Formal golden stats export (JSON) for CI regression charts.
+5. Expand time conversion strategy (19) & structured logging (24).
 
-## JPL testpo Reference Data (Planned)
+## JPL testpo Reference Data
 Source: https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/
-- Retrieval script (future) to trim datasets & produce reproducible cache.
-- Mapping override file for ambiguous codes.
-- Golden tests will output statistics: max/mean/RMS position & velocity errors.
+Handling: Cached per ephemeris under integration test data cache. Parser stops after header sentinel `EOT`.
 
 ## Sample Usage (Real Kernel Parsing – WIP)
 ```csharp
@@ -82,14 +88,13 @@ foreach (var seg in kernel.Segments)
 - [x] EphemerisDataSource + lazy SPK loading & benchmarks
 - [x] Relative state (barycentric) resolution
 - [x] Segment indexing (baseline)
-- [ ] testpo inventory & mapping (16a/16b)
-- [ ] testpo integration refactor (16d)
-- [ ] testpo diagnostics CLI (16e)
-- [ ] Velocity semantics validation (16f)
-- [ ] Golden comparison harness (17)
+- [x] Earth/Moon composite logic (EMRAT) in service
+- [x] Dynamic testpo tolerance adaptation (AU presence)
+- [ ] Formal testpo mapping inventory (16a/16b)
+- [ ] Diagnostic CLI & velocity validation
+- [ ] Golden statistics artifact (17)
 - [ ] Advanced TT?TDB / pluggable time model
-- [ ] Diagnostic CLI & CI workflows
-- [ ] Expanded kernel type & frame support
+- [ ] Structured logging / performance consolidation
 
 ## Development Principles
 - Clean-room reimplementation; no CSPICE source inclusion.
@@ -97,7 +102,7 @@ foreach (var seg in kernel.Segments)
 - Benchmark-driven optimization after correctness.
 
 ## Contributing
-Contribution workflow formalization deferred until after golden comparison layer lands.
+Contribution workflow formalization deferred until after golden comparison layer lands. Provide rationale for any tolerance changes.
 
 ## License
 Planned: MIT (confirm CSPICE license compatibility before distributing binaries). Not an official NAIF/JPL distribution.
