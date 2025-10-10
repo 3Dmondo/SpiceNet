@@ -83,7 +83,7 @@ public sealed class FullDafReader : IDisposable
       throw new EndOfStreamException();
 
     string idWord = Encoding.ASCII.GetString(fileRec[..8]);
-    if (!idWord.StartsWith("DAF/"))
+    if (!(idWord.StartsWith("DAF/") || idWord.StartsWith("NAIF/DAF")))
       throw new InvalidDataException($"Not a DAF file (IDWORD='{idWord}')");
 
     int ndLE = BinaryPrimitives.ReadInt32LittleEndian(fileRec.Slice(8, 4));

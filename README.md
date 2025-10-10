@@ -51,7 +51,11 @@ Relaxed (AU constant missing): ×10,000
 - Position: 1e-9 AU  (? 149.6 m)
 - Velocity: 1e-12 AU/day (? 1.73e-9 km/s)
 
-Additional early ephemeris relaxation (ephemeris number starting with '2'): extra ×100 (overall ×1,000,000 vs strict)
+Additional ephemeris relaxation (ephemeris number 40x): extra ×10 (overall ×100,000 vs strict)
+- Position: 1e-8 AU (? 1.496 km)
+- Velocity: 1e-11 AU/day (? 1.73e-10 km/s)
+
+Additional ephemeris relaxation (ephemeris number 2xx): extra ×100 (overall ×1,000,000 vs strict)
 - Position: 1e-7 AU (? 14.96 km)
 - Velocity: 1e-10 AU/day (? 1.73e-11 km/s)
 

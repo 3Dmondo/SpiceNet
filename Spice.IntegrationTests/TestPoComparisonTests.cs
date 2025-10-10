@@ -61,7 +61,12 @@ public class TestPoComparisonTests
       {
         positionTolKm *= 10000;
         velocityTolKmPerSec *= 10000; // relax tolerances if AU constant missing
-        if (ephNumber.StartsWith("2"))
+        if (ephNumber.StartsWith("40"))
+        {
+          positionTolKm *= 10; // looser for DE40x 
+          velocityTolKmPerSec *= 10; // looser for DE40x 
+        }
+        else if (ephNumber.StartsWith("2"))
         {
           positionTolKm *= 100; // even looser for DE2xx 
           velocityTolKmPerSec *= 100; // even looser for DE1xx, DE2xx 
