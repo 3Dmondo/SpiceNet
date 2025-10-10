@@ -8,9 +8,9 @@ namespace Spice.Ephemeris;
 /// <summary>
 /// High-level ephemeris service loading kernels (LSK, SPK) via a meta-kernel and providing state queries.
 /// Segment selection precedence: among segments matching (target, center) that cover the epoch, choose the one with the
-/// greatest <see cref="SpkSegment.StartTdbSec"/> (latest starting segment) as per prompt specification.
-/// Supports both synthetic SPK (eager) and real SPK lazy loading (Prompt 15). Adds per-target/center segment index
-/// with binary-search fast path (Prompt 18).
+/// greatest <see cref="SpkSegment.StartTdbSec"/> (latest starting segment).
+/// Implements a per (target,center) segment index for O(log n) lookup and a barycentric relative state resolver:
+/// state(target, center) = state(target, SSB) - state(center, SSB) when a direct segment is absent (SSB id = 0).
 /// </summary>
 public sealed class EphemerisService : IDisposable
 {
@@ -39,18 +39,14 @@ public sealed class EphemerisService : IDisposable
     }
     public bool TryLocate(double et, out SpkSegment? seg)
     {
-      // Binary search latest start <= et, then walk backwards until coverage found (should be at or before index)
       int idx = Array.BinarySearch(Starts, et);
-      if (idx < 0) idx = ~idx - 1; // index of greatest start < et
+      if (idx < 0) idx = ~idx - 1; // greatest start <= et
       for (int i = idx; i >=0; i--)
       {
         var candidate = Segments[i];
-        if (et > candidate.StopTdbSec) continue; // started earlier but ended before epoch
+        if (et > candidate.StopTdbSec) continue;
         if (et >= candidate.StartTdbSec && et <= candidate.StopTdbSec)
-        {
-          // This is by construction the latest start covering et because we traverse backwards from latest start <= et.
-          seg = candidate; return true;
-        }
+        { seg = candidate; return true; }
       }
       seg = null; return false;
     }
@@ -59,9 +55,11 @@ public sealed class EphemerisService : IDisposable
   readonly Dictionary<Key, SegmentListIndex> _index = new();
   bool _indexDirty = true;
 
+  // Cache for barycentric (relative to SSB=0) states at specific epochs; key tuple used sparingly per query path.
+  readonly Dictionary<(int body,long etSeconds), StateVector> _baryCache = new();
+
   public IReadOnlyList<string> KernelPaths => _registry.KernelPaths;
 
-  /// <summary>Load a meta-kernel (.tm). Synthetic SPK files are parsed eagerly; call <see cref="LoadRealSpkLazy"/> for lazy real SPK loading.</summary>
   public void Load(string metaKernelPath)
   {
     if (metaKernelPath is null) throw new ArgumentNullException(nameof(metaKernelPath));
@@ -78,28 +76,24 @@ public sealed class EphemerisService : IDisposable
           using (var s = File.OpenRead(path))
           {
             var lsk = LskParser.Parse(s);
-            _lsk = lsk; // last wins
+            _lsk = lsk;
             TimeConversionService.SetLeapSeconds(lsk);
           }
           break;
         case ".bsp":
           using (var s = File.OpenRead(path))
           {
-            // Assume synthetic for legacy tests. Real kernels should use LoadRealSpkLazy.
             var spk = SpkKernelParser.Parse(s);
             _segments.AddRange(spk.Segments);
             _indexDirty = true;
           }
           break;
         default:
-          break; // ignore unsupported
+          break;
       }
     }
   }
 
-  /// <summary>
-  /// Load a real SPK file lazily (memory-mapped by default) adding its segments. Coefficients are fetched on-demand.
-  /// </summary>
   public void LoadRealSpkLazy(string spkPath, bool memoryMap = true)
   {
     if (spkPath is null) throw new ArgumentNullException(nameof(spkPath));
@@ -124,22 +118,79 @@ public sealed class EphemerisService : IDisposable
     _indexDirty = false;
   }
 
-  /// <summary>Attempt to get state; returns false if no covering segment found.</summary>
-  public bool TryGetState(BodyId target, BodyId center, Instant t, out StateVector state)
+  bool TryLocateSegment(int target, int center, long etSeconds, out SpkSegment? seg)
   {
     EnsureIndex();
-    if (_index.TryGetValue(new Key(target.Value, center.Value), out var idx) && idx.TryLocate(t.TdbSecondsFromJ2000, out var seg) && seg is not null)
+    if (_index.TryGetValue(new Key(target, center), out var idx) && idx.TryLocate(etSeconds, out seg) && seg is not null)
+      return true;
+    seg = null; return false;
+  }
+
+  public bool TryGetState(BodyId target, BodyId center, Instant t, out StateVector state)
+  {
+    if (TryLocateSegment(target.Value, center.Value, t.TdbSecondsFromJ2000, out var seg) && seg is not null)
     {
       state = SpkSegmentEvaluator.EvaluateState(seg, t); return true;
+    }
+    // Fallback: compose via barycentric SSB path if possible.
+    if (TryGetRelativeState(target, center, t, out state)) return true;
+    state = default; return false;
+  }
+
+  /// <summary>
+  /// Attempt to compute state(target, center) via barycentric composition: state(t,c)=state(t,0)-state(c,0).
+  /// Requires both bodies resolvable to SSB (0). Returns false if either cannot be resolved.
+  /// </summary>
+  public bool TryGetRelativeState(BodyId target, BodyId center, Instant t, out StateVector state)
+  {
+    if (target.Value == center.Value) { state = StateVector.Zero; return true; }
+    if (target.Value == 0 || center.Value == 0)
+    {
+      // One is SSB: direct attempt already done; compute direct barycentric if available.
+      if (TryResolveBarycentric(target.Value, t, out var targB) && TryResolveBarycentric(center.Value, t, out var cenB))
+      { state = targB.Subtract(cenB); return true; }
+      state = default; return false;
+    }
+    if (TryResolveBarycentric(target.Value, t, out var tB) && TryResolveBarycentric(center.Value, t, out var cB))
+    { state = tB.Subtract(cB); return true; }
+    state = default; return false;
+  }
+
+  bool TryResolveBarycentric(int body, Instant t, out StateVector state)
+  {
+    if (body == 0) { state = StateVector.Zero; return true; }
+    var key = (body, t.TdbSecondsFromJ2000);
+    if (_baryCache.TryGetValue(key, out state)) return true;
+
+    // Direct segment body->SSB?
+    if (TryLocateSegment(body, 0, t.TdbSecondsFromJ2000, out var seg) && seg is not null)
+    {
+      state = SpkSegmentEvaluator.EvaluateState(seg, t);
+      _baryCache[key] = state; return true;
+    }
+
+    // Otherwise locate any segment body->X and recursively resolve X->SSB.
+    EnsureIndex();
+    // Choose a covering segment with smallest |center| id precedence heuristically.
+    var candidates = _segments.Where(s => s.Target.Value == body && t.TdbSecondsFromJ2000 >= s.StartTdbSec && t.TdbSecondsFromJ2000 <= s.StopTdbSec).OrderBy(s=>s.Center.Value).ToList();
+    foreach (var cand in candidates)
+    {
+      if (cand.Center.Value == body) continue; // avoid self-loop
+      var partial = SpkSegmentEvaluator.EvaluateState(cand, t); // state(body, center)
+      if (TryResolveBarycentric(cand.Center.Value, t, out var centerBary))
+      {
+        // partial = body relative to center, so body barycentric = partial + center barycentric
+        state = partial.Add(centerBary);
+        _baryCache[key] = state; return true;
+      }
     }
     state = default; return false;
   }
 
-  /// <summary>Get state or throw if no covering segment.</summary>
   public StateVector GetState(BodyId target, BodyId center, Instant t)
   {
     if (!TryGetState(target, center, t, out var state))
-      throw new InvalidOperationException($"No SPK segment covers epoch {t} for target {target.Value} center {center.Value}.");
+      throw new InvalidOperationException($"No SPK segment (direct or composable) covers epoch {t} for target {target.Value} center {center.Value}.");
     return state;
   }
 

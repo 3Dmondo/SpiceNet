@@ -2,7 +2,7 @@
   "profiles": {
     "Spice.Benchmarks": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\edmondo\\Downloads\\de440s.bsp 399 3 0 --list"
+      "commandLineArgs": "C:\\Users\\edmondo\\Downloads\\de440s.bsp 399 3 0 --list --comments"
     }
   }
 }

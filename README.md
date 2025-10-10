@@ -18,39 +18,49 @@ Goal: Read real ephemeris (SPK) binary kernels and compare against authoritative
 
 | Prompt | Goal | Status | Notes |
 |--------|------|--------|-------|
-| 13 | Full DAF low-level reader (summary/name traversal, endianness) | ? Done | `FullDafReader` spec-compliant, dual encoding fallback for control words |
-| 14 | Real SPK parsing (multi-record Type 2 & 3) | ? Done | Trailer (INIT, INTLEN, RSIZE, N) parsing; per-record MID/RADIUS captured |
-| 15 | EphemerisDataSource (stream/mmapped, lazy) | ? Done | Endianness-aware; zero-copy MMF path |
-| 16 | testpo loader scaffold | ? Planned | Loader interface drafted (not yet committed) |
-| 17 | Golden comparison tests vs testpo | ? Planned | Will gate numerical parity tolerances |
-| 18 | Segment indexing / fast lookup | ? Planned | Interval binary search + per-target index |
-| 19 | Higher-order TT?TDB model, pluggable strategies | ? Planned | Keep default fast analytic; plug advanced terms |
-| 20 | Minimal FK/PCK parsing (body radii, frames) | ? Planned | Required for geometry & future orientation |
-| 21 | Diagnostic CLI tool | ? Planned | Coverage listing, CSV export, diff vs testpo |
-| 22 | CI workflow & artifacts | ? Planned | Build/test, optional micro benchmark, cache test data |
-| 23 | Time conversion strategy interfaces | ? Planned | `ILeapSecondProvider`, `ITdbOffsetModel` |
-| 24 | Structured logging for selection decisions | ? Planned | In-memory logger for test assertions |
-| 25 | Perf consolidation (SIMD Chebyshev, pooling) | ? Planned | Document before/after in `docs/perf.md` |
+| 13 | Full DAF low-level reader (summary/name traversal, endianness) | ? Done | `FullDafReader` spec-compliant, dual-encoding fallback |
+| 14 | Real SPK parsing (multi-record Type 2 & 3) | ? Done | Trailer parsing; per-record MID/RADIUS captured |
+| 15 | EphemerisDataSource (stream/mmapped, lazy) | ? Done | Endianness-aware; lazy coeff fetch |
+| 16 | testpo integration (initial) | ? Partial | Basic parser + download cache; semantics/mapping pending |
+| 16a | testpo code/center inventory & JSON report | ?? Planned | Distill distinct (target,center) pairs |
+| 16b | Provisional testpo?NAIF ID mapping layer | ?? Planned | Heuristic + override file `testpo_mapping.json` |
+| 16c | Relative state resolver (barycentric chaining) | ? Done | Implemented in `EphemerisService` (target,center via SSB) |
+| 16d | Integration test refactor using relative states | ?? Planned | Positions only until semantics validated |
+| 16e | Diagnostic CLI: testpo-diagnose (path + residuals) | ?? Planned | Extend benchmarks/tooling project |
+| 16f | Velocity semantics validation & enable vel asserts | ?? Planned | Compare derived vs reference or CSPICE |
+| 17 | Golden comparison tests (strict tolerances) | ?? Planned | After 16a–f completion |
+| 18 | Segment indexing / fast lookup | ? Partial | Per-(target,center) binary search index implemented; perf tests pending |
+| 19 | Higher-order TT?TDB model, pluggable strategies | ?? Planned | Keep current analytic as default |
+| 20 | Minimal FK/PCK parsing (body radii, frames) | ?? Planned | Foundation for frames/orientation |
+| 21 | Diagnostic CLI tool (coverage, CSV export) | ?? Planned | Will absorb testpo diagnostics |
+| 22 | CI workflow & artifacts | ?? Planned | Add caching & optional benchmarks |
+| 23 | Time conversion strategy interfaces | ?? Planned | `ILeapSecondProvider`, `ITdbOffsetModel` |
+| 24 | Structured logging (segment selection trace) | ?? Planned | In-memory logger for tests |
+| 25 | Performance consolidation (SIMD, pooling) | ?? Planned | Document gains in `docs/perf.md` |
 
 ## Implementation Notes (Current)
-- **DAF Reader**: Reads control words as double precision (NEXT, PREV, NSUM) with fallback to synthetic 32?bit int form used in early tests. Handles both little & big endian by plausibility of ND/NI.
-- **Addressing**: 1-based word addresses mapped to `(recordIndex * 1024) + wordIndex*8` byte offsets; record = 128 8-byte words.
-- **SPK Types 2 & 3**: Multi-record Chebyshev payload followed by 4-double trailer `[INIT, INTLEN, RSIZE, N]`. Degree validated via `RSIZE = 2 + K*(DEG+1)` where `K=3 (T2)` or `6 (T3)`.
-- **Lazy Loading**: Only MID/RADIUS vectors read eagerly; coefficients streamed on demand (or mmapped) using `IEphemerisDataSource`.
-- **Endianness**: Coefficient 64-bit words reversed when underlying kernel differs from host endianness.
+- **DAF Reader**: Reads control words as double precision (NEXT, PREV, NSUM) with fallback to legacy synthetic 32?bit form. Big & little endian supported.
+- **Addressing**: 1-based word addresses ? `(recordIndex * 1024) + wordIndex*8` bytes; record = 128 words (1024 bytes).
+- **SPK Types 2 & 3**: Multi-record Chebyshev + 4-double trailer `[INIT, INTLEN, RSIZE, N]`; degree validated via `RSIZE = 2 + K*(DEG+1)` (K=3 or 6).
+- **Lazy Loading**: MID/RADIUS eagerly; coefficients on demand via `IEphemerisDataSource` (stream or memory-mapped).
+- **Endianness**: Automatic detection; coefficient words byte-swapped when needed.
+- **Segment Index**: Per (target, center) sorted array with binary search for latest-start covering segment (Prompt 18 partial).
+- **Relative State Composition**: Implemented barycentric chaining (target vs center via SSB=0) enabling indirect state queries when direct segment absent (Prompt 16c).
+- **testpo Integration (Early)**: Downloader, caching, line-by-line component parser (positions & velocities) present; semantic mapping and golden validation pending 16a–f.
 
-## Upcoming Focus
-1. Implement `TestPoLoader` and trimmed test dataset (subset epochs for major bodies) under `Spice.Tests/TestData`.
-2. Introduce `SegmentIndex` building sorted (start, end, pointer) arrays per target for O(log n) lookup.
-3. Add golden comparisons (position < 1e-6 km, velocity < 1e-9 km/s) with summary statistics (mean / max errors) dumped to test output.
-4. Provide diagnostic CLI (`Spice.Tool`) enumerating segments & coverage.
-5. Extend time conversion accuracy & plug strategy model.
+## Upcoming Focus (Revised)
+1. testpo code/center inventory & mapping heuristics (16a,16b).
+2. Refactor integration tests to exercise relative state resolution & positions only (16d).
+3. Diagnostic CLI additions (coverage & testpo-diagnose) (16e / 21 synergy).
+4. Velocity semantics confirmation & enable velocity assertions (16f).
+5. Golden tolerance harness (17) with summary JSON artifact.
+6. Higher-order time conversion model & pluggable providers (19/23).
 
 ## JPL testpo Reference Data (Planned)
 Source: https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/
-- Retrieval script (`scripts/fetch-testpo.ps1`) to produce a curated minimal subset.
-- Store only needed epochs; cite source & retrieval date.
-- Golden tests will compare state deltas & accumulate statistics.
+- Retrieval script (future) to trim datasets & produce reproducible cache.
+- Mapping override file for ambiguous codes.
+- Golden tests will output statistics: max/mean/RMS position & velocity errors.
 
 ## Sample Usage (Real Kernel Parsing – WIP)
 ```csharp
@@ -58,7 +68,7 @@ using Spice.Kernels;
 using var fs = File.OpenRead("de440_small.bsp");
 var kernel = RealSpkKernelParser.Parse(fs);
 foreach (var seg in kernel.Segments)
-  Console.WriteLine($"Target={seg.Target.Id} Center={seg.Center.Id} Type={seg.DataType} Records={seg.RecordCount}");
+  Console.WriteLine($"Target={seg.Target.Value} Center={seg.Center.Value} Type={seg.DataType} Records={seg.RecordCount}");
 ```
 
 ## Completed vs Pending Checklist
@@ -70,9 +80,13 @@ foreach (var seg in kernel.Segments)
 - [x] Full DAF reader (real layout enumeration)
 - [x] Real SPK parsing (multi-record Types 2 & 3)
 - [x] EphemerisDataSource + lazy SPK loading & benchmarks
-- [ ] testpo loader scaffold
-- [ ] Golden comparison harness (tolerances & stats)
-- [ ] Segment indexing & performance layer
+- [x] Relative state (barycentric) resolution
+- [x] Segment indexing (baseline)
+- [ ] testpo inventory & mapping (16a/16b)
+- [ ] testpo integration refactor (16d)
+- [ ] testpo diagnostics CLI (16e)
+- [ ] Velocity semantics validation (16f)
+- [ ] Golden comparison harness (17)
 - [ ] Advanced TT?TDB / pluggable time model
 - [ ] Diagnostic CLI & CI workflows
 - [ ] Expanded kernel type & frame support
@@ -80,7 +94,7 @@ foreach (var seg in kernel.Segments)
 ## Development Principles
 - Clean-room reimplementation; no CSPICE source inclusion.
 - Explicit units, immutable value types, low allocation.
-- Benchmark-driven optimization only after correctness established.
+- Benchmark-driven optimization after correctness.
 
 ## Contributing
 Contribution workflow formalization deferred until after golden comparison layer lands.

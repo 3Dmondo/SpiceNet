@@ -6,20 +6,22 @@ using System.Globalization;
 
 // Temporary diagnostic main replacing BenchmarkDotNet runner.
 // Usage:
-//   dotnet run -c Debug -- <file> <targetId> <centerId> <etSeconds> [--list]
+//   dotnet run -c Debug -- <file> <targetId> <centerId> <etSeconds> [--list] [--comments]
 // Adding --list prints structural info for all parsed segments (real SPK).
+// Adding --comments prints the DAF comment area (and parsed symbol assignments) then exits if only inspection desired.
 
 if (args.Length < 4)
 {
   Console.WriteLine("SpiceNet EPHEMERIS QUICK TEST\n" +
-                    "Args: <kernel-or-meta> <target> <center> <etSeconds> [--list]\n" +
+                    "Args: <kernel-or-meta> <target> <center> <etSeconds> [--list] [--comments]\n" +
                     "Example: dotnet run -- de_test.bsp 499 0 0\n" +
-                    "Example: dotnet run -- de_test.bsp 499 0 0 --list");
+                    "Example: dotnet run -- de_test.bsp 499 0 0 --list --comments");
   Console.WriteLine("(Benchmark harness disabled for this diagnostic run.)");
   return;
 }
 
 bool list = args.Contains("--list", StringComparer.OrdinalIgnoreCase);
+bool showComments = args.Contains("--comments", StringComparer.OrdinalIgnoreCase) || args.Contains("--show-comments", StringComparer.OrdinalIgnoreCase);
 string file = args[0];
 if (!File.Exists(file)) { Console.WriteLine($"File not found: {file}"); return; }
 if (!int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var targetId) ||
@@ -36,6 +38,27 @@ var epoch = new Instant((long)Math.Round(et));
 
 try
 {
+  // If user only wants comments, do that early for .bsp
+  if (showComments && Path.GetExtension(file).Equals(".bsp", StringComparison.OrdinalIgnoreCase))
+  {
+    var (comments, symbols) = DafCommentUtility.Extract(file);
+    Console.WriteLine("-- COMMENT AREA (filtered printable lines) --");
+    if (comments.Length == 0) Console.WriteLine("(no comments)");
+    else foreach (var c in comments) Console.WriteLine(c);
+
+    if (symbols.Count > 0)
+    {
+      Console.WriteLine();
+      Console.WriteLine("-- PARSED SYMBOL ASSIGNMENTS --");
+      foreach (var s in symbols)
+      {
+        Console.WriteLine(s.ToString());
+      }
+    }
+    Console.WriteLine();
+    // Continue with state evaluation unless user passed only --comments without list? We still proceed unless target/center meaningless.
+  }
+
   StateVector state;
   string ext = Path.GetExtension(file).ToLowerInvariant();
   if (ext == ".tm")
