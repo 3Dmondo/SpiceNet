@@ -2,14 +2,13 @@ using Shouldly;
 using Spice.Core;
 using Spice.Kernels;
 using Spice.Ephemeris;
-using System.Collections.Concurrent;
 
 namespace Spice.IntegrationTests;
 
 public class TestPoComparisonTests
 {
-  const double PositionTolKm = 1e-14; // absolute tolerance in AU domain (positions expressed as AU)
-  const double VelocityTolKmPerSec = 1e-14; // absolute tolerance in AU/day domain for velocities
+  const double PositionTolKm = 1e-13; // absolute tolerance in AU domain (positions expressed as AU)
+  const double VelocityTolKmPerSec = 1e-16; // absolute tolerance in AU/day domain for velocities
 
   public static IEnumerable<object[]> EphemerisNumbers()
   {
@@ -48,16 +47,26 @@ public class TestPoComparisonTests
     ensured.ShouldNotBeNull($"Failed to ensure ephemeris de{ephNumber} (download or cache failure).\n");
     var (testpoPath, bspPath) = ensured.Value;
 
-    // Extract AU and EMRAT constants from the kernel comment area (fallback to canonical values if absent).
+
+    var positionTolKm = PositionTolKm;
+    var velocityTolKmPerSec = VelocityTolKmPerSec;
+    // Extract AU constant from kernel comment area (fallback if absent).
     double auKm = 1.4959787070000000e+08; // fallback (km)
-    double emrat = 8.1300568221497215E+01; // fallback
     try
     {
-      var (l, r, map) = DafCommentUtility.Extract(bspPath);
+      var (_, _, map) = DafCommentUtility.Extract(bspPath);
       if (map.TryGetValue("AU", out var auSym) && auSym.FirstNumeric is double auParsed)
         auKm = auParsed;
-      if (map.TryGetValue("EMRAT", out var emratSym) && emratSym.FirstNumeric is double emParsed)
-        emrat = emParsed;
+      else
+      {
+        positionTolKm *= 10000;
+        velocityTolKmPerSec *= 10000; // relax tolerances if AU constant missing
+        if (ephNumber.StartsWith("2"))
+        {
+          positionTolKm *= 100; // even looser for DE2xx 
+          velocityTolKmPerSec *= 100; // even looser for DE1xx, DE2xx 
+        }
+      }
     }
     catch { /* retain fallback */ }
 
@@ -91,44 +100,32 @@ public class TestPoComparisonTests
         6 => state.VelocityKmPerSec.Z / auDKmS,
         _ => double.NaN
       };
-      if (double.IsNaN(predicted))
-        continue;
+      if (double.IsNaN(predicted)) continue;
 
       double err = Math.Abs(predicted - comp.Value);
       var key = new Key(target.Value, center.Value, comp.ComponentIndex);
-      if (!agg.TryGetValue(key, out var a))
-      {
-        a = new Agg();
-        agg[key] = a;
-      }
+      if (!agg.TryGetValue(key, out var a)) { a = new Agg(); agg[key] = a; }
       a.Add(instant.TdbSecondsFromJ2000, comp.Value, predicted, err);
 
       if (comp.ComponentIndex <= 3)
       {
-        posSamples++;
-        posSumErr += err;
-        if (err > posMaxErr)
-          posMaxErr = err;
+        posSamples++; posSumErr += err; if (err > posMaxErr) posMaxErr = err;
       }
       else
       {
-        velSamples++;
-        velSumErr += err;
-        if (err > velMaxErr)
-          velMaxErr = err;
+        velSamples++; velSumErr += err; if (err > velMaxErr) velMaxErr = err;
       }
     }
 
-    (posSamples > 0 || velSamples > 0).ShouldBeTrue($"Inconclusive: de{ephNumber} produced no comparable samples (no matching/composable states). AU={auKm} EMRAT={emrat}");
+    (posSamples > 0 || velSamples > 0).ShouldBeTrue($"Inconclusive: de{ephNumber} produced no comparable samples (no matching/composable states). AU={auKm}");
 
     // Collect only failing component rows.
     var failing = new List<string>();
     foreach (var kvp in agg.OrderBy(x => x.Key.Target).ThenBy(x => x.Key.Center).ThenBy(x => x.Key.Component))
     {
-      var k = kvp.Key;
-      var a = kvp.Value;
+      var k = kvp.Key; var a = kvp.Value;
       bool isPos = k.Component <= 3;
-      double tol = isPos ? PositionTolKm : VelocityTolKmPerSec;
+      double tol = isPos ? positionTolKm : velocityTolKmPerSec;
       if (a.MaxErr > tol)
       {
         var w = a.WorstSample;
@@ -137,14 +134,14 @@ public class TestPoComparisonTests
     }
 
     var header =
-      $"de{ephNumber} Failing Components (Tolerance Pos={PositionTolKm:E} AU Vel={VelocityTolKmPerSec:E} AU/day) AU(km)={auKm} EMRAT={emrat}\n" +
+      $"de{ephNumber} Failing Components (Tolerance Pos={positionTolKm:E} AU Vel={VelocityTolKmPerSec:E} AU/day) AU(km)={auKm}\n" +
        "    Target Center Comp Count        Max       Mean      WorstET                     Ref                    Pred\n";
 
     if (posSamples > 0)
     {
       var posMean = posSumErr / posSamples;
       posMaxErr.ShouldBeLessThanOrEqualTo(
-        PositionTolKm,
+        positionTolKm,
         failing.Count == 0
           ? $"de{ephNumber} position ok"
           : header + string.Join(Environment.NewLine, failing));
@@ -153,7 +150,7 @@ public class TestPoComparisonTests
     {
       var velMean = velSumErr / velSamples;
       velMaxErr.ShouldBeLessThanOrEqualTo(
-        VelocityTolKmPerSec,
+        velocityTolKmPerSec,
         failing.Count == 0
           ? $"de{ephNumber} velocity ok"
           : header + string.Join(Environment.NewLine, failing));

@@ -110,6 +110,14 @@ internal static class TestPoParser
       if (!int.TryParse(parts[5], out var compIndex)) continue;
       if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) continue;
       if (compIndex is < 1 or > 6) continue;
+      if (tcode == 3)
+        tcode = 399; // testpo uses 3 for Earth, SPICE uses 399
+      if (tcode == 10)
+        tcode = 301; // testpo uses 10 for Moon, SPICE uses 301
+      if (ccode == 3)
+        ccode = 399; // testpo uses 3 for Earth, SPICE uses 399
+      if (ccode == 10)
+        ccode = 301; // testpo uses 10 for Moon, SPICE uses 301
       yield return new TestPoComponent(tcode, ccode, jd, compIndex, value);
       if (++count >= maxComponents) yield break;
     }
