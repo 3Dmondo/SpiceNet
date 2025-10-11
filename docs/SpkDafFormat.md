@@ -2,6 +2,9 @@
 
 This document summarizes the subset of the NAIF DAF + SPK specification implemented by the current SpiceNet codebase (Types 2 & 3 only). It complements the authoritative NAIF Required Reading files (`daf.req`, `spk.req`). Non?implemented details are intentionally omitted.
 
+> Barycentric Chaining Note (Prompt 26 D3)
+> The service resolves relative states generically via Solar System Barycenter (SSB id 0) composition:`state(target,center)=state(target,SSB)-state(center,SSB)`. No legacy Earth/Moon (EMB/EMRAT) special-case path remains; all chaining uses the same recursion with a cycle guard.
+
 ## DAF Concepts
 - Record size: 1024 bytes (128 double precision words)
 - Addressing: 1-based double word index over entire file (word 1 is first 8 bytes of record 1)
@@ -24,7 +27,7 @@ Remaining fields (LOC* / FTPSTR / padding) ignored in current implementation.
 
 ### Summary Record
 A summary record holds:
-- Control area (first 3 double words): NEXT, PREV, NSUM stored as IEEE 754 double values whose integer parts encode the integers. We also tolerate synthetic little-endian 32-bit int in low half (unit tests).
+- Control area (first 3 double words): NEXT, PREV, NSUM stored as IEEE 754 double values whose integer parts encode the integers. Synthetic little-endian 32-bit encoding (low half only) also accepted (unit tests).
 - Packed summaries begin at word index 4.
 - Each packed summary consumes: `SS = ND + ((NI + 1) / 2)` double words.
 - Maximum summaries per record: `floor(125 / SS)` (since 3 words for control).
@@ -78,12 +81,12 @@ Validate `(RSIZE - 2) % K == 0` and DEG >= 0.
 
 ### Evaluation
 Type 2:
-1. Locate record where t ? [MID - RADIUS, MID + RADIUS]. Uniform spacing allows index ? floor((t - INIT)/INTLEN).
+1. Locate record where t ? [MID - RADIUS, MID + RADIUS]. Uniform spacing allows index ? floor((t - INIT)/INTLEN) (code still validates by interval test).
 2. Compute tau and evaluate Chebyshev polynomials for position components.
 3. Velocity derived by differentiating polynomial: d/dt = (1/RADIUS) * d/dtau.
 
 Type 3:
-Same as Type 2 but velocity polynomials provided directly (first derivative already encoded), still scaled by d/dtau factor? No: velocity sets are polynomials in tau that directly approximate velocity; evaluate without differentiation.
+Same as Type 2 but velocity polynomials provided directly; evaluate without differentiation.
 
 ## Endianness Handling
 - ND/NI read in both little & big forms; plausible range 0 < value < 256 selects active byte order.
@@ -91,9 +94,9 @@ Same as Type 2 but velocity polynomials provided directly (first derivative alre
 - Packed integer pairs extracted from each 8-byte word by reading two 32-bit values under active endianness.
 
 ## Control Word Fallback Logic
-1. Attempt to interpret 8 bytes as double and round to integer if difference < 1e-12.
-2. If upper 32 bits zero and lower non-zero treat lower 32 bits as synthetic int (legacy test builder).
-3. Otherwise return (possibly zero) integer rounding of double.
+1. Interpret 8 bytes as double; if integral within 1e-12 use that.
+2. If upper 32 bits zero and lower non-zero treat lower 32 bits as synthetic int.
+3. Otherwise fallback to lower 32 bits.
 
 ## Address Math Helper
 For 1-based word address A:
@@ -108,15 +111,15 @@ byteOffset = recordIndex * 1024 + wordInRecord * 8
 - Comment area parsing
 - Free address validation / integrity checks
 - Backward traversal using PREV control word
-- Chained segment precedence (higher priority later in file) in selection engine (Ephemeris layer handles precedence heuristics later)
+- Chained segment precedence heuristics beyond current latest-start selection
 
 ## Validation Heuristics in Code
 - Reject segments where `(final - initial + 1) != RSIZE * N + 4`
 - Ensure `Degree >= 0`
-- Ensure NSUM within reasonable cap (? 10k)
+- Ensure NSUM within reasonable cap (? 10000)
 
 ## References
 - NAIF DAF Required Reading (daf.req)
 - NAIF SPK Required Reading (spk.req)
 
-This document is intentionally concise; authoritative semantics remain with NAIF documentation.
+Authoritative semantics remain with NAIF documentation.
