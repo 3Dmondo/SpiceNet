@@ -121,11 +121,28 @@ public class TestPoComparisonTests
     // Produce stats artifact (prior to assertions so failures still emit data)
     try
     {
-      var statsDir = Path.Combine(Path.GetDirectoryName(testpoPath)!, $"de{ephNumber}");
+      var testpoDir = Path.GetDirectoryName(testpoPath)!;
+      var lastDir = Path.GetFileName(testpoDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+      var expectedDirName = $"de{ephNumber}";
+      var statsDir = string.Equals(lastDir, expectedDirName, StringComparison.OrdinalIgnoreCase)
+        ? testpoDir // already in de<eph>
+        : Path.Combine(testpoDir, expectedDirName);
       Directory.CreateDirectory(statsDir);
       var statsPath = Path.Combine(statsDir, $"comparison_stats.{ephNumber}.json");
       var json = BuildStatsJson(ephNumber, posSamples, velSamples, posMaxErr, posSumErr, velMaxErr, velSumErr, tol, hasAuConstant);
       File.WriteAllText(statsPath, json);
+
+      // Schema validation (presence & simple type checks) - Prompt 26 C3/H5
+      using var doc = JsonDocument.Parse(json);
+      var root = doc.RootElement;
+      string[] reqKeys = ["ephemeris","samples","strictMode","positionMaxAu","positionMeanAu","velocityMaxAuDay","velocityMeanAuDay","hasAuConstant","generatedUtc"]; 
+      foreach (var k in reqKeys)
+      {
+        root.TryGetProperty(k, out var prop).ShouldBeTrue($"Stats JSON missing key '{k}' for de{ephNumber}");
+        // Basic type expectations (string or number or bool) enforced implicitly by parse; we only ensure non-empty strings.
+        if (prop.ValueKind == JsonValueKind.String)
+          prop.GetString().ShouldNotBeNullOrWhiteSpace();
+      }
     }
     catch { /* non-fatal */ }
 

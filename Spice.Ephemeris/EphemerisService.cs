@@ -33,32 +33,47 @@ public sealed class EphemerisService : IDisposable
   {
     public SpkSegment[] Segments = Array.Empty<SpkSegment>(); // sorted by StartTdbSec ascending
     public double[] Starts = Array.Empty<double>();
+    public double[] Stops = Array.Empty<double>();
     public void Build(IEnumerable<SpkSegment> segs)
     {
       Segments = segs.OrderBy(s=>s.StartTdbSec).ToArray();
-      Starts = Segments.Select(s=>s.StartTdbSec).ToArray();
+      int len = Segments.Length;
+      Starts = new double[len];
+      Stops = new double[len];
+      for (int i=0;i<len;i++){ var s=Segments[i]; Starts[i]=s.StartTdbSec; Stops[i]=s.StopTdbSec; }
     }
     public bool TryLocate(double et, out SpkSegment? seg)
     {
+      // Binary search on starts
       int idx = Array.BinarySearch(Starts, et);
       if (idx >= 0)
       {
-        // Fast path: exact start time match; walk forward to latest segment starting at this ET covering ET.
-        for (int j = idx; j < Segments.Length && Segments[j].StartTdbSec == et; j++)
-        {
-          var cand = Segments[j];
-            if (et <= cand.StopTdbSec) { seg = cand; return true; }
-        }
-        // Fallback to precedence scan below if not covered.
+        // Exact start match: walk forward among same-start segments to find first covering.
+        for (int j = idx; j < Segments.Length && Starts[j] == et; j++)
+        { var cand = Segments[j]; if (et <= cand.StopTdbSec) { seg = cand; return true; } }
+        // If none cover, fall through to predecessor search.
       }
-      if (idx < 0) idx = ~idx - 1; // greatest start <= et
-      for (int i = idx; i >=0; i--)
+      else idx = ~idx - 1; // predecessor index
+
+      if (idx >= 0)
       {
-        var candidate = Segments[i];
-        if (et > candidate.StopTdbSec) continue;
-        if (et >= candidate.StartTdbSec && et <= candidate.StopTdbSec)
-        { seg = candidate; return true; }
+        // Fast path boundary check: if et equals stop of predecessor segment.
+        var pred = Segments[idx];
+        if (et <= pred.StopTdbSec && et >= pred.StartTdbSec)
+        { seg = pred; return true; }
       }
+
+      // If predecessor failed, optionally check successor whose start is just after et in case of zero-width start==stop.
+      int succ = idx + 1;
+      if (succ >=0 && succ < Segments.Length)
+      {
+        var ssucc = Segments[succ];
+        if (et >= ssucc.StartTdbSec && et <= ssucc.StopTdbSec) { seg = ssucc; return true; }
+      }
+
+      // Linear fallback (rare; ordering anomalies)
+      for (int i=0;i<Segments.Length;i++)
+      { var c=Segments[i]; if (et >= c.StartTdbSec && et <= c.StopTdbSec) { seg = c; return true; } }
       seg = null; return false;
     }
   }
@@ -219,15 +234,30 @@ public sealed class EphemerisService : IDisposable
 
     // Otherwise locate any segment body->X and recursively resolve X->SSB.
     EnsureIndex();
-    var candidates = _segments.Where(s => s.Target.Value == body && t.TdbSecondsFromJ2000 >= s.StartTdbSec && t.TdbSecondsFromJ2000 <= s.StopTdbSec).OrderBy(s=>s.Center.Value).ToList();
-    foreach (var cand in candidates)
+    // Collect candidate segments (target->center) covering epoch without LINQ allocations.
+    List<SpkSegment>? candidates = null;
+    double etVal = t.TdbSecondsFromJ2000;
+    for (int i = 0; i < _segments.Count; i++)
     {
-      if (cand.Center.Value == body) continue; // avoid self-loop
-      var partial = SpkSegmentEvaluator.EvaluateState(cand, t); // state(body, center)
-      if (TryResolveBarycentric(cand.Center.Value, t, visited, out var centerBary))
+      var s = _segments[i];
+      if (s.Target.Value != body) continue;
+      if (etVal < s.StartTdbSec || etVal > s.StopTdbSec) continue;
+      (candidates ??= new()).Add(s);
+    }
+    if (candidates is not null && candidates.Count > 1)
+      candidates.Sort(static (a,b) => a.Center.Value.CompareTo(b.Center.Value));
+    if (candidates is not null)
+    {
+      for (int i = 0; i < candidates.Count; i++)
       {
-        state = partial.Add(centerBary);
-        _baryCache[key] = state; return true;
+        var cand = candidates[i];
+        if (cand.Center.Value == body) continue;
+        var partial = SpkSegmentEvaluator.EvaluateState(cand, t);
+        if (TryResolveBarycentric(cand.Center.Value, t, visited, out var centerBary))
+        {
+          state = partial.Add(centerBary);
+          _baryCache[key] = state; return true;
+        }
       }
     }
     state = default; return false;

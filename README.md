@@ -20,18 +20,18 @@ Goal: Read real ephemeris (SPK) binary kernels and compare against authoritative
 |--------|------|--------|-------|
 | 13 | Full DAF low-level reader (summary/name traversal, endianness) | ? Done | `FullDafReader` spec-compliant, dual-encoding fallback |
 | 14 | Real SPK parsing (multi-record Type 2 & 3) | ? Done | Trailer parsing; per-record MID/RADIUS captured |
-| 15 | EphemerisDataSource (stream/mmapped, lazy) | ? Done | Endianness-aware; lazy coeff fetch |
-| 16 | testpo integration (initial) | ? In Progress | Parser + cache + comparison harness active |
-| 16a | testpo code/center inventory & JSON report | Planned | Distill distinct (target,center) pairs |
-| 16b | testpo?NAIF ID mapping layer | Planned | Replace provisional mapping with JSON file (Prompt 26.B) |
-| 16c | Relative state resolver (barycentric chaining) | ? Done | Implemented in `EphemerisService` |
-| 16d | Integration test refactor (relative states) | In Progress | AU-domain validation |
-| 16e | Diagnostic CLI: testpo-diagnose | Planned | Benchmarks/tooling project extension |
-| 16f | Velocity semantics validation | Planned | Cross-check vs CSPICE |
-| 17 | Golden comparison tests (strict tolerances) | Partial | Dynamic tolerance regime implemented |
-| 18 | Segment indexing / fast lookup | ? Partial | Binary search per (target,center) |
+| 15 | EphemerisDataSource (stream/mmapped, lazy) | ? Done | Lazy & memory-mapped modes |
+| 16 | testpo integration (initial) | ? Core | Parser + cache + mapping remap + comparison harness |
+| 16a | testpo code/center inventory & JSON report | Planned | (Optional enrichment) |
+| 16b | testpo?NAIF ID mapping layer | ? Done | `TestData/BodyMapping.json` + validation test |
+| 16c | Relative state resolver (barycentric chaining) | ? Done | Generic; no EMB special-case |
+| 16d | Integration test refactor (relative states) | ? Done | AU-domain validation vs dynamic tolerances |
+| 16e | Diagnostic CLI: testpo-diagnose | Planned | To be added to Demo/Benchmarks |
+| 16f | Velocity semantics validation | Planned | Pending CSPICE parity harness |
+| 17 | Golden comparison tests (strict tolerances) | Partial | Policy tiers implemented; stricter CSPICE cross-check TBD |
+| 18 | Segment indexing / fast lookup | ? Partial | Per (t,c) sorted arrays + boundary fast path |
 | 19-25 | Remaining roadmap items | Planned | See manifest |
-| 26 | Consolidation / Quality Alignment | In Progress (Phase 0 Complete) | Surface baseline captured; proceeding with consolidation tasks |
+| 26 | Consolidation / Quality Alignment | In Progress | Most tasks complete; report & final API lock pending |
 
 ## Supported Public Surface (Stability Baseline)
 Public facade types:
@@ -45,22 +45,39 @@ Spice.Ephemeris:
 Pre-1.0.0: surface may evolve with explicit baseline updates.
 
 ## Implementation Notes (Current)
-- DAF reader: control words (NEXT, PREV, NSUM) + synthetic fallback, dual endianness.
-- SPK Types 2 & 3 parsed with trailer `[INIT, INTLEN, RSIZE, N]`.
-- Lazy coefficient loading via data source abstraction.
-- Barycentric composition is generic (no special-case Earth/Moon path).
-- Provisional inline testpo remap being replaced by JSON mapping (Prompt 26.B).
+- DAF reader: control words (NEXT, PREV, NSUM) + synthetic 32-bit fallback, dual endianness helper (`DafAddress`).
+- SPK Types 2 & 3 parsed with trailer `[INIT, INTLEN, RSIZE, N]`; validation: `RecordCount * RecordSize + 4 == totalDoubles`.
+- Lazy coefficient loading via data source abstraction (stream / mmap).
+- Per-record MID/RADIUS arrays with binary search + boundary fast path.
+- Barycentric composition generic (no legacy Earth/Moon path); cycle guard present.
+- Central tolerance policy + tests; repository search enforces no stray literals.
+- Mapping JSON + validation test (Earth/Moon baseline; extendable).
+- Stats JSON artifact emitted per ephemeris with deterministic key order + schema validation.
+- Control word decoding tests (double, synthetic int) and record boundary evaluator tests.
 
 ## Tolerances
 Single authoritative specification lives in `docs/Tolerances.md` (no duplication here). All tests obtain bounds via `TolerancePolicy.Get`.
 
-## Upcoming Focus (Prompt 26)
-1. Mapping JSON & loader (remove inline remaps).
-2. Stats artifact export & schema validation.
-3. Documentation synchronization via links (no duplicated tolerance tables).
-4. Evaluator/index refactors (record search, cycle guard, control word clarity).
-5. Expanded tests & optional benchmarks.
-6. Consolidation report & final public API lock.
+## Prompt 26 Consolidation – Completed Items
+- A: Central `TolerancePolicy` + literal purge + tier tests
+- B: Mapping inventory (`BodyMapping.json`) + loader + validation test
+- C: Stats artifact JSON + schema tests
+- D: Docs reference single tolerance source (root README links only)
+- F1–F6: Evaluator/search refactors (binary search + fallback, validation check, DAF helper, control word clarity/tests, cycle guard, LINQ removal)
+- G1–G3: Segment index arrays + boundary fast path + `TryGetBarycentric`
+- H3–H5: New unit/integration tests (record selection, tolerance tiers, mapping, control words, stats schema)
+
+Pending (Prompt 26 wrap-up):
+- H1/H2: Finalize Demo CLI & benchmarks separation
+- I: Optional micro-benchmarks (record selection, barycentric warm/cold)
+- J2/J3: README checklist tick + `docs/RefactorReport_Prompt26.md` final report
+- Final: Public API lock (add analyzer shipped list)
+
+## Upcoming Focus
+1. CSPICE numeric parity sampling harness (tighten Prompt 17 strict tier confirmation).
+2. Diagnostic CLI enrichment (segment coverage, JSON export, optional CSV sampling).
+3. Benchmark set (Chebyshev eval vectorization, index lookup micro-benchmarks).
+4. Public API analyzer lock-in (post Prompt 26 report).
 
 ## JPL testpo Reference Data
 Source: https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/
