@@ -32,9 +32,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 	ProjectSection(SolutionItems) = preProject
 		docs\api-scan.initial.json = docs\api-scan.initial.json
+		docs\integrationTests.md = docs\integrationTests.md
+		docs\Prompt26-ArchitectureAddendum.md = docs\Prompt26-ArchitectureAddendum.md
 		docs\Prompt26-Consolidation.md = docs\Prompt26-Consolidation.md
 		docs\PublicApiClassification.md = docs\PublicApiClassification.md
 		docs\RealSpkParsingAnalysis.md = docs\RealSpkParsingAnalysis.md
+		docs\RefactorReport_Prompt26.md = docs\RefactorReport_Prompt26.md
 		docs\SpkDafFormat.md = docs\SpkDafFormat.md
 		docs\Tolerances.md = docs\Tolerances.md
 	EndProjectSection

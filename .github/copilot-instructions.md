@@ -13,126 +13,73 @@ Build a cohesive set of narrowly-scoped C# libraries (prefer multiple small proj
      state vectors, orientations) with clear unit semantics.
   3. Offer a clean, discoverable API for: (a) loading kernels, (b) querying states (position & velocity) between bodies,
      (c) handling leap seconds & time conversions (UTC <-> TAI <-> TDB/ET), (d) performing basic frame transformations (initial minimal subset).
-  4. Embrace modern .NET 9 performance features (Span<T>, ReadOnlySpan<T>, vectorization via System.Numerics, optional SIMD intrinsics) while
-     retaining readability and SRP.
-  5. Enable rigorous automated test coverage (golden numeric comparisons vs authoritative CSPICE output for selected cases).
-  6. Provide an extensible foundation to incrementally add other kernel support (CK, PCK, DSK, etc.) later.
-
-Initial functional scope (Phase 1 / MVP):
-  - Binary SPK kernel reading (minimum necessary SPK segment types to support common planetary ephemerides: clarify subset).
-  - LSK (Leap Seconds) text kernel parsing.
-  - Direct loading of individual kernel files (meta-kernel indirection removed) via repeated `EphemerisService.Load` calls.
-  - Time system conversions: UTC <-> TAI <-> TT <-> TDB/ET using loaded leap second + analytic approximation for TT-TDB (allow pluggable refinement).
-  - Retrieval of barycentric/planet-centric state vectors for planetary bodies and major satellites from loaded kernels.
-  - Unit tests validating state retrieval vs reference values.
+  4. Embrace modern .NET 9 performance features while retaining clarity.
+  5. Maintain rigorous automated test coverage and auditable numeric tolerances.
+  6. Provide an extensible foundation for later kernel support.
 
 ============================================================
 SECTION: ARCHITECTURAL GUIDING PRINCIPLES
 ============================================================
-1. SOLID with emphasis on SRP; each class/record has a single reason to change.
-2. Immutability by default: use 'record' / 'readonly record struct' for small value types; prefer 'init' setters over constructors for aggregate configuration objects.
-3. Separation of concerns:
-   - Parsing/IO layer (kernel decoding, binary layouts, endianness, indexing) isolated from domain math & query orchestration.
-   - Domain math primitives independent of kernel format specifics.
-   - Query facade orchestrates: (a) time conversion, (b) segment selection, (c) interpolation, (d) frame assumptions.
-4. Avoid premature abstraction; introduce interfaces only when multiple implementations are plausible.
-5. Favor static extension methods for pure functional transformations (Vector math, interpolation, time scale conversions) grouped by thematic static classes.
-6. Enforce explicit units. Adopt kilometers (km) for position, km/s for velocity, seconds (SI) for durations, TDB seconds past J2000 for ephemeris time.
-7. Expose high-level API free of raw pointer semantics; encapsulate unsafe code (if needed) internally.
-8. Optimize after correctness. Provide baseline straightforward implementation with benchmarks to drive targeted optimization.
-9. Internalize incidental complexity of SPK DAF architecture; external consumers operate at semantic level: GetState(bodyId, relativeToId, Instant).
-10. Rich XML documentation on all public APIs; summary + param semantics + units + references.
+1. SOLID / SRP.
+2. Immutability by default.
+3. Strict separation: IO/parsing vs domain math vs query orchestration.
+4. Minimal necessary abstraction; interfaces only when multiple implementations are expected.
+5. Explicit units in all public APIs.
+6. Encapsulate DAF/SPK complexity; facade exposes semantic operations.
+7. Optimize after correctness; benchmark before & after.
+8. Minimal public surface (primitives + `EphemerisService`).
+9. Deterministic artifacts (stats JSON) for regression tracking.
+10. Comprehensive XML documentation.
 
 ============================================================
-SECTION: PROPOSED PROJECT STRUCTURE (INITIAL)
+SECTION: PROJECT STRUCTURE
 ============================================================
 Solution: SpiceNet.sln
-
-Projects (all target net9.0):
-  1. Spice.Core
-  2. Spice.IO
-  3. Spice.Kernels
-  4. Spice.Ephemeris
-  5. Spice.Tests
-  6. (Optional) Spice.Benchmarks
+Projects (net9.0): Core, IO, Kernels, Ephemeris, Tests, IntegrationTests, Benchmarks (optional), Console.Demo.
 
 ============================================================
-SECTION: CODING CONVENTIONS / STYLE ALIGNMENT
+SECTION: CODING CONVENTIONS
 ============================================================
-Honor existing .editorconfig:
-  - Indent size 2 spaces, file-scoped namespaces, expression-bodied members where allowed.
-  - Use predefined types (int, double) & pattern matching features.
-  - Prefer readonly fields & struct immutability.
-  - Favor 'readonly record struct' for small vector/matrix/instant types.
-  - Use 'checked' context only where overflow risk requires detection.
-  - Avoid unnecessary heap allocations; prefer Span/ReadOnlySpan for transient buffers.
-  - Central Package Management (CPM) via Directory.Packages.props for all NuGet versions; individual project files must omit Version attributes.
-  - After any automated edits the agent MUST build (dotnet build) and run tests (dotnet test); failures must be fixed before responding completion.
-  - Implicit usings are enabled; do NOT add explicit using directives for namespaces already covered by implicit usings unless required for disambiguation.
-  - Prefer collection expressions / collection initializers (e.g., `[1.0, 2.0]`, `[]`, or `new() { ... }`).
-  - When porting logic directly from a CSPICE C source file, add header comment: `// CSPICE Port Reference: <relative-path>` else mark as original design.
-  - For performance-sensitive parsing, prefer Span<T>, MemoryMarshal, and (when justified) internal unsafe blocks guarded by benchmarks.
-  - All new public APIs require XML docs and explicit unit tests.
+(Refer to .editorconfig; summarized previously – unchanged.)
 
 ============================================================
-SECTION: DOMAIN MODEL (INITIAL SKETCH)
+SECTION: SEQUENTIAL PROMPTS (PHASE 2)
 ============================================================
-(unchanged for brevity)
+Status Legend: ? Completed | ? Pending | ? Optional
 
-============================================================
-SECTION: SEQUENTIAL PROMPTS FOR COPILOT AGENT (PHASE 1 COMPLETED)
-============================================================
-PROMPT 1 .. PROMPT 12 (Completed) — see Git history & tests.
+| Prompt | Title | Status | Notes |
+|--------|-------|--------|-------|
+| 13 | Full DAF Reader | ? | Endianness + summaries + names + control words |
+| 14 | Real SPK Multi-Record | ? | Types 2/3 trailer & per-record MID/RADIUS |
+| 15 | EphemerisDataSource (Lazy/MM) | ? | Stream vs memory-map abstraction |
+| 16 | testpo Integration | ? | Parser + mapping JSON + comparisons |
+| 17 | Tolerance Golden Tests | ? | Policy tiers + stats JSON artifact |
+| 18 | Segment Indexing | ? | Binary search + boundary fast path |
+| 19 | Extended TT->TDB Model | ? | Pluggable offset strategy (basic vs extended harmonics) |
+| 20 | Body/Frame Metadata Loader | ? | Minimal FK/PCK subset |
+| 21 | Diagnostic CLI Enrichment | ? | Public facade only tooling |
+| 22 | CI Workflow | ? | Build/test + artifact publish |
+| 23 | Pluggable Time Strategies | ? | ILeapSecondProvider / ITdbOffsetModel refactor |
+| 24 | Structured Logging | ? | Segment selection trace |
+| 25 | Perf Consolidation | ? | SIMD Chebyshev + pooling + perf report |
+| 26 | Consolidation | ? | Tolerances, mapping, stats, docs, meta-kernel removal |
 
-============================================================
-SECTION: NEXT PHASE ROADMAP (PHASE 2: REAL KERNEL SUPPORT)
-============================================================
-PROMPT 13:
-"Implement full DAF low-level reader capable of traversing record directory (forward/backward pointers), summary & name records, supporting big/little endianness detection. Expose enumerator for arrays (segments) with raw address ranges. Add robust validation & tests using a minimal handcrafted true DAF structure (not synthetic header shortcut)."
-
-PROMPT 14:
-"Enhance real SPK loader to consume multi-record segments: parse segment descriptor (DC + IC components), handle multiple records per segment (directory of coefficient records), and support Types 2 & 3 with scaling factors (MID, RADIUS) stored in each record."
-
-PROMPT 15:
-"Introduce EphemerisDataSource abstraction allowing: (a) Stream, (b) MemoryMapped file. Provide async open methods. Update EphemerisService to lazily map SPK coefficients (no full materialization) using spans over a shared byte buffer / memory-mapped accessor."
-
-PROMPT 16:
-"Integrate JPL 'testpo' reference data for integration tests; implement parser and comparison harness (AU-domain)."
-
-PROMPT 17:
-"Add tolerance-based golden tests vs testpo using centralized tolerance policy; emit stats artifact (JSON)."
-
-PROMPT 18:
-"Implement segment indexing / binary search + boundary fast path for O(log n) lookup."
-
-PROMPT 19–25:
-Performance & fidelity enhancements (advanced TT->TDB model, logging, benchmarks, additional segment types) — deferred.
-
-PROMPT 26:
-"Consolidation: tolerance/constant unification, mapping inventory, stats artifact, doc synchronization, quality gates, evaluator/index refinements, public API lock prep, removal of meta-kernel indirection."
+Post-Consolidation Sub-Prompts:
+| Prompt | Description | Status | Priority |
+|--------|-------------|--------|----------|
+| 26B | Public API Analyzer Baseline (API Lock) | ? | High |
+| 26C | Diagnostic CLI Audit (H1) ensure public-only | ? | High |
+| 26D | Micro Benchmarks (record selection, barycentric warm/cold) | ? | Optional |
 
 ============================================================
-SECTION: DATA SOURCES & TEST FIXTURES GUIDELINES
+SECTION: PROMPT 19 IMPLEMENTATION SUMMARY
 ============================================================
-- Real kernel fixtures SHOULD be the smallest public-domain slices sufficient for tests (time-window truncated). Provide scripts (not large binaries) when possible.
-- 'testpo' reference files: store curated subset only (few epochs per planet) with source citation.
-- Never commit large proprietary or license-restricted kernels.
+Added pluggable TT->TDB offset model inside `TimeConversionService` with interface `ITdbOffsetModel` and two strategies: basic (2-term) and extended (adds 3rd & 4th harmonics). Default remains basic to preserve prior behavior; switching models resets J2000 alignment.
 
 ============================================================
-SECTION: VALIDATION & ERROR BUDGET
+SECTION: NEXT RECOMMENDED STEP
 ============================================================
-- Target double-precision parity vs CSPICE; investigate systematic deviation > 1e-10 relative.
-- Document known approximations (current TT->TDB series order, ignored frame transformations) in README.
-- Relative states resolved generically via SSB composition.
-- Public API baseline enforced locally (analyzer lock at end of Prompt 26).
-
-============================================================
-SECTION: CONTRIBUTION WORKFLOW (UPDATED NOTES)
-============================================================
-- For each new prompt (13+), update README roadmap and tick completed items.
-- Benchmarks must run locally before merging performance-related PRs; include summary in PR description.
-- During Prompt 26, ensure all tolerance literals are centralized and docs synchronized.
-- Load kernels directly: call `EphemerisService.Load("file.tls")`, `Load("file.bsp")` multiple times (meta-kernel removed).
+Proceed to Prompt 20 (Body/Frame Metadata Loader) after completing diagnostics audit (26C) if tooling requires frame name resolution; otherwise implement minimal FK/PCK parser returning radii & frame name map (internal) + tests.
 
 ============================================================
 END OF MANIFEST

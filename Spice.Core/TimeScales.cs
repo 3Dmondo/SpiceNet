@@ -57,6 +57,47 @@ internal static partial class TimeConversionService
   static bool _tdbOffsetInitialized;
   static double _deltaTdbAtJ2000; // periodic term value at J2000 (removed to keep epoch alignment)
 
+  static ITdbOffsetModel _offsetModel = new BasicTdbOffsetModel();
+  static ITdbOffsetModel _basicModel = new BasicTdbOffsetModel();
+  static ITdbOffsetModel _extendedModel = new ExtendedTdbOffsetModel();
+
+  interface ITdbOffsetModel
+  {
+    double GetOffsetSeconds(double ttSecondsSinceJ2000);
+  }
+
+  sealed class BasicTdbOffsetModel : ITdbOffsetModel
+  {
+    public double GetOffsetSeconds(double ttSecondsSinceJ2000)
+    {
+      double jdTt = JD_J2000 + ttSecondsSinceJ2000 / SecondsPerDay;
+      double daysFromJ2000 = jdTt - JD_J2000;
+      double gDeg = G0 + G_RATE * daysFromJ2000;
+      double g = gDeg * Deg2Rad;
+      return TERM1 * Math.Sin(g) + TERM2 * Math.Sin(2 * g); // seconds
+    }
+  }
+
+  sealed class ExtendedTdbOffsetModel : ITdbOffsetModel
+  {
+    // Higher-order tiny periodic terms + optional quadratic drift placeholder (currently zero)
+    const double TERM3 = 0.000000165;   // seconds * sin(3g)
+    const double TERM4 = 0.000000001;   // seconds * sin(4g)
+    public double GetOffsetSeconds(double ttSecondsSinceJ2000)
+    {
+      double jdTt = JD_J2000 + ttSecondsSinceJ2000 / SecondsPerDay;
+      double daysFromJ2000 = jdTt - JD_J2000;
+      double gDeg = G0 + G_RATE * daysFromJ2000;
+      double g = gDeg * Deg2Rad;
+      return TERM1 * Math.Sin(g)
+           + TERM2 * Math.Sin(2 * g)
+           + TERM3 * Math.Sin(3 * g)
+           + TERM4 * Math.Sin(4 * g);
+    }
+  }
+
+  internal enum TdbOffsetModel { Basic, Extended }
+
   /// <summary>Install leap second kernel for subsequent conversions.</summary>
   public static void SetLeapSeconds(LskKernel kernel)
   {
@@ -98,14 +139,15 @@ internal static partial class TimeConversionService
   /// <summary>Convert UTC to TT seconds since J2000 (relative), constant 32.184s cancels in relative measure so identical to TAI value.</summary>
   public static double UtcToTtSecondsSinceJ2000(DateTimeOffset utc) => UtcToTaiSecondsSinceJ2000(utc);
 
-  static double ComputePeriodicDelta(double ttSecondsSinceJ2000)
+  /// <summary>Configure which analytic TT->TDB offset model to use (basic 2-term or extended multi-term). Defaults to Basic.</summary>
+  public static void ConfigureTdbOffsetModel(TdbOffsetModel model)
   {
-    double jdTt = JD_J2000 + ttSecondsSinceJ2000 / SecondsPerDay;
-    double daysFromJ2000 = jdTt - JD_J2000;
-    double gDeg = G0 + G_RATE * daysFromJ2000; // mean anomaly of the Sun
-    double g = gDeg * Deg2Rad;
-    return TERM1 * Math.Sin(g) + TERM2 * Math.Sin(2 * g); // seconds
+    _offsetModel = model == TdbOffsetModel.Basic ? _basicModel : _extendedModel;
+    // Force re-alignment computation so J2000 offset stays zero across model changes.
+    _tdbOffsetInitialized = false;
   }
+
+  static double ComputePeriodicDelta(double ttSecondsSinceJ2000) => _offsetModel.GetOffsetSeconds(ttSecondsSinceJ2000);
 
   /// <summary>
   /// Approximate TT->TDB conversion adding periodic relativistic terms. Accuracy ~<2 ms, suitable for many ephemeris uses.

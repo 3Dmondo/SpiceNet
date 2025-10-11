@@ -1,6 +1,7 @@
 using System.Buffers.Binary;
 using System.Reflection;
 using Shouldly;
+using Spice.IO;
 
 namespace Spice.Tests;
 
@@ -33,30 +34,12 @@ public class FullDafReaderControlWordTests
 
   static (List<(double[] Dc,int[] Ic,string Name,int InitialAddress,int FinalAddress)> Segs, int Nd, int Ni) Enumerate(Stream stream)
   {
-    var ioAsm = AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetName().Name == "Spice.IO");
-    var readerType = ioAsm.GetType("Spice.IO.FullDafReader", throwOnError:true)!;
-    var open = readerType.GetMethod("Open", BindingFlags.NonPublic|BindingFlags.Static | BindingFlags.Public)!;
-    var readerObj = open.Invoke(null, new object[]{stream, true})!; // leaveOpen=true so stream not disposed
-    try
-    {
-      var ndProp = readerType.GetProperty("Nd", BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public)!;
-      var niProp = readerType.GetProperty("Ni", BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public)!;
-      int nd = (int)ndProp.GetValue(readerObj)!;
-      int ni = (int)niProp.GetValue(readerObj)!;
-      var enumMeth = readerType.GetMethod("EnumerateSegments", BindingFlags.Instance|BindingFlags.NonPublic | BindingFlags.Public)!;
-      var enumerable = (System.Collections.IEnumerable)enumMeth.Invoke(readerObj, Array.Empty<object>())!;
-      var list = new List<(double[] Dc,int[] Ic,string Name,int InitialAddress,int FinalAddress)>();
-      foreach (var item in enumerable)
-      {
-        if (item is ValueTuple<double[],int[],string,int,int> t)
-          list.Add((t.Item1, t.Item2, t.Item3, t.Item4, t.Item5));
-      }
-      return (list, nd, ni);
-    }
-    finally
-    {
-      if (readerObj is IDisposable d) d.Dispose();
-    }
+    using var reader = FullDafReader.Open(stream, leaveOpen:true);
+    var list = new List<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)>();
+
+    foreach (var seg in reader.EnumerateSegments())
+      list.Add((seg.Dc, seg.Ic, seg.Name, seg.InitialAddress, seg.FinalAddress));
+    return (list, reader.Nd, reader.Ni);
   }
 
   static MemoryStream BuildMinimalDaf(bool syntheticControlWords)
