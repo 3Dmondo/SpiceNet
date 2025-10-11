@@ -1,4 +1,4 @@
-// CSPICE Port Reference: NAIF DAF Required Reading (conceptual) ? implementation is original managed design focused on
+// CSPICE Port Reference: NAIF DAF Required Reading (conceptual) – implementation is original managed design focused on
 // required subset (summary + name record traversal). This reader follows the DAF record model: file record, optional
 // reserved/comment records (ignored), then a doubly linked list of summary/name record pairs. Control words (NEXT, PREV,
 // NSUM) in summary records are stored as double precision values per spec. Synthetic unit tests originally wrote them
@@ -9,11 +9,22 @@ using System.Text;
 
 namespace Spice.IO;
 
+internal static class DafAddress
+{
+  internal const int RecordBytes = 1024;
+  internal const int WordBytes = 8;
+  internal const int WordsPerRecord = RecordBytes / WordBytes; // 128
+  internal static long RecordToByte(int recordNumber) => (long)(recordNumber - 1) * RecordBytes;
+  internal static long WordToByte(long wordAddress)
+  {
+    long recordIndex = (wordAddress - 1L) / WordsPerRecord; // 0-based
+    int wordInRecord = (int)((wordAddress - 1L) % WordsPerRecord);
+    return recordIndex * RecordBytes + (long)wordInRecord * WordBytes;
+  }
+}
+
 internal sealed class FullDafReader : IDisposable
 {
-  const int RecordBytes = 1024;
-  const int WordBytes = 8;
-  const int WordsPerRecord = RecordBytes / WordBytes; // 128
   const int SegmentNameLength = 40; // NC for ND=2, NI=6 (SPK typical)
 
   readonly Stream _stream;
@@ -46,8 +57,8 @@ internal sealed class FullDafReader : IDisposable
     if (!stream.CanRead || !stream.CanSeek)
       throw new ArgumentException("Stream must be seekable & readable", nameof(stream));
     stream.Seek(0, SeekOrigin.Begin);
-    Span<byte> fileRec = stackalloc byte[RecordBytes];
-    if (stream.Read(fileRec) != RecordBytes)
+    Span<byte> fileRec = stackalloc byte[DafAddress.RecordBytes];
+    if (stream.Read(fileRec) != DafAddress.RecordBytes)
       throw new EndOfStreamException();
 
     string idWord = Encoding.ASCII.GetString(fileRec[..8]);
@@ -106,7 +117,7 @@ internal sealed class FullDafReader : IDisposable
     if (FirstSummaryRecord <= 2)
       return Array.Empty<string>();
     var list = new List<string>();
-    Span<byte> buf = stackalloc byte[RecordBytes];
+    Span<byte> buf = stackalloc byte[DafAddress.RecordBytes];
     Span<byte> lineBuf = stackalloc byte[CommentSizePerRecord];
     int linePos = 0;
     for (int rec = 2; rec < FirstSummaryRecord; rec++)
@@ -143,14 +154,14 @@ internal sealed class FullDafReader : IDisposable
 
   (List<SegmentRaw> summaries, int next) ReadSummaryRecord(int recordNumber)
   {
-    byte[] summaryBuf = new byte[RecordBytes];
-    byte[] nameBuf = new byte[RecordBytes];
+    byte[] summaryBuf = new byte[DafAddress.RecordBytes];
+    byte[] nameBuf = new byte[DafAddress.RecordBytes];
     ReadRecord(recordNumber, summaryBuf);
 
-    int next = ReadControlWord(summaryBuf, 0);
-    int prev = ReadControlWord(summaryBuf, 1);
+    int next = ReadControlWord(summaryBuf, 0);      // NEXT pointer (record number or 0)
+    int prev = ReadControlWord(summaryBuf, 1);      // PREV pointer (unused here)
     _ = prev;
-    int nsum = ReadControlWord(summaryBuf, 2);
+    int nsum = ReadControlWord(summaryBuf, 2);      // Number of summaries
 
     if (nsum <= 0)
       return (new List<SegmentRaw>(), next);
@@ -158,20 +169,20 @@ internal sealed class FullDafReader : IDisposable
       throw new InvalidDataException("NSUM unrealistic");
 
     int summaryWordSpan = Nd + ((Ni + 1) / 2);
-    int capacityWords = WordsPerRecord - 3;
+    int capacityWords = DafAddress.WordsPerRecord - 3; // after control words
     if (summaryWordSpan * nsum > capacityWords)
       throw new InvalidDataException("Summary record overflow");
 
     ReadRecord(recordNumber + 1, nameBuf);
 
     var list = new List<SegmentRaw>(nsum);
-    int wordIndex = 3;
+    int wordIndex = 3; // skip control words
     for (int i = 0; i < nsum; i++)
     {
       double[] dc = new double[Nd];
       for (int d = 0; d < Nd; d++)
       {
-        int offsetBytes = wordIndex * WordBytes;
+        int offsetBytes = wordIndex * DafAddress.WordBytes;
         dc[d] = ReadDouble(summaryBuf, offsetBytes, _isLittleEndian);
         wordIndex++;
       }
@@ -180,16 +191,14 @@ internal sealed class FullDafReader : IDisposable
       int icPos = 0;
       while (remaining > 0)
       {
-        int offsetBytes = wordIndex * WordBytes;
-        var word = summaryBuf.AsSpan(offsetBytes, 8);
+        int offsetBytes = wordIndex * DafAddress.WordBytes;
+        var word = summaryBuf.AsSpan(offsetBytes, DafAddress.WordBytes);
         int a = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(word[..4]) : BinaryPrimitives.ReadInt32BigEndian(word[..4]);
-        ic[icPos++] = a;
-        remaining--;
+        ic[icPos++] = a; remaining--;
         if (remaining > 0)
         {
           int b = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(word.Slice(4, 4)) : BinaryPrimitives.ReadInt32BigEndian(word.Slice(4, 4));
-          ic[icPos++] = b;
-          remaining--;
+          ic[icPos++] = b; remaining--;
         }
         wordIndex++;
       }
@@ -207,12 +216,19 @@ internal sealed class FullDafReader : IDisposable
 
   int ReadControlWord(byte[] record, int controlWordIndex)
   {
-    int byteOffset = controlWordIndex * WordBytes;
-    var span = record.AsSpan(byteOffset, 8);
+    // Control words SHOULD be stored as IEEE double precision integers (exact integer representable values).
+    // Early synthetic test data wrote them as raw 32-bit ints occupying the low (or high, depending on endian) 4 bytes
+    // with zero in the other 4 bytes. We support both encodings:
+    //  1. Synthetic form: other 4 bytes are zero -> treat present 32-bit int as the value.
+    //  2. Standard form: interpret full 8 bytes as double; if it is very close to an int, use that integer.
+    //  3. Fallback: return low 32-bit word (defensive) if double form not integral.
+    int byteOffset = controlWordIndex * DafAddress.WordBytes;
+    var span = record.AsSpan(byteOffset, DafAddress.WordBytes);
     int low = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(span[..4]) : BinaryPrimitives.ReadInt32BigEndian(span.Slice(4, 4));
     int high = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(span.Slice(4, 4)) : BinaryPrimitives.ReadInt32BigEndian(span[..4]);
     if (high == 0 && low != 0)
-      return low;
+      return low; // synthetic 32-bit encoding
+
     double dv = ReadDouble(record, byteOffset, _isLittleEndian);
     if (!double.IsNaN(dv) && Math.Abs(dv) < int.MaxValue)
     {
@@ -220,16 +236,16 @@ internal sealed class FullDafReader : IDisposable
       if (Math.Abs(dv - lv) < 1e-12)
         return (int)lv;
     }
-    return low;
+    return low; // conservative fallback
   }
 
   void ReadRecord(int recordNumber, Span<byte> destination)
   {
-    long offset = (long)(recordNumber - 1) * RecordBytes;
-    if (recordNumber <= 0 || offset + RecordBytes > _stream.Length)
+    long offset = DafAddress.RecordToByte(recordNumber);
+    if (recordNumber <= 0 || offset + DafAddress.RecordBytes > _stream.Length)
       throw new InvalidDataException($"Record {recordNumber} out of range");
     _stream.Seek(offset, SeekOrigin.Begin);
-    if (_stream.Read(destination) != RecordBytes)
+    if (_stream.Read(destination) != DafAddress.RecordBytes)
       throw new EndOfStreamException();
   }
 

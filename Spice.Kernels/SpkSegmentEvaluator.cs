@@ -34,13 +34,7 @@ internal static class SpkSegmentEvaluator
       };
     }
 
-    int recIndex = -1;
-    for (int i = 0; i < seg.RecordCount; i++)
-    {
-      double mid = seg.RecordMids[i];
-      double rad = seg.RecordRadii[i];
-      if (et >= mid - rad && et <= mid + rad) { recIndex = i; break; }
-    }
+    int recIndex = LocateRecord(seg.RecordMids, seg.RecordRadii, seg.RecordCount, et);
     if (recIndex < 0)
       throw new InvalidOperationException("No record covers the requested epoch (gap in segment records).");
 
@@ -53,7 +47,7 @@ internal static class SpkSegmentEvaluator
     if (!seg.Lazy)
     {
       int per = seg.RecordSizeDoubles;
-      int offset = recIndex * per + 2;
+      int offset = recIndex * per + 2; // skip MID/RADIUS
       var block = seg.Coefficients.AsSpan(offset, seg.ComponentsPerSet * n1);
       return seg.DataType switch
       {
@@ -70,7 +64,7 @@ internal static class SpkSegmentEvaluator
       if (scratch.Length < coeffCount)
         Scratch.Value = scratch = new double[coeffCount];
       long recordStartAddress = seg.DataSourceInitialAddress + recIndex * (long)seg.RecordSizeDoubles;
-      long coeffStartAddress = recordStartAddress + 2;
+      long coeffStartAddress = recordStartAddress + 2; // skip MID/RADIUS
       seg.DataSource.ReadDoubles(coeffStartAddress, scratch.AsSpan(0, coeffCount));
       var coeffSpan = scratch.AsSpan(0, coeffCount);
       return seg.DataType switch
@@ -80,6 +74,29 @@ internal static class SpkSegmentEvaluator
         _ => throw new NotSupportedException($"Unsupported data type {seg.DataType} in evaluator")
       };
     }
+  }
+
+  static int LocateRecord(double[] mids, double[] radii, int count, double et)
+  {
+    // Binary search on mids to find closest candidate then local scan.
+    int lo = 0, hi = count - 1;
+    while (lo <= hi)
+    {
+      int midIndex = (int)((uint)(lo + hi) >> 1);
+      double mid = mids[midIndex];
+      double rad = radii[midIndex];
+      if (et < mid - rad) { hi = midIndex - 1; continue; }
+      if (et > mid + rad) { lo = midIndex + 1; continue; }
+      return midIndex; // inside interval
+    }
+    // Not inside interval of exact bsearch candidate; check nearest neighbors (lo and hi) just in case of slight ordering anomalies.
+    if (lo >= 0 && lo < count && et >= mids[lo] - radii[lo] && et <= mids[lo] + radii[lo]) return lo;
+    if (hi >= 0 && hi < count && et >= mids[hi] - radii[hi] && et <= mids[hi] + radii[hi]) return hi;
+
+    // Fallback linear scan (should be rare; defensive if ordering assumptions broken)
+    for (int i = 0; i < count; i++)
+      if (et >= mids[i] - radii[i] && et <= mids[i] + radii[i]) return i;
+    return -1;
   }
 
   static StateVector EvaluateType2Single(SpkSegment seg, double tau, double radius)

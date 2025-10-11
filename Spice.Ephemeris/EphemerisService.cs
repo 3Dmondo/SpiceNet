@@ -41,6 +41,16 @@ public sealed class EphemerisService : IDisposable
     public bool TryLocate(double et, out SpkSegment? seg)
     {
       int idx = Array.BinarySearch(Starts, et);
+      if (idx >= 0)
+      {
+        // Fast path: exact start time match; walk forward to latest segment starting at this ET covering ET.
+        for (int j = idx; j < Segments.Length && Segments[j].StartTdbSec == et; j++)
+        {
+          var cand = Segments[j];
+            if (et <= cand.StopTdbSec) { seg = cand; return true; }
+        }
+        // Fallback to precedence scan below if not covered.
+      }
       if (idx < 0) idx = ~idx - 1; // greatest start <= et
       for (int i = idx; i >=0; i--)
       {
@@ -164,6 +174,10 @@ public sealed class EphemerisService : IDisposable
     state = default; return false;
   }
 
+  /// <summary>Convenience: attempt barycentric state (body relative to SSB=0). Returns false if no path.</summary>
+  internal bool TryGetBarycentric(BodyId body, Instant t, out StateVector state)
+    => TryResolveBarycentric(body.Value, t, out state);
+
   /// <summary>
   /// Attempt to compute state(target, center) via barycentric composition: state(t,c)=state(t,0)-state(c,0).
   /// Requires both bodies resolvable to SSB (0). Returns false if either cannot be resolved (no traversal path).
@@ -187,9 +201,12 @@ public sealed class EphemerisService : IDisposable
     state = default; return false;
   }
 
-  bool TryResolveBarycentric(int body, Instant t, out StateVector state)
+  bool TryResolveBarycentric(int body, Instant t, out StateVector state) => TryResolveBarycentric(body, t, new HashSet<int>(), out state);
+
+  bool TryResolveBarycentric(int body, Instant t, HashSet<int> visited, out StateVector state)
   {
     if (body == 0) { state = StateVector.Zero; return true; }
+    if (!visited.Add(body)) { state = default; return false; } // cycle guard
     var key = (body, t.TdbSecondsFromJ2000);
     if (_baryCache.TryGetValue(key, out state)) return true;
 
@@ -207,7 +224,7 @@ public sealed class EphemerisService : IDisposable
     {
       if (cand.Center.Value == body) continue; // avoid self-loop
       var partial = SpkSegmentEvaluator.EvaluateState(cand, t); // state(body, center)
-      if (TryResolveBarycentric(cand.Center.Value, t, out var centerBary))
+      if (TryResolveBarycentric(cand.Center.Value, t, visited, out var centerBary))
       {
         state = partial.Add(centerBary);
         _baryCache[key] = state; return true;

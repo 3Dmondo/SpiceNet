@@ -63,10 +63,12 @@ G. Service & Index Improvements
   G2. Fast path for exact segment boundary epoch.
   G3. Convenience `TryGetBarycentric` for diagnostics/tests.
 
-H. Testing Enhancements
-  H1. Unit tests: record boundary selection, tolerance tiers, mapping loader, control word edge cases.
-  H2. Integration test ensuring removal of legacy Earth/Moon path does not regress deltas beyond legacy tier.
-  H3. Snapshot-style structure test for stats JSON (ignoring numeric values).
+H. Testing & Tooling Adjustments
+  H1. Relocate original diagnostic CLI (previously in `Spice.Benchmarks`) into new `Spice.Console.Demo` project using ONLY public APIs; strip internal segment/comment inspection (future diagnostic surface TBD).
+  H2. Convert `Spice.Benchmarks` back to pure BenchmarkDotNet harness (placeholder until performance tasks resume).
+  H3. Unit tests: record boundary selection, tolerance tiers, mapping loader, control word edge cases.
+  H4. Integration test ensuring removal of legacy Earth/Moon path does not regress deltas beyond legacy tier.
+  H5. Snapshot-style structure test for stats JSON (ignoring numeric values).
 
 I. Benchmark Updates (Optional)
   I1. Record selection (binary vs linear) micro-benchmark.
@@ -96,6 +98,7 @@ J. Housekeeping
 - Binary search record selection passes existing & new evaluator tests.
 - Control word tests cover native, synthetic, invalid branches.
 - Public API unchanged post Phase 0 until final lock; final gate added at end.
+- Diagnostic CLI successfully relocated; benchmarks project free of ad-hoc CLI logic.
 
 ## Risks & Mitigations
 | Risk | Mitigation |
@@ -106,6 +109,7 @@ J. Housekeeping
 | Binary search incorrect radius assumption | Fallback to linear when non-uniform spacing detected |
 | Control word regression | Dedicated unit test suite |
 | Cycle in barycentric chain | Visited set guard |
+| Diagnostic tool needs internal data | Future narrow public diagnostic API rather than internal leakage |
 
 ## Follow-Up (Feeds Later Prompts)
 - Stats JSON seeds regression tracking.
@@ -116,7 +120,7 @@ J. Housekeeping
 
 ## Implementation Order Suggestion
 0. Phase 0 (Completed)
-1. A (constants/tolerance centralization) ? 2. B (mapping) ? 3. D (doc sync) ? 4. C (stats artifact) ? 5. F/G (refactors) ? 6. H (tests) ? 7. I (benchmarks) ? 8. J (report) ? Final verification & public API lock.
+1. A (constants/tolerance centralization) ? 2. B (mapping) ? 3. D (doc sync via links) ? 4. C (stats artifact) ? 5. F/G (refactors) ? 6. H (tooling/tests relocation) ? 7. I (benchmarks) ? 8. J (report) ? Final verification & public API lock.
 
 ## Success Metric
 Net deletion > addition for duplicated literals & doc redundancy; coverage stable or improved; benchmarks show no >5% regression in state queries; tolerance policy changes auditable via single source file.
