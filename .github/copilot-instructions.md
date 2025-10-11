@@ -1,4 +1,4 @@
-# Copilot Shared Instruction Manifest (.mf)
+﻿# Copilot Shared Instruction Manifest (.mf)
 # Purpose: Provide consistent high-level context and quality constraints for porting a subset of NAIF CSPICE toolkit
 # into a modern, maintainable, testable .NET 9 / C# 14 multi-library ecosystem focused on reading JPL ephemerides
 # (text and binary kernels) and exposing precise solar system body state data.
@@ -40,36 +40,37 @@ Projects (net9.0): Core, IO, Kernels, Ephemeris, Tests, IntegrationTests, Benchm
 ============================================================
 SECTION: CODING CONVENTIONS
 ============================================================
-(Refer to .editorconfig; summarized previously � unchanged.)
+(Refer to .editorconfig; summarized previously – unchanged.)
 
 ============================================================
 SECTION: SEQUENTIAL PROMPTS (PHASE 2)
 ============================================================
-Status Legend: ? Completed | ? Pending | ? Optional
+Status Legend: ✅ Completed | ▶ Pending | ⭕ Optional
 
 | Prompt | Title | Status | Notes |
 |--------|-------|--------|-------|
-| 13 | Full DAF Reader | ? | Endianness + summaries + names + control words |
-| 14 | Real SPK Multi-Record | ? | Types 2/3 trailer & per-record MID/RADIUS |
-| 15 | EphemerisDataSource (Lazy/MM) | ? | Stream vs memory-map abstraction |
-| 16 | testpo Integration | ? | Parser + mapping JSON + comparisons |
-| 17 | Tolerance Golden Tests | ? | Policy tiers + stats JSON artifact |
-| 18 | Segment Indexing | ? | Binary search + boundary fast path |
-| 19 | Extended TT->TDB Model | ? | Pluggable offset strategy (basic vs extended harmonics) |
-| 20 | Body/Frame Metadata Loader | ? | Minimal FK/PCK subset |
-| 21 | Diagnostic CLI Enrichment | ? | Public facade only tooling |
-| 22 | CI Workflow | ? | Build/test + artifact publish |
-| 23 | Pluggable Time Strategies | ? | ILeapSecondProvider / ITdbOffsetModel refactor |
-| 24 | Structured Logging | ? | Segment selection trace |
-| 25 | Perf Consolidation | ? | SIMD Chebyshev + pooling + perf report |
-| 26 | Consolidation | ? | Tolerances, mapping, stats, docs, meta-kernel removal |
+| 13 | Full DAF Reader | ✅ | Endianness + summaries + names + control words |
+| 14 | Real SPK Multi-Record | ✅ | Types 2/3 trailer & per-record MID/RADIUS |
+| 15 | EphemerisDataSource (Lazy/MM) | ✅ | Stream vs memory-map abstraction |
+| 16 | testpo Integration | ✅ | Parser + mapping JSON + comparisons |
+| 17 | Tolerance Golden Tests | ✅ | Policy tiers + stats JSON artifact |
+| 18 | Segment Indexing | ✅ | Binary search + boundary fast path |
+| 19 | Extended TT->TDB Model | ✅ | Pluggable offset strategy (basic vs extended harmonics) |
+| 20 | Body/Frame Metadata Loader | ▶ | Minimal FK/PCK subset |
+| 21 | Diagnostic CLI Enrichment | ▶ | Public facade only tooling |
+| 22 | CI Workflow | ▶ | Build/test + artifact publish |
+| 23 | Pluggable Time Strategies | ▶ | ILeapSecondProvider / ITdbOffsetModel refactor |
+| 24 | Structured Logging | ▶ | Segment selection trace |
+| 25 | Perf Consolidation | ▶ | SIMD Chebyshev + pooling + perf report |
+| 26 | Consolidation | ✅ | Tolerances, mapping, stats, docs, meta-kernel removal |
 
 Post-Consolidation Sub-Prompts:
+
 | Prompt | Description | Status | Priority |
 |--------|-------------|--------|----------|
-| 26B | Public API Analyzer Baseline (API Lock) | ? | High |
-| 26C | Diagnostic CLI Audit (H1) ensure public-only | ? | High |
-| 26D | Micro Benchmarks (record selection, barycentric warm/cold) | ? | Optional |
+| 26B | Public API Analyzer Baseline (API Lock) | ✅ | High |
+| 26C | Diagnostic CLI Audit (H1) ensure public-only | ▶ | High |
+| 26D | Micro Benchmarks (record selection, barycentric warm/cold) | ⭕ | Optional |
 
 ============================================================
 SECTION: PROMPT 19 IMPLEMENTATION SUMMARY
