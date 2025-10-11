@@ -8,7 +8,7 @@ namespace Spice.IO;
 /// Abstraction over ephemeris coefficient storage enabling lazy, zero-copy (memory-mapped) or streamed
 /// access to SPK element data addressed by 1-based DAF double word addresses.
 /// </summary>
-public interface IEphemerisDataSource : IDisposable
+internal interface IEphemerisDataSource : IDisposable
 {
   double ReadDouble(long address1Based);
   void ReadDoubles(long address1Based, Span<double> destination);
@@ -104,11 +104,11 @@ internal sealed class MemoryMappedEphemerisDataSource : IEphemerisDataSource
 }
 
 /// <summary>Factory helpers.</summary>
-public static class EphemerisDataSource
+internal static class EphemerisDataSource
 {
-  public static IEphemerisDataSource FromStream(Stream stream, bool littleEndian, bool leaveOpen=false) => new StreamEphemerisDataSource(stream, littleEndian, leaveOpen);
-  public static IEphemerisDataSource MemoryMapped(string filePath, bool littleEndian) => new MemoryMappedEphemerisDataSource(filePath, littleEndian);
-  public static ValueTask<IEphemerisDataSource> FromStreamAsync(string filePath, bool littleEndian, bool memoryMap=false, CancellationToken ct=default)
+  internal static IEphemerisDataSource FromStream(Stream stream, bool littleEndian, bool leaveOpen=false) => new StreamEphemerisDataSource(stream, littleEndian, leaveOpen);
+  internal static IEphemerisDataSource MemoryMapped(string filePath, bool littleEndian) => new MemoryMappedEphemerisDataSource(filePath, littleEndian);
+  internal static ValueTask<IEphemerisDataSource> FromStreamAsync(string filePath, bool littleEndian, bool memoryMap=false, CancellationToken ct=default)
   {
     if (memoryMap)
       return ValueTask.FromResult<IEphemerisDataSource>(MemoryMapped(filePath, littleEndian));

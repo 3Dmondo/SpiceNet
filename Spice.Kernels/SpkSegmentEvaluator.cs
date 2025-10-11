@@ -11,12 +11,11 @@ namespace Spice.Kernels;
 ///  - Real multi-record segments (Phase 2) using per-record MID/RADIUS scaling values.
 ///  - Lazy multi-record segments where coefficient records are fetched on-demand from an <see cref="IEphemerisDataSource"/>.
 /// </summary>
-public static class SpkSegmentEvaluator
+internal static class SpkSegmentEvaluator
 {
   static readonly ThreadLocal<double[]> Scratch = new(() => Array.Empty<double>());
 
-  /// <summary>Evaluate state at epoch <paramref name="t"/> (TDB seconds since J2000) for the supplied segment.</summary>
-  public static StateVector EvaluateState(SpkSegment seg, Instant t)
+  internal static StateVector EvaluateState(SpkSegment seg, Instant t)
   {
     double et = t.TdbSecondsFromJ2000;
     if (et < seg.StartTdbSec || et > seg.StopTdbSec)
@@ -24,7 +23,6 @@ public static class SpkSegmentEvaluator
 
     if (seg.RecordCount <= 1 || seg.RecordMids is null || seg.RecordRadii is null || seg.RecordSizeDoubles == 0)
     {
-      // Single-record (synthetic) path; derive scaling from full segment window.
       double mid = 0.5 * (seg.StartTdbSec + seg.StopTdbSec);
       double radius = 0.5 * (seg.StopTdbSec - seg.StartTdbSec);
       double tau = radius == 0 ? 0 : (et - mid) / radius;
@@ -36,7 +34,6 @@ public static class SpkSegmentEvaluator
       };
     }
 
-    // Multi-record path: find record whose [mid - radius, mid + radius] contains et.
     int recIndex = -1;
     for (int i = 0; i < seg.RecordCount; i++)
     {
@@ -55,9 +52,8 @@ public static class SpkSegmentEvaluator
 
     if (!seg.Lazy)
     {
-      // Slice into already materialized coefficients.
       int per = seg.RecordSizeDoubles;
-      int offset = recIndex * per + 2; // skip MID,RADIUS
+      int offset = recIndex * per + 2;
       var block = seg.Coefficients.AsSpan(offset, seg.ComponentsPerSet * n1);
       return seg.DataType switch
       {
@@ -69,15 +65,12 @@ public static class SpkSegmentEvaluator
     else
     {
       if (seg.DataSource is null) throw new InvalidOperationException("Lazy segment missing data source");
-      // Fetch only the needed record coefficient block (excluding MID/RADIUS).
       int coeffCount = seg.ComponentsPerSet * n1;
       var scratch = Scratch.Value!;
       if (scratch.Length < coeffCount)
         Scratch.Value = scratch = new double[coeffCount];
-
-      // Record start address (1-based) = initial + recIndex*RecordSizeDoubles.
       long recordStartAddress = seg.DataSourceInitialAddress + recIndex * (long)seg.RecordSizeDoubles;
-      long coeffStartAddress = recordStartAddress + 2; // skip MID, RADIUS
+      long coeffStartAddress = recordStartAddress + 2;
       seg.DataSource.ReadDoubles(coeffStartAddress, scratch.AsSpan(0, coeffCount));
       var coeffSpan = scratch.AsSpan(0, coeffCount);
       return seg.DataType switch
@@ -92,7 +85,7 @@ public static class SpkSegmentEvaluator
   static StateVector EvaluateType2Single(SpkSegment seg, double tau, double radius)
   {
     var coeffs = seg.Coefficients;
-    int n1 = coeffs.Length / 3; // N+1
+    int n1 = coeffs.Length / 3;
     if (n1 * 3 != coeffs.Length) throw new InvalidOperationException("Invalid coefficient count for type 2 segment");
     var span = coeffs.AsSpan();
     var x = span.Slice(0, n1);
@@ -109,7 +102,7 @@ public static class SpkSegmentEvaluator
   static StateVector EvaluateType3Single(SpkSegment seg, double tau)
   {
     var coeffs = seg.Coefficients;
-    int n1 = coeffs.Length / 6; // N+1
+    int n1 = coeffs.Length / 6;
     if (n1 * 6 != coeffs.Length) throw new InvalidOperationException("Invalid coefficient count for type 3 segment");
     var span = coeffs.AsSpan();
     var px = span.Slice(0, n1);
@@ -149,15 +142,14 @@ public static class SpkSegmentEvaluator
     return new StateVector(pos, vel);
   }
 
-  // Derivative evaluation: d/dx T_k(x) = k * U_{k-1}(x)
   static double EvaluateChebyshevDerivative(ReadOnlySpan<double> coeffs, double tau)
   {
     int n = coeffs.Length - 1;
     if (n <= 0) return 0d;
-    double sum = coeffs.Length > 1 ? coeffs[1] : 0d; // k=1 term: 1 * c1 * U0 (U0=1)
+    double sum = coeffs.Length > 1 ? coeffs[1] : 0d;
     if (n == 1) return sum;
-    double Ukm2 = 1d;          // U0
-    double Ukm1 = 2 * tau;     // U1
+    double Ukm2 = 1d;
+    double Ukm1 = 2 * tau;
     if (n >= 2) sum += 2 * coeffs[2] * Ukm1;
     for (int k = 3; k <= n; k++)
     {

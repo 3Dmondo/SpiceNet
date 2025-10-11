@@ -9,16 +9,17 @@ namespace Spice.IO;
 ///   BODY=<id> JD=<julian-date-tdb> X=<km> Y=<km> Z=<km> VX=<km/s> VY=<km/s> VZ=<km/s>
 /// Lines starting with '#' or blank are ignored. Units: km and km/s. Epoch converted to TDB seconds past J2000.
 /// This is a minimal subset format for Prompt 16 tests; can be extended to support original testpo block style.
+/// INTERNAL: Test harness support only (not part of public facade).
 /// </summary>
-public static class TestPoLoader
+internal static class TestPoLoader
 {
-  public sealed record TestPoState(BodyId Body, double EpochTdbSec, Vector3d PositionKm, Vector3d VelocityKmPerSec);
+  internal sealed record TestPoState(BodyId Body, double EpochTdbSec, Vector3d PositionKm, Vector3d VelocityKmPerSec);
 
   const double J2000_JD_TDB = 2451545.0; // JD(TDB) at J2000 epoch (2000-01-01 12:00:00 TDB)
   const double SecondsPerDay = 86400.0;
 
   /// <summary>Parse a simplified testpo reference file.</summary>
-  public static IReadOnlyList<TestPoState> Parse(Stream stream)
+  internal static IReadOnlyList<TestPoState> Parse(Stream stream)
   {
     using var reader = new StreamReader(stream, leaveOpen: true);
     var list = new List<TestPoState>();

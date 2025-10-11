@@ -14,7 +14,7 @@ namespace Spice.Kernels;
 /// Ignored content: blank lines, lines beginning with '\\', '#', '/*', '*/', '//' as simple comment handling, and other assignments.
 /// This parser is intentionally strict and minimal for MVP test usage; it does not fully implement NAIF LSK grammar.
 /// </summary>
-public static class LskParser
+internal static class LskParser
 {
   static readonly Dictionary<string,int> MonthMap = new(StringComparer.OrdinalIgnoreCase)
   {
@@ -22,7 +22,7 @@ public static class LskParser
     ["JUL"] = 7,["AUG"] = 8,["SEP"] = 9,["OCT"] = 10,["NOV"] = 11,["DEC"] = 12
   };
 
-  public static LskKernel Parse(Stream stream)
+  internal static LskKernel Parse(Stream stream)
   {
     using var reader = new StreamReader(stream, Encoding.ASCII, leaveOpen:true);
     var lines = new List<string>();
@@ -44,7 +44,6 @@ public static class LskParser
       if (afterEq.StartsWith('('))
         blockBuilder.Append(afterEq[1..]);
 
-      // Accumulate until we find a ')' possibly on later lines.
       while (!blockBuilder.ToString().Contains(')'))
       {
         i++;
@@ -58,9 +57,7 @@ public static class LskParser
       int closeIdx = block.IndexOf(')');
       if (closeIdx >= 0) block = block[..closeIdx];
 
-      // Tokenize by commas and whitespace.
       var rawTokens = block.Replace('\t',' ').Split(new[]{' ',','}, StringSplitOptions.RemoveEmptyEntries);
-      // Expect pairs: <int-offset> @YYYY-MON-DD
       for (int t = 0; t < rawTokens.Length; t++)
       {
         if (!double.TryParse(rawTokens[t], out var offset))
@@ -84,13 +81,12 @@ public static class LskParser
   {
     if (string.IsNullOrWhiteSpace(line)) return true;
     if (line.StartsWith("\\") || line.StartsWith("#") || line.StartsWith("//") || line.StartsWith("/*") || line.StartsWith("*")) return true;
-    if (line.StartsWith("\begindata", StringComparison.OrdinalIgnoreCase)) return true; // treat marker as comment for simplicity
+    if (line.StartsWith("\begindata", StringComparison.OrdinalIgnoreCase)) return true;
     return false;
   }
 
   static DateTimeOffset ParseDate(string token)
   {
-    // Format: YYYY-MON-DD
     var parts = token.Split('-');
     if (parts.Length != 3) throw new InvalidDataException($"Invalid date format '{token}'");
     if (!int.TryParse(parts[0], out var year)) throw new InvalidDataException($"Invalid year in '{token}'");

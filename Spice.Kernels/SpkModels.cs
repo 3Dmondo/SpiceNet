@@ -7,7 +7,7 @@ using Spice.IO;
 /// <summary>
 /// In-memory SPK kernel representation containing a collection of generic SPK segments.
 /// </summary>
-public sealed record SpkKernel(IReadOnlyList<SpkSegment> Segments);
+internal sealed record SpkKernel(IReadOnlyList<SpkSegment> Segments);
 
 /// <summary>
 /// SPK segment representation supporting both synthetic single-record segments (Phase 1) and
@@ -18,7 +18,7 @@ public sealed record SpkKernel(IReadOnlyList<SpkSegment> Segments);
 /// Includes trailer metadata for real type 2/3 segments: INIT (segment INIT value), INTLEN (uniform record length in seconds),
 /// RSIZE (record size in doubles including MID/RADIUS), TN (record count from trailer) for validation & future indexing.
 /// </summary>
-public sealed record SpkSegment(
+internal sealed record SpkSegment(
   BodyId Target,
   BodyId Center,
   FrameId Frame,

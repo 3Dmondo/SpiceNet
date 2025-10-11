@@ -1,0 +1,101 @@
+#nullable enable
+override Spice.Core.BodyId.GetHashCode() -> int
+override Spice.Core.BodyId.ToString() -> string!
+override Spice.Core.Duration.GetHashCode() -> int
+override Spice.Core.FrameId.GetHashCode() -> int
+override Spice.Core.FrameId.ToString() -> string!
+override Spice.Core.Instant.GetHashCode() -> int
+override Spice.Core.Instant.ToString() -> string!
+override Spice.Core.StateVector.GetHashCode() -> int
+override Spice.Core.Vector3d.GetHashCode() -> int
+Spice.Core.BodyId
+Spice.Core.BodyId.BodyId() -> void
+Spice.Core.BodyId.BodyId(int Value) -> void
+Spice.Core.BodyId.Deconstruct(out int Value) -> void
+Spice.Core.BodyId.Equals(Spice.Core.BodyId other) -> bool
+Spice.Core.BodyId.Value.get -> int
+Spice.Core.BodyId.Value.init -> void
+Spice.Core.Duration
+Spice.Core.Duration.Deconstruct(out double Seconds) -> void
+Spice.Core.Duration.Duration() -> void
+Spice.Core.Duration.Duration(double Seconds) -> void
+Spice.Core.Duration.Equals(Spice.Core.Duration other) -> bool
+Spice.Core.Duration.Seconds.get -> double
+Spice.Core.Duration.Seconds.init -> void
+Spice.Core.FrameId
+Spice.Core.FrameId.Deconstruct(out int Value) -> void
+Spice.Core.FrameId.Equals(Spice.Core.FrameId other) -> bool
+Spice.Core.FrameId.FrameId() -> void
+Spice.Core.FrameId.FrameId(int Value) -> void
+Spice.Core.FrameId.Value.get -> int
+Spice.Core.FrameId.Value.init -> void
+Spice.Core.Instant
+Spice.Core.Instant.Deconstruct(out long TdbSecondsFromJ2000) -> void
+Spice.Core.Instant.Equals(Spice.Core.Instant other) -> bool
+Spice.Core.Instant.Instant() -> void
+Spice.Core.Instant.Instant(long TdbSecondsFromJ2000) -> void
+Spice.Core.Instant.TdbSecondsFromJ2000.get -> long
+Spice.Core.Instant.TdbSecondsFromJ2000.init -> void
+Spice.Core.StateVector
+Spice.Core.StateVector.Deconstruct(out Spice.Core.Vector3d PositionKm, out Spice.Core.Vector3d VelocityKmPerSec) -> void
+Spice.Core.StateVector.Equals(Spice.Core.StateVector other) -> bool
+Spice.Core.StateVector.PositionKm.get -> Spice.Core.Vector3d
+Spice.Core.StateVector.PositionKm.init -> void
+Spice.Core.StateVector.StateVector() -> void
+Spice.Core.StateVector.StateVector(Spice.Core.Vector3d PositionKm, Spice.Core.Vector3d VelocityKmPerSec) -> void
+Spice.Core.StateVector.VelocityKmPerSec.get -> Spice.Core.Vector3d
+Spice.Core.StateVector.VelocityKmPerSec.init -> void
+Spice.Core.Vector3d
+Spice.Core.Vector3d.Deconstruct(out double X, out double Y, out double Z) -> void
+Spice.Core.Vector3d.Equals(Spice.Core.Vector3d other) -> bool
+Spice.Core.Vector3d.Length() -> double
+Spice.Core.Vector3d.Normalize() -> Spice.Core.Vector3d
+Spice.Core.Vector3d.Vector3d() -> void
+Spice.Core.Vector3d.Vector3d(double X, double Y, double Z) -> void
+Spice.Core.Vector3d.X.get -> double
+Spice.Core.Vector3d.X.init -> void
+Spice.Core.Vector3d.Y.get -> double
+Spice.Core.Vector3d.Y.init -> void
+Spice.Core.Vector3d.Z.get -> double
+Spice.Core.Vector3d.Z.init -> void
+static readonly Spice.Core.Vector3d.Zero -> Spice.Core.Vector3d
+static Spice.Core.BodyId.operator !=(Spice.Core.BodyId left, Spice.Core.BodyId right) -> bool
+static Spice.Core.BodyId.operator ==(Spice.Core.BodyId left, Spice.Core.BodyId right) -> bool
+static Spice.Core.Duration.FromSeconds(double seconds) -> Spice.Core.Duration
+static Spice.Core.Duration.operator !=(Spice.Core.Duration left, Spice.Core.Duration right) -> bool
+static Spice.Core.Duration.operator *(double s, Spice.Core.Duration d) -> Spice.Core.Duration
+static Spice.Core.Duration.operator *(Spice.Core.Duration d, double s) -> Spice.Core.Duration
+static Spice.Core.Duration.operator +(Spice.Core.Duration a, Spice.Core.Duration b) -> Spice.Core.Duration
+static Spice.Core.Duration.operator -(Spice.Core.Duration a, Spice.Core.Duration b) -> Spice.Core.Duration
+static Spice.Core.Duration.operator /(Spice.Core.Duration d, double s) -> Spice.Core.Duration
+static Spice.Core.Duration.operator ==(Spice.Core.Duration left, Spice.Core.Duration right) -> bool
+static Spice.Core.Duration.Zero.get -> Spice.Core.Duration
+static Spice.Core.FrameId.operator !=(Spice.Core.FrameId left, Spice.Core.FrameId right) -> bool
+static Spice.Core.FrameId.operator ==(Spice.Core.FrameId left, Spice.Core.FrameId right) -> bool
+static Spice.Core.Instant.FromSeconds(long seconds) -> Spice.Core.Instant
+static Spice.Core.Instant.J2000.get -> Spice.Core.Instant
+static Spice.Core.Instant.operator !=(Spice.Core.Instant left, Spice.Core.Instant right) -> bool
+static Spice.Core.Instant.operator -(Spice.Core.Instant a, Spice.Core.Instant b) -> Spice.Core.Duration
+static Spice.Core.Instant.operator ==(Spice.Core.Instant left, Spice.Core.Instant right) -> bool
+static Spice.Core.StateVector.operator !=(Spice.Core.StateVector left, Spice.Core.StateVector right) -> bool
+static Spice.Core.StateVector.operator ==(Spice.Core.StateVector left, Spice.Core.StateVector right) -> bool
+static Spice.Core.StateVector.Zero.get -> Spice.Core.StateVector
+static Spice.Core.Vector3d.Dot(in Spice.Core.Vector3d a, in Spice.Core.Vector3d b) -> double
+static Spice.Core.Vector3d.From(double x, double y, double z) -> Spice.Core.Vector3d
+static Spice.Core.Vector3d.operator !=(Spice.Core.Vector3d left, Spice.Core.Vector3d right) -> bool
+static Spice.Core.Vector3d.operator *(double s, Spice.Core.Vector3d v) -> Spice.Core.Vector3d
+static Spice.Core.Vector3d.operator *(Spice.Core.Vector3d v, double s) -> Spice.Core.Vector3d
+static Spice.Core.Vector3d.operator +(Spice.Core.Vector3d a, Spice.Core.Vector3d b) -> Spice.Core.Vector3d
+static Spice.Core.Vector3d.operator -(Spice.Core.Vector3d a, Spice.Core.Vector3d b) -> Spice.Core.Vector3d
+static Spice.Core.Vector3d.operator -(Spice.Core.Vector3d v) -> Spice.Core.Vector3d
+static Spice.Core.Vector3d.operator /(Spice.Core.Vector3d v, double s) -> Spice.Core.Vector3d
+static Spice.Core.Vector3d.operator ==(Spice.Core.Vector3d left, Spice.Core.Vector3d right) -> bool
+~override Spice.Core.BodyId.Equals(object obj) -> bool
+~override Spice.Core.Duration.Equals(object obj) -> bool
+override Spice.Core.Duration.ToString() -> string!
+~override Spice.Core.FrameId.Equals(object obj) -> bool
+~override Spice.Core.Instant.Equals(object obj) -> bool
+~override Spice.Core.StateVector.Equals(object obj) -> bool
+override Spice.Core.StateVector.ToString() -> string!
+~override Spice.Core.Vector3d.Equals(object obj) -> bool
+~override Spice.Core.Vector3d.ToString() -> string

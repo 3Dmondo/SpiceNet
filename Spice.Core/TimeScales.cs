@@ -2,9 +2,9 @@
 namespace Spice.Core;
 
 /// <summary>
-/// Supported time scales for conversions. Limited subset for Phase 1.
+/// Supported time scales for conversions (internal for now; external callers use UTC <-> Instant helpers only).
 /// </summary>
-public enum TimeScale
+internal enum TimeScale
 {
   UTC,
   TAI,
@@ -17,7 +17,7 @@ public enum TimeScale
 /// Each entry's offset applies from its EffectiveUtc (inclusive) until the next entry.
 /// </summary>
 /// <param name="Entries">Ordered collection of leap second entries.</param>
-public sealed record LskKernel(IReadOnlyList<LeapSecondEntry> Entries)
+internal sealed record LskKernel(IReadOnlyList<LeapSecondEntry> Entries)
 {
   public static LskKernel FromEntries(IEnumerable<LeapSecondEntry> entries)
   {
@@ -32,24 +32,20 @@ public sealed record LskKernel(IReadOnlyList<LeapSecondEntry> Entries)
 /// </summary>
 /// <param name="EffectiveUtc">UTC instant (at 00:00:00 of day the new offset becomes active).</param>
 /// <param name="TaiMinusUtcSeconds">Cumulative TAI-UTC in seconds after the leap second insertion at EffectiveUtc.</param>
-public readonly record struct LeapSecondEntry(DateTimeOffset EffectiveUtc, double TaiMinusUtcSeconds);
+internal readonly record struct LeapSecondEntry(DateTimeOffset EffectiveUtc, double TaiMinusUtcSeconds);
 
 /// <summary>
 /// Time conversion utilities. Adds analytic approximation for TT->TDB using standard low-order periodic terms.
 /// Instant uses whole-second precision for now.
 /// NOTE: We compute relative seconds since J2000 so constant TT-TAI offset (32.184s) cancels and is omitted.
 /// </summary>
-public static partial class TimeConversionService
+internal static partial class TimeConversionService
 {
-  // J2000 epoch: 2000-01-01 12:00:00 TT == 2000-01-01 11:59:27.816 TAI == 2000-01-01 11:58:55.816 UTC.
   static readonly DateTimeOffset J2000Utc = new DateTimeOffset(2000,1,1,11,58,55,0, TimeSpan.Zero).AddMilliseconds(816);
 
   static LskKernel? _lsk;
   static double _taiMinusUtcAtJ2000; // cached from installed kernel
 
-  // Constants for TT->TDB approximation (see NAIF Frames / TDB required reading simplified formula).
-  // TDB - TT ? 0.001657 sin(g) + 0.00001385 sin(2g)  (seconds)
-  // g = 357.53° + 0.9856003° * (JD_TT - 2451545.0)
   const double Deg2Rad = Math.PI / 180.0;
   const double G0 = 357.53;        // degrees at J2000
   const double G_RATE = 0.9856003;  // degrees per day

@@ -1,0 +1,162 @@
+[
+  {
+    "Name": "Spice.Core",
+    "Types": [
+      {
+        "Namespace": "Spice.Core",
+        "Name": "BodyId",
+        "Kind": "struct",
+        "Members": [
+          "method String ToString()",
+          "method Int32 GetHashCode()",
+          "method Boolean Equals(Object obj)",
+          "method Boolean Equals(BodyId other)",
+          "method Void Deconstruct(Int32\u0026 Value)",
+          "property Int32 Value get; set;"
+        ]
+      },
+      {
+        "Namespace": "Spice.Core",
+        "Name": "Duration",
+        "Kind": "struct",
+        "Members": [
+          "method Duration FromSeconds(Double seconds)",
+          "method String ToString()",
+          "method Int32 GetHashCode()",
+          "method Boolean Equals(Object obj)",
+          "method Boolean Equals(Duration other)",
+          "method Void Deconstruct(Double\u0026 Seconds)",
+          "property Double Seconds get; set;",
+          "property Duration Zero get;"
+        ]
+      },
+      {
+        "Namespace": "Spice.Core",
+        "Name": "FrameId",
+        "Kind": "struct",
+        "Members": [
+          "method String ToString()",
+          "method Int32 GetHashCode()",
+          "method Boolean Equals(Object obj)",
+          "method Boolean Equals(FrameId other)",
+          "method Void Deconstruct(Int32\u0026 Value)",
+          "property Int32 Value get; set;"
+        ]
+      },
+      {
+        "Namespace": "Spice.Core",
+        "Name": "Instant",
+        "Kind": "struct",
+        "Members": [
+          "method Instant FromSeconds(Int64 seconds)",
+          "method String ToString()",
+          "method Int32 GetHashCode()",
+          "method Boolean Equals(Object obj)",
+          "method Boolean Equals(Instant other)",
+          "method Void Deconstruct(Int64\u0026 TdbSecondsFromJ2000)",
+          "property Int64 TdbSecondsFromJ2000 get; set;",
+          "property Instant J2000 get;"
+        ]
+      },
+      {
+        "Namespace": "Spice.Core",
+        "Name": "StateVector",
+        "Kind": "struct",
+        "Members": [
+          "method String ToString()",
+          "method Int32 GetHashCode()",
+          "method Boolean Equals(Object obj)",
+          "method Boolean Equals(StateVector other)",
+          "method Void Deconstruct(Vector3d\u0026 PositionKm, Vector3d\u0026 VelocityKmPerSec)",
+          "property Vector3d PositionKm get; set;",
+          "property Vector3d VelocityKmPerSec get; set;",
+          "property StateVector Zero get;"
+        ]
+      },
+      {
+        "Namespace": "Spice.Core",
+        "Name": "Vector3d",
+        "Kind": "struct",
+        "Members": [
+          "method Vector3d From(Double x, Double y, Double z)",
+          "method Double Dot(Vector3d\u0026 a, Vector3d\u0026 b)",
+          "method Double Length()",
+          "method Vector3d Normalize()",
+          "method String ToString()",
+          "method Int32 GetHashCode()",
+          "method Boolean Equals(Object obj)",
+          "method Boolean Equals(Vector3d other)",
+          "method Void Deconstruct(Double\u0026 X, Double\u0026 Y, Double\u0026 Z)",
+          "property Double X get; set;",
+          "property Double Y get; set;",
+          "property Double Z get; set;",
+          "field Vector3d Zero"
+        ]
+      },
+      {
+        "Namespace": "Spice.Core",
+        "Name": "Vector3dExtensions",
+        "Kind": "class",
+        "Members": [
+          "method Vector3d Add(Vector3d\u0026 a, Vector3d\u0026 b)",
+          "method Vector3d Subtract(Vector3d\u0026 a, Vector3d\u0026 b)",
+          "method Vector3d Scale(Vector3d\u0026 v, Double s)"
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Spice.Ephemeris",
+    "Types": [
+      {
+        "Namespace": "Spice.Ephemeris",
+        "Name": "EphemerisService",
+        "Kind": "class",
+        "Members": [
+          "method Void Load(String metaKernelPath)",
+          "method Void LoadRealSpkLazy(String spkPath, Boolean memoryMap)",
+          "method Boolean TryGetState(BodyId target, BodyId center, Instant t, StateVector\u0026 state)",
+          "method Boolean TryGetRelativeState(BodyId target, BodyId center, Instant t, StateVector\u0026 state)",
+          "method StateVector GetState(BodyId target, BodyId center, Instant t)",
+          "method Void Dispose()",
+          "property IReadOnlyList\u00601 KernelPaths get;"
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Spice.IO",
+    "Types": []
+  },
+  {
+    "Name": "Spice.Kernels",
+    "Types": [
+      {
+        "Namespace": "Spice.Kernels",
+        "Name": "DafCommentUtility",
+        "Kind": "class",
+        "Members": [
+          "method ValueTuple\u00603 Extract(String filePath)",
+          "method Boolean TryGetConstant(String filePath, String name, Double\u0026 value)"
+        ]
+      },
+      {
+        "Namespace": "Spice.Kernels",
+        "Name": "DafSymbol",
+        "Kind": "class",
+        "Members": [
+          "method String ToString()",
+          "method Int32 GetHashCode()",
+          "method Boolean Equals(Object obj)",
+          "method Boolean Equals(DafSymbol other)",
+          "method DafSymbol \u003CClone\u003E$()",
+          "method Void Deconstruct(String\u0026 Name, IReadOnlyList\u00601\u0026 RawValues, IReadOnlyList\u00601\u0026 NumericValues)",
+          "property String Name get; set;",
+          "property IReadOnlyList\u00601 RawValues get; set;",
+          "property IReadOnlyList\u00601 NumericValues get; set;",
+          "property Nullable\u00601 FirstNumeric get;"
+        ]
+      }
+    ]
+  }
+]

@@ -15,9 +15,9 @@ namespace Spice.Kernels;
 /// Addresses are 1-based indices of double words within the coefficient block immediately
 /// following all summaries.
 /// </summary>
-public static class SpkKernelParser
+internal static class SpkKernelParser
 {
-  public static SpkKernel Parse(Stream stream)
+  internal static SpkKernel Parse(Stream stream)
   {
     using var daf = DafReader.Open(stream);
     if (daf.Nd != 2 || daf.Ni < 6)

@@ -87,49 +87,68 @@ PROMPT 1 .. PROMPT 12 (Completed) — see Git history & tests.
 ============================================================
 SECTION: NEXT PHASE ROADMAP (PHASE 2: REAL KERNEL SUPPORT)
 ============================================================
-PROMPT 13: Full DAF low-level reader. (Done)
-PROMPT 14: Real SPK parsing Types 2 & 3. (Done)
-PROMPT 15: EphemerisDataSource abstraction & lazy coeff access. (Done)
-PROMPT 16: testpo integration (Initial parsing + cache + comparison harness). (In Progress: basic comparisons active, Earth/Moon mapping added.)
-PROMPT 16a/16b: code/center inventory & mapping. (Partial – provisional mapping 3?399, 10?301.)
-PROMPT 16c: Relative state resolver (barycentric chain). (Done)
-PROMPT 16d: Integration refactor using relative states. (In Progress)
-PROMPT 16e: Diagnostic CLI testpo-diagnose. (Planned)
-PROMPT 16f: Velocity semantics validation. (Planned)
-PROMPT 17: Golden tolerance harness. (Partially realized with dynamic AU-based tolerances.)
-PROMPT 18: Segment indexing / fast lookup. (Baseline binary search done.)
-PROMPT 19+: Pending per original list.
+PROMPT 13:
+"Implement full DAF low-level reader capable of traversing record directory (forward/backward pointers), summary & name records, supporting big/little endianness detection. Expose enumerator for arrays (segments) with raw address ranges. Add robust validation & tests using a minimal handcrafted true DAF structure (not synthetic header shortcut)."
+
+PROMPT 14:
+"Enhance SpkKernelParser to consume real SPK files: parse segment descriptor (DC + IC components), handle multiple records per segment (directory of coefficient records), and support Types 2 & 3 with scaling factors (MID, RADIUS) stored in each record. Add tests with a small truncated official SPK (public domain) or synthetic binary matching real layout." 
+
+PROMPT 15:
+"Introduce EphemerisDataSource abstraction allowing: (a) Stream, (b) MemoryMapped file. Provide async open methods. Update EphemerisService to lazily map SPK coefficients (no full materialization) using spans over a shared byte buffer / memory-mapped accessor. Add benchmarks comparing stream vs mmap for large sequential and random segment access."
+
+PROMPT 16:
+"Integrate JPL 'testpo' planetary position reference data (https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/) for integration tests: implement TestPoLoader that parses ASCII testpo files producing barycentric state vectors at listed epochs. Add comparison tests (state deltas) vs SpiceNet interpolation from loaded real SPK (DE440/DE441 excerpt)." 
+
+PROMPT 17:
+"Add tolerance-based golden tests vs testpo: absolute position error < 1e-6 km, velocity < 1e-9 km/s for supported epochs. Collect statistics (mean / max error) and output to test log for regression tracking." 
+
+PROMPT 18:
+"Implement caching/index layer: build per-target segment interval tree or binary-searchable array (sorted by start ET) to accelerate segment lookup; update benchmarks. Provide TryGetState fast path avoiding LINQ/allocations." 
+
+PROMPT 19:
+"Extend TT->TDB conversion: add higher-order periodic terms and optional relativistic correction strategy interface. Provide configuration knob and ensure previous simple approximation remains default for performance. Verify deltas vs CSPICE < 10 microseconds across multi-year span via sampled epochs." 
+
+PROMPT 20:
+"Add body & frame metadata loader (FK / PCK minimal subset): parse simple text kernels for body radii & frame names required for future orientation work. Keep scope minimal; tests confirm parsing of a handful of entries." 
+
+PROMPT 21:
+"Introduce diagnostic / validation tool (command-line) that loads a meta-kernel, enumerates segments, prints coverage windows, and optionally exports sampled states to CSV for comparison with testpo or CSPICE output." 
+
+PROMPT 22:
+"Add GitHub Actions workflow: build, test, (optional) run lightweight benchmark, publish artifacts (diagnostic tool). Cache .nuget & possibly testpo subset using license-compliant approach." 
+
+PROMPT 23:
+"Refactor TimeConversionService into pluggable strategy (ILeapSecondProvider, ITdbOffsetModel). Add tests injecting mock providers. Prepare for future TCB / relativistic models." 
+
+PROMPT 24:
+"Implement structured logging (ILogger abstractions) around kernel loading & segment selection decisions. Provide an in-memory logger for test assertions (ensuring correct precedence path)." 
+
+PROMPT 25:
+"Consolidate performance improvements guided by BenchmarkDotNet: (a) vectorized Chebyshev evaluation for position+velocity, (b) pooling scratch buffers, (c) minimizing bounds checks with ref locals. Document improvements under /docs/perf.md with before/after tables." 
+
+PROMPT 26:
+"Consolidation / Quality Alignment: unify tolerance & constant sources, introduce mapping inventory JSON, remove obsolete EMB+EMRAT special-case documentation, add comparison statistics artifact, synchronize roadmap tables, enable quality gates."
 
 ============================================================
 SECTION: DATA SOURCES & TEST FIXTURES GUIDELINES
 ============================================================
-- Real kernel fixtures SHOULD be the smallest public-domain slices sufficient for tests.
-- testpo reference files: cached per ephemeris; parser normalizes Earth (3?399) & Moon (10?301) codes.
+- Real kernel fixtures SHOULD be the smallest public-domain slices sufficient for tests (e.g., time-window truncated). Provide scripts (not large binaries) when possible.
+- 'testpo' reference files: store a curated subset (few epochs per planet) under test assets with clear source citation & retrieval script.
 - Never commit large proprietary or license-restricted kernels.
 
 ============================================================
-SECTION: VALIDATION & ERROR BUDGET (UPDATED)
+SECTION: VALIDATION & ERROR BUDGET
 ============================================================
-Integration test comparisons currently operate in AU (positions) and AU/day (velocities) matching testpo output:
-  Primary strict tolerances (when AU constant found in BSP comments):
-    Position: 1e-13 AU  (~1.50e-5 km ? 1.5 cm)
-    Velocity: 1e-16 AU/day (~1.73e-13 km/s)
-  If AU constant missing, tolerances are relaxed ×10,000:
-    Position: 1e-9 AU  (~149.6 m)
-    Velocity: 1e-12 AU/day (~1.73e-9 km/s)
-  For early DE2xx series (ephemeris number starting with '2') an additional ×100 relaxation (overall ×1e6) applies:
-    Position: 1e-7 AU  (~14.96 km)
-    Velocity: 1e-10 AU/day (~1.73e-11 km/s)
-  Earth/Moon special handling derives Earth & Moon barycentric states via EMB + EMRAT (extracted from SPK comments) to reduce large residuals.
-Target long-term goal: reconcile and re-express tolerances directly in km and km/s once all unit pathways & scaling verified.
-Investigate any systematic deviation >1e-10 relative (AU or AU/day domain) when strict tolerance regime active.
+- Target double-precision parity vs CSPICE; any systematic deviation > 1e-10 relative requires investigation.
+- Document known approximations (current TT->TDB series order, ignored frame transformations) in README.
+- Relative states resolved generically via Solar System Barycenter composition; no special EMB+EMRAT path retained.
 
 ============================================================
 SECTION: CONTRIBUTION WORKFLOW (UPDATED NOTES)
 ============================================================
-- Update this manifest when tolerances, mappings, or special-case logic (e.g., Earth/Moon) change.
-- Provide rationale in PR description for any tolerance relaxation.
-- Benchmarks must run locally before merging performance-related PRs; include summary.
+- For each new prompt (13+), update README roadmap and tick completed items.
+- Benchmarks must run locally before merging performance-related PRs; include summary in PR description.
+- During Prompt 26, ensure all tolerance literals are centralized and docs synchronized.
 
 ============================================================
 END OF MANIFEST

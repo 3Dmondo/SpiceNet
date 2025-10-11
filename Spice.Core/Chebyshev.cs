@@ -8,7 +8,7 @@ namespace Spice.Core;
 /// Implementation uses the Clenshaw recurrence for numerical stability.
 /// Reference: NAIF SPICE Required Reading (SPK) & standard numerical analysis texts.
 /// </summary>
-public static class Chebyshev
+internal static class Chebyshev
 {
   /// <summary>
   /// Evaluate a Chebyshev series at <paramref name="tau"/> (scaled independent variable in [-1,1]).

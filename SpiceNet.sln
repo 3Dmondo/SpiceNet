@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spice.Benchmarks", "Spice.B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spice.IntegrationTests", "Spice.IntegrationTests\Spice.IntegrationTests.csproj", "{370BE9AC-7F39-1A26-DFDC-536C5C4ABDFF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Spice.ApiScan", "Spice.ApiScan\Spice.ApiScan.csproj", "{AD6755D3-0284-AE06-C398-574F40641F01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -121,8 +123,23 @@ Global
 		{370BE9AC-7F39-1A26-DFDC-536C5C4ABDFF}.Release|x64.Build.0 = Release|Any CPU
 		{370BE9AC-7F39-1A26-DFDC-536C5C4ABDFF}.Release|x86.ActiveCfg = Release|Any CPU
 		{370BE9AC-7F39-1A26-DFDC-536C5C4ABDFF}.Release|x86.Build.0 = Release|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Debug|x64.Build.0 = Debug|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Debug|x86.Build.0 = Debug|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Release|x64.ActiveCfg = Release|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Release|x64.Build.0 = Release|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Release|x86.ActiveCfg = Release|Any CPU
+		{AD6755D3-0284-AE06-C398-574F40641F01}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {61425BB4-3A69-4D1B-BEDA-221FE30D1C15}
 	EndGlobalSection
 EndGlobal

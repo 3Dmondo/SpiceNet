@@ -15,10 +15,9 @@ namespace Spice.Kernels;
 /// 4. Populate <see cref="SpkSegment"/> with per-record MID/RADIUS arrays enabling precise sub-interval evaluation.
 /// 5. Support lazy mode: only MID/RADIUS headers and trailer metadata are read; coefficients fetched on demand.
 /// </summary>
-public static class RealSpkKernelParser
+internal static class RealSpkKernelParser
 {
-  /// <summary>Parse an SPK kernel stream producing an <see cref="SpkKernel"/> comprised of supported segments (eager load).</summary>
-  public static SpkKernel Parse(Stream stream)
+  internal static SpkKernel Parse(Stream stream)
   {
     using var daf = FullDafReader.Open(stream, leaveOpen: true);
     bool little = daf.IsLittleEndian;
@@ -38,11 +37,10 @@ public static class RealSpkKernelParser
       if (type is not (2 or 3) || initial <= 0 || final < initial) continue;
 
       int totalDoubles = final - initial + 1;
-      if (totalDoubles < 4) continue; // must at least hold trailer
+      if (totalDoubles < 4) continue;
 
-      var all = ReadDoubleRange(stream, initial, final, little); // Full copy
+      var all = ReadDoubleRange(stream, initial, final, little);
 
-      // Trailer occupies last 4 doubles
       double init = all[^4];
       double intLen = all[^3];
       double rSizeTrailer = all[^2];
@@ -52,13 +50,12 @@ public static class RealSpkKernelParser
       int rsize = (int)rSizeTrailer;
       int n = (int)nTrailer;
       long expectedPayload = (long)rsize * n;
-      if (expectedPayload + 4 != totalDoubles) continue; // structural mismatch
+      if (expectedPayload + 4 != totalDoubles) continue;
 
       int k = type == 2 ? 3 : 6;
       int degree = (rsize - 2) / k - 1;
-      if (degree < 0 || 2 + k * (degree + 1) != rsize) continue; // invalid degree / RSIZE relation
+      if (degree < 0 || 2 + k * (degree + 1) != rsize) continue;
 
-      // Extract payload (records only – exclude trailer)
       int payloadCount = totalDoubles - 4;
       var payload = new double[payloadCount];
       Array.Copy(all, 0, payload, 0, payloadCount);
@@ -75,8 +72,8 @@ public static class RealSpkKernelParser
       segments.Add(new SpkSegment(
         new BodyId(target), new BodyId(center), new FrameId(frame), type,
         start, stop,
-        initial - 1, // coefficient offset base (1-based -> 0-based)
-        payload.Length, // coefficient count excluding trailer
+        initial - 1,
+        payload.Length,
         payload,
         RecordCount: n,
         Degree: degree,
@@ -93,8 +90,7 @@ public static class RealSpkKernelParser
     return new SpkKernel(segments);
   }
 
-  /// <summary>Parse an SPK file lazily using an ephemeris data source: only headers + trailer are read eagerly.</summary>
-  public static SpkKernel ParseLazy(string filePath, bool memoryMap = true)
+  internal static SpkKernel ParseLazy(string filePath, bool memoryMap = true)
   {
     using var fs = File.OpenRead(filePath);
     using var daf = FullDafReader.Open(fs, leaveOpen: true);
@@ -136,7 +132,7 @@ public static class RealSpkKernelParser
       double[] recordRadii = new double[n];
       for (int r = 0; r < n; r++)
       {
-        long recStart = initial + r * (long)rsize; // 1-based
+        long recStart = initial + r * (long)rsize;
         recordMids[r] = dataSource.ReadDouble(recStart);
         recordRadii[r] = dataSource.ReadDouble(recStart + 1);
       }
@@ -145,7 +141,7 @@ public static class RealSpkKernelParser
         new BodyId(target), new BodyId(center), new FrameId(frame), type,
         start, stop,
         initial - 1,
-        0, // coefficients not materialized
+        0,
         Array.Empty<double>(),
         RecordCount: n,
         Degree: degree,
@@ -174,7 +170,7 @@ public static class RealSpkKernelParser
     byte[] buf = new byte[8];
     for (int i = 0; i < count; i++)
     {
-      int address = initialAddress + i; // 1-based double word address
+      int address = initialAddress + i;
       long recordIndex = (address - 1L) / 128L;
       int wordInRecord = (address - 1) % 128;
       long byteOffset = recordIndex * 1024L + wordInRecord * 8L;

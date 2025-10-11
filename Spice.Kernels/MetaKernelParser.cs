@@ -10,9 +10,9 @@ namespace Spice.Kernels;
 /// Relative paths are resolved against the directory of the meta-kernel source path provided to <see cref="Parse(Stream,string)"/>.
 /// Comments (lines beginning with \\ # // /* *) and blank lines are ignored. Simplified grammar for MVP tests.
 /// </summary>
-public static class MetaKernelParser
+internal static class MetaKernelParser
 {
-  public static MetaKernel Parse(Stream stream, string sourcePath)
+  internal static MetaKernel Parse(Stream stream, string sourcePath)
   {
     if (!stream.CanRead) throw new ArgumentException("Stream must be readable", nameof(stream));
     var dir = Path.GetDirectoryName(Path.GetFullPath(sourcePath)) ?? Directory.GetCurrentDirectory();
@@ -90,17 +90,17 @@ public static class MetaKernelParser
 /// <summary>
 /// Meta kernel model holding absolute kernel file paths.
 /// </summary>
-public sealed record MetaKernel(IReadOnlyList<string> KernelPaths);
+internal sealed record MetaKernel(IReadOnlyList<string> KernelPaths);
 
 /// <summary>
 /// Registry tracking loaded kernel paths (and optionally parsed kernel objects in later phases).
 /// </summary>
-public sealed class KernelRegistry
+internal sealed class KernelRegistry
 {
   readonly List<string> _paths = new();
-  public IReadOnlyList<string> KernelPaths => _paths;
+  internal IReadOnlyList<string> KernelPaths => _paths;
 
-  public void AddKernelPaths(IEnumerable<string> paths)
+  internal void AddKernelPaths(IEnumerable<string> paths)
   {
     foreach (var p in paths)
     {
@@ -110,5 +110,5 @@ public sealed class KernelRegistry
     }
   }
 
-  public void AddMetaKernel(MetaKernel meta) => AddKernelPaths(meta.KernelPaths);
+  internal void AddMetaKernel(MetaKernel meta) => AddKernelPaths(meta.KernelPaths);
 }

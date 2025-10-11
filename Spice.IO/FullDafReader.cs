@@ -1,4 +1,4 @@
-// CSPICE Port Reference: NAIF DAF Required Reading (conceptual) — implementation is original managed design focused on
+// CSPICE Port Reference: NAIF DAF Required Reading (conceptual) ? implementation is original managed design focused on
 // required subset (summary + name record traversal). This reader follows the DAF record model: file record, optional
 // reserved/comment records (ignored), then a doubly linked list of summary/name record pairs. Control words (NEXT, PREV,
 // NSUM) in summary records are stored as double precision values per spec. Synthetic unit tests originally wrote them
@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Spice.IO;
 
-public sealed class FullDafReader : IDisposable
+internal sealed class FullDafReader : IDisposable
 {
   const int RecordBytes = 1024;
   const int WordBytes = 8;
@@ -20,38 +20,13 @@ public sealed class FullDafReader : IDisposable
   readonly bool _leaveOpen;
   readonly bool _isLittleEndian;
 
-  /// <summary>DAF identification word (e.g. "DAF/SPK ").</summary>
-  public string IdWord
-  {
-    get;
-  }
-  /// <summary>Number of double precision components per segment summary (ND).</summary>
-  public int Nd
-  {
-    get;
-  }
-  /// <summary>Number of integer components per segment summary (NI).</summary>
-  public int Ni
-  {
-    get;
-  }
-  /// <summary>Internal file name (IFNAME) trimmed of trailing spaces.</summary>
-  public string InternalFileName
-  {
-    get;
-  }
-  /// <summary>Record number of the first summary record (0 if none).</summary>
-  public int FirstSummaryRecord
-  {
-    get;
-  }
-  /// <summary>Record number of the last summary record (0 if none).</summary>
-  public int LastSummaryRecord
-  {
-    get;
-  }
-  /// <summary>True if underlying DAF numeric storage is little-endian.</summary>
-  public bool IsLittleEndian => _isLittleEndian;
+  internal string IdWord { get; }
+  internal int Nd { get; }
+  internal int Ni { get; }
+  internal string InternalFileName { get; }
+  internal int FirstSummaryRecord { get; }
+  internal int LastSummaryRecord { get; }
+  internal bool IsLittleEndian => _isLittleEndian;
 
   FullDafReader(Stream stream, bool leaveOpen, string idWord, int nd, int ni, string ifname, int fward, int bward, bool little)
   {
@@ -66,14 +41,7 @@ public sealed class FullDafReader : IDisposable
     LastSummaryRecord = bward;
   }
 
-  /// <summary>
-  /// Open an existing DAF stream positioned at its beginning. The caller remains owner of the stream
-  /// unless <paramref name="leaveOpen"/> is false (default); in that case disposing the reader also disposes the stream.
-  /// Performs basic endianness detection using ND/NI plausibility checks.
-  /// </summary>
-  /// <param name="stream">Seekable readable stream containing a DAF (e.g., SPK) file.</param>
-  /// <param name="leaveOpen">True to keep the stream open after the reader is disposed.</param>
-  public static FullDafReader Open(Stream stream, bool leaveOpen = false)
+  internal static FullDafReader Open(Stream stream, bool leaveOpen = false)
   {
     if (!stream.CanRead || !stream.CanSeek)
       throw new ArgumentException("Stream must be seekable & readable", nameof(stream));
@@ -102,7 +70,6 @@ public sealed class FullDafReader : IDisposable
 
     string ifname = Encoding.ASCII.GetString(fileRec.Slice(16, 60));
 
-    // Forward/backward summary record numbers may appear as 32-bit ints in synthetic test builder.
     int fward = ReadInt(fileRec, 76, isLittle);
     int bward = ReadInt(fileRec, 80, isLittle);
 
@@ -117,18 +84,13 @@ public sealed class FullDafReader : IDisposable
       ? BinaryPrimitives.ReadInt64LittleEndian(buffer.Slice(offset, 8))
       : BinaryPrimitives.ReadInt64BigEndian(buffer.Slice(offset, 8)));
 
-  /// <summary>
-  /// Enumerate raw segments (arrays) discovered in the file. Each item exposes:
-  /// DC (double components), IC (integer components), segment name, and the initial/final addresses.
-  /// No element (coefficient) data are read; consumer may later map the address range to element records.
-  /// </summary>
-  public IEnumerable<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)> EnumerateSegments()
+  internal IEnumerable<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)> EnumerateSegments()
   {
     if (Nd <= 0 || Ni <= 0)
       yield break;
     int rec = FirstSummaryRecord;
     if (rec <= 0)
-      yield break; // synthetic & real tests always set this
+      yield break;
     while (rec != 0)
     {
       var (summaries, nextRec) = ReadSummaryRecord(rec);
@@ -138,11 +100,7 @@ public sealed class FullDafReader : IDisposable
     }
   }
 
-  /// <summary>
-  /// Read all printable ASCII comment lines preceding the first summary record (records 2..FirstSummaryRecord-1).
-  /// Lines are split on CR/LF; trailing nulls and whitespace-only lines are trimmed. Returns empty if no comment records.
-  /// </summary>
-  public string[] ReadComments()
+  internal string[] ReadComments()
   {
     const int CommentSizePerRecord = 1000; 
     if (FirstSummaryRecord <= 2)
@@ -159,10 +117,10 @@ public sealed class FullDafReader : IDisposable
         var b = buf[i];
         switch (b)
         {
-          case 4: // EOT
-            i = CommentSizePerRecord; // end of record
+          case 4:
+            i = CommentSizePerRecord;
             break;
-          case 0: // NUL
+          case 0:
             string line = Encoding.ASCII.GetString(lineBuf[0..linePos]);
             list.Add(line);
             linePos = 0;
@@ -189,7 +147,6 @@ public sealed class FullDafReader : IDisposable
     byte[] nameBuf = new byte[RecordBytes];
     ReadRecord(recordNumber, summaryBuf);
 
-    // Control words are the first three double precision words (NEXT, PREV, NSUM) per spec.
     int next = ReadControlWord(summaryBuf, 0);
     int prev = ReadControlWord(summaryBuf, 1);
     _ = prev;
@@ -205,10 +162,10 @@ public sealed class FullDafReader : IDisposable
     if (summaryWordSpan * nsum > capacityWords)
       throw new InvalidDataException("Summary record overflow");
 
-    ReadRecord(recordNumber + 1, nameBuf); // paired name record
+    ReadRecord(recordNumber + 1, nameBuf);
 
     var list = new List<SegmentRaw>(nsum);
-    int wordIndex = 3; // after control area
+    int wordIndex = 3;
     for (int i = 0; i < nsum; i++)
     {
       double[] dc = new double[Nd];
@@ -252,12 +209,10 @@ public sealed class FullDafReader : IDisposable
   {
     int byteOffset = controlWordIndex * WordBytes;
     var span = record.AsSpan(byteOffset, 8);
-    // Detect synthetic encoding: upper 32 bits zero (or all zero) and lower 32 bits non-zero => treat as int32
     int low = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(span[..4]) : BinaryPrimitives.ReadInt32BigEndian(span.Slice(4, 4));
     int high = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(span.Slice(4, 4)) : BinaryPrimitives.ReadInt32BigEndian(span[..4]);
     if (high == 0 && low != 0)
-      return low; // synthetic test path
-
+      return low;
     double dv = ReadDouble(record, byteOffset, _isLittleEndian);
     if (!double.IsNaN(dv) && Math.Abs(dv) < int.MaxValue)
     {
@@ -265,7 +220,7 @@ public sealed class FullDafReader : IDisposable
       if (Math.Abs(dv - lv) < 1e-12)
         return (int)lv;
     }
-    return low; // fallback (likely zero)
+    return low;
   }
 
   void ReadRecord(int recordNumber, Span<byte> destination)
@@ -278,7 +233,6 @@ public sealed class FullDafReader : IDisposable
       throw new EndOfStreamException();
   }
 
-  /// <summary>Dispose the reader and optionally the underlying stream.</summary>
   public void Dispose()
   {
     if (!_leaveOpen)

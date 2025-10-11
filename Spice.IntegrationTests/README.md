@@ -40,16 +40,12 @@ These adaptive rules prevent spurious failures for legacy or incomplete kernels 
 
 > Long-term goal: converge on universal km / km/s bounds of ?1e-6 km and ?1e-9 km/s once all scaling & special-case handling is stabilized.
 
-## Earth / Moon Special Handling
-`EphemerisService` derives Earth and Moon barycentric states using the Earth-Moon barycenter (EMB) and the mass ratio `EMRAT` (also parsed from BSP comments):
+## Barycentric Composition
+Relative states are composed generically via Solar System Barycenter (SSB) chaining when a direct segment (target, center) is absent:
 ```
-Earth_bary = EMB - Moon_geo / (1 + EMRAT)
-Moon_bary  = Earth_bary + Moon_geo
+state(target, center) = state(target, SSB) - state(center, SSB)
 ```
-This reduces large residuals for testpo target/center pairs involving Earth (testpo code 3) and Moon (10). The parser remaps:
-- Earth: 3 ? 399
-- Moon:  10 ? 301
-prior to state resolution.
+Previous Earth/Moon EMB + EMRAT specific derivation path has been removed as obsolete; any future special handling will be reintroduced only if validated by comparison statistics.
 
 ## Cache Layout (gitignored)
 ```
@@ -69,16 +65,16 @@ Spice.IntegrationTests/
 | `SPICE_ALLOW_LARGE_KERNELS` | If set (any value) permits downloading >150MB BSPs | Disabled |
 | `SPICE_TESTPO_MAX_STATES` | Max components sampled per ephemeris (lines) | 50 |
 | `SPICE_INTEGRATION_CACHE` | Override cache root path | Project `TestData/cache` |
-| `SPICE_NET_ENABLE_INTEGRATION` | If unset, tests are skipped (opt?in) | Skipped |
+| `SPICE_NET_ENABLE_INTEGRATION` | If unset, tests are skipped (opt-in) | Skipped |
 
 ## Adding New Ephemeris
 1. Append entry to `EphemerisCatalog` (size bytes, preferred BSP variant if small exists).
 2. Re-run with `SPICE_EPH_LIST` including the new number.
-3. Verify AU & EMRAT are present in the BSP comment area for strict tolerance mode.
+3. Verify AU symbol is present in BSP comment area for strict tolerance mode (optional).
 
 ## Notes / Limitations
 - Only SPK Types 2 & 3 currently parsed (sufficient for planetary DE kernels in scope).
-- No light?time, aberration, or relativistic corrections (pure geometric states matching testpo assumptions).
+- No light-time, aberration, or relativistic corrections (pure geometric states matching testpo assumptions).
 - Time conversion: simple JD?TDB seconds mapping; higher-order TT?TDB modeling pending roadmap item 19.
 - Velocity parity still under review for legacy kernels; strict regime emphasizes position fidelity first.
 
@@ -102,4 +98,4 @@ JPL testpo reference data: https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/
 ## Contributing Guidance
 - Keep tolerance changes minimal & document rationale.
 - Avoid hard-coding AU unless absolutely necessary; prefer parsed symbol.
-- Add unit tests for new symbol extraction or special-case logic.
+- Add unit tests for new symbol extraction or mapping logic.

@@ -11,6 +11,7 @@ namespace Spice.Ephemeris;
 /// greatest <see cref="SpkSegment.StartTdbSec"/> (latest starting segment).
 /// Implements a per (target,center) segment index for O(log n) lookup and a barycentric relative state resolver:
 /// state(target, center) = state(target, SSB) - state(center, SSB) when a direct segment is absent (SSB id = 0).
+/// Thread-safety: instances are not thread-safe; create separate instances per parallel scenario.
 /// </summary>
 public sealed class EphemerisService : IDisposable
 {
@@ -58,8 +59,19 @@ public sealed class EphemerisService : IDisposable
   // Cache for barycentric (relative to SSB=0) states at specific epochs; key tuple used sparingly per query path.
   readonly Dictionary<(int body,long etSeconds), StateVector> _baryCache = new();
 
+  /// <summary>
+  /// Gets the ordered list of kernel file paths successfully loaded (via meta-kernel or direct calls).
+  /// Useful for diagnostics and reproducibility. Order matches load order.
+  /// </summary>
   public IReadOnlyList<string> KernelPaths => _registry.KernelPaths;
 
+  /// <summary>
+  /// Load a meta-kernel (.tm style) which enumerates a set of kernel file paths. Supported kernel types:
+  /// LSK (.tls) and binary SPK (.bsp). Each encountered kernel is parsed and its segments registered.
+  /// Repeated calls append additional kernels (no duplicate prevention beyond path equality).
+  /// </summary>
+  /// <param name="metaKernelPath">Filesystem path to the meta-kernel text file.</param>
+  /// <exception cref="ArgumentNullException">If <paramref name="metaKernelPath"/> is null.</exception>
   public void Load(string metaKernelPath)
   {
     if (metaKernelPath is null) throw new ArgumentNullException(nameof(metaKernelPath));
@@ -94,6 +106,12 @@ public sealed class EphemerisService : IDisposable
     }
   }
 
+  /// <summary>
+  /// Load a real binary SPK kernel (.bsp) leveraging lazy coefficient access. Coefficients remain on the underlying
+  /// data source (stream or memory-mapped file) and are retrieved on-demand per record evaluation.
+  /// </summary>
+  /// <param name="spkPath">Path to the SPK file.</param>
+  /// <param name="memoryMap">True to prefer memory-mapped access (reduced per-read overhead) else stream-based.</param>
   public void LoadRealSpkLazy(string spkPath, bool memoryMap = true)
   {
     if (spkPath is null) throw new ArgumentNullException(nameof(spkPath));
@@ -126,6 +144,15 @@ public sealed class EphemerisService : IDisposable
     seg = null; return false;
   }
 
+  /// <summary>
+  /// Try to obtain the inertial state vector of <paramref name="target"/> relative to <paramref name="center"/>
+  /// at ephemeris time <paramref name="t"/>. Returns true if either a direct covering segment exists or a barycentric
+  /// composition path (target->SSB minus center->SSB) could be resolved.
+  /// </summary>
+  /// <param name="target">Target body id.</param>
+  /// <param name="center">Center (observer) body id.</param>
+  /// <param name="t">Ephemeris time (TDB seconds past J2000).</param>
+  /// <param name="state">Resolved state vector (km, km/s) if successful, otherwise default.</param>
   public bool TryGetState(BodyId target, BodyId center, Instant t, out StateVector state)
   {
     if (TryLocateSegment(target.Value, center.Value, t.TdbSecondsFromJ2000, out var seg) && seg is not null)
@@ -139,8 +166,12 @@ public sealed class EphemerisService : IDisposable
 
   /// <summary>
   /// Attempt to compute state(target, center) via barycentric composition: state(t,c)=state(t,0)-state(c,0).
-  /// Requires both bodies resolvable to SSB (0). Returns false if either cannot be resolved.
+  /// Requires both bodies resolvable to SSB (0). Returns false if either cannot be resolved (no traversal path).
   /// </summary>
+  /// <param name="target">Target body id.</param>
+  /// <param name="center">Center body id.</param>
+  /// <param name="t">Ephemeris time (TDB seconds past J2000).</param>
+  /// <param name="state">Resulting composed state if successful.</param>
   public bool TryGetRelativeState(BodyId target, BodyId center, Instant t, out StateVector state)
   {
     if (target.Value == center.Value) { state = StateVector.Zero; return true; }
@@ -171,7 +202,6 @@ public sealed class EphemerisService : IDisposable
 
     // Otherwise locate any segment body->X and recursively resolve X->SSB.
     EnsureIndex();
-    // Choose a covering segment with smallest |center| id precedence heuristically.
     var candidates = _segments.Where(s => s.Target.Value == body && t.TdbSecondsFromJ2000 >= s.StartTdbSec && t.TdbSecondsFromJ2000 <= s.StopTdbSec).OrderBy(s=>s.Center.Value).ToList();
     foreach (var cand in candidates)
     {
@@ -179,7 +209,6 @@ public sealed class EphemerisService : IDisposable
       var partial = SpkSegmentEvaluator.EvaluateState(cand, t); // state(body, center)
       if (TryResolveBarycentric(cand.Center.Value, t, out var centerBary))
       {
-        // partial = body relative to center, so body barycentric = partial + center barycentric
         state = partial.Add(centerBary);
         _baryCache[key] = state; return true;
       }
@@ -187,6 +216,16 @@ public sealed class EphemerisService : IDisposable
     state = default; return false;
   }
 
+  /// <summary>
+  /// Get the state vector (throws if unavailable) of <paramref name="target"/> relative to <paramref name="center"/> at <paramref name="t"/>.
+  /// Uses <see cref="TryGetState"/> internally and throws an <see cref="InvalidOperationException"/> when no suitable segment or
+  /// composition path is found.
+  /// </summary>
+  /// <param name="target">Target body id.</param>
+  /// <param name="center">Center body id.</param>
+  /// <param name="t">Ephemeris time (TDB seconds past J2000).</param>
+  /// <returns>Resolved state vector (km, km/s).</returns>
+  /// <exception cref="InvalidOperationException">If no data covers the requested epoch & pair.</exception>
   public StateVector GetState(BodyId target, BodyId center, Instant t)
   {
     if (!TryGetState(target, center, t, out var state))
@@ -194,6 +233,9 @@ public sealed class EphemerisService : IDisposable
     return state;
   }
 
+  /// <summary>
+  /// Dispose underlying ephemeris data sources (e.g., memory-mapped SPK files). After disposal further calls are invalid.
+  /// </summary>
   public void Dispose()
   {
     foreach (var ds in _dataSources)

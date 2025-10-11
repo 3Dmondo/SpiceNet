@@ -8,18 +8,18 @@ namespace Spice.IO;
 /// Supports reading: identification word, ND, NI, RECORDS count and enumerating a contiguous block of segment summaries.
 /// Not a full implementation of NAIF DAF architecture yet.
 /// </summary>
-public sealed class DafReader : IDisposable
+internal sealed class DafReader : IDisposable
 {
   const int IdWordLength = 8; // "DAF/SPK " (padded)
 
   readonly Stream _stream;
   readonly BinaryReader _br;
 
-  public int Nd { get; }
-  public int Ni { get; }
-  public int RecordCount { get; }
-  public long SummariesOffset { get; }
-  public int SummaryCount { get; }
+  internal int Nd { get; }
+  internal int Ni { get; }
+  internal int RecordCount { get; }
+  internal long SummariesOffset { get; }
+  internal int SummaryCount { get; }
 
   DafReader(Stream stream, int nd, int ni, int recordCount, int summaryCount, long summariesOffset)
   {
@@ -38,7 +38,7 @@ public sealed class DafReader : IDisposable
   /// int32 ND, int32 NI, int32 RECORDS, int32 SUMMARY_COUNT, (reserved int32 x2),
   /// followed immediately by summaries (ND doubles then NI int32s) repeated SUMMARY_COUNT times.
   /// </summary>
-  public static DafReader Open(Stream stream)
+  internal static DafReader Open(Stream stream)
   {
     if (!stream.CanRead || !stream.CanSeek) throw new ArgumentException("Stream must be seekable & readable", nameof(stream));
     stream.Seek(0, SeekOrigin.Begin);
@@ -66,17 +66,10 @@ public sealed class DafReader : IDisposable
     return BinaryPrimitives.ReadInt32LittleEndian(tmp);
   }
 
-  static double ReadDouble(Stream s, Span<byte> tmp8)
-  {
-    if (s.Read(tmp8) != 8) throw new EndOfStreamException();
-    ulong bits = BinaryPrimitives.ReadUInt64LittleEndian(tmp8);
-    return BitConverter.Int64BitsToDouble((long)bits);
-  }
-
   /// <summary>
   /// Read all summaries returning collection of raw double/int arrays.
   /// </summary>
-  public IEnumerable<DafSegmentSummary> ReadSummaries()
+  internal IEnumerable<DafSegmentSummary> ReadSummaries()
   {
     _stream.Seek(SummariesOffset, SeekOrigin.Begin);
     var result = new List<DafSegmentSummary>(SummaryCount);
@@ -111,4 +104,4 @@ public sealed class DafReader : IDisposable
 /// <summary>
 /// Raw DAF segment summary: ND double precision components followed by NI integer components.
 /// </summary>
-public sealed record DafSegmentSummary(double[] Doubles, int[] Integers);
+internal sealed record DafSegmentSummary(double[] Doubles, int[] Integers);
