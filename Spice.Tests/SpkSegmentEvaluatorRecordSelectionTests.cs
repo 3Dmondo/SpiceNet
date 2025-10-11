@@ -32,6 +32,34 @@ public class SpkSegmentEvaluatorRecordSelectionTests
     sInterior2.PositionKm.X.ShouldBe(0.5, 1e-12);
   }
 
+  [Fact]
+  public void LocateRecord_Fallback_Linear_On_Unsorted_Mids()
+  {
+    // Create two records but supply mids array intentionally unsorted (200, 0).
+    // Evaluate inside second (true mid=0) record coverage at et=50; binary search will miss and linear fallback should find record index 1.
+    int degree = 2; int n1 = degree + 1; // 3
+    double[] rec0 = [200,100, 0,1,0, 0,0,0, 5,0,0]; // mid=200 (record 0)
+    double[] rec1 = [0,100, 0,1,0, 0,0,0, 5,0,0];   // mid=0   (record 1)
+    var coeffs = rec0.Concat(rec1).ToArray();
+    int recordSize = 2 + 3 * n1; // 11
+    var seg = new SpkSegment(
+      new BodyId(1), new BodyId(0), new FrameId(1), 2,
+      -100, 300,
+      0, coeffs.Length, coeffs,
+      RecordCount: 2,
+      Degree: degree,
+      RecordMids: [200,0],          // unsorted on purpose
+      RecordRadii: [100,100],
+      ComponentsPerSet: 3,
+      RecordSizeDoubles: recordSize,
+      Init: 0, IntervalLength: 0, TrailerRecordSize: recordSize, TrailerRecordCount: 2
+    );
+
+    // At et=50: record with mid=0 radius=100 expected; its X polynomial is [0,1,0] => tau = (50-0)/100 = 0.5 => position X=0.5
+    var state = SpkSegmentEvaluator.EvaluateState(seg, new Instant(50));
+    state.PositionKm.X.ShouldBe(0.5, 1e-12);
+  }
+
   static SpkSegment BuildType2Multi()
   {
     int degree = 2; int n1 = degree + 1; // 3

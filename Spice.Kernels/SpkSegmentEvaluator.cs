@@ -161,16 +161,21 @@ internal static class SpkSegmentEvaluator
 
   static double EvaluateChebyshevDerivative(ReadOnlySpan<double> coeffs, double tau)
   {
+    // Derivative of T_n expressed via Chebyshev polynomials of the second kind U_{n-1}:
+    //   d/dtau T_n(tau) = n * U_{n-1}(tau)
+    // Position polynomial P(tau) = ? c_k T_k(tau) => P'(tau) = ? k * c_k * U_{k-1}(tau)
+    // We generate U_k iteratively with recurrence: U_0=1, U_1=2*tau, U_k = 2*tau*U_{k-1} - U_{k-2}.
+    // Implementation accumulates k*c_k*U_{k-1}. (k index aligns with coeffs[k])
     int n = coeffs.Length - 1;
     if (n <= 0) return 0d;
-    double sum = coeffs.Length > 1 ? coeffs[1] : 0d;
+    double sum = coeffs.Length > 1 ? coeffs[1] : 0d; // k=1 term where U_0 = 1
     if (n == 1) return sum;
-    double Ukm2 = 1d;
-    double Ukm1 = 2 * tau;
-    if (n >= 2) sum += 2 * coeffs[2] * Ukm1;
+    double Ukm2 = 1d;      // U_0
+    double Ukm1 = 2 * tau; // U_1
+    if (n >= 2) sum += 2 * coeffs[2] * Ukm1; // k=2 term uses U_1
     for (int k = 3; k <= n; k++)
     {
-      double Ukminus1 = 2 * tau * Ukm1 - Ukm2;
+      double Ukminus1 = 2 * tau * Ukm1 - Ukm2; // produces U_{k-1}
       sum += k * coeffs[k] * Ukminus1;
       Ukm2 = Ukm1;
       Ukm1 = Ukminus1;

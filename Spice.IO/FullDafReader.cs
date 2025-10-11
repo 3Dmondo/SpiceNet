@@ -25,6 +25,7 @@ internal static class DafAddress
 
 internal sealed class FullDafReader : IDisposable
 {
+  const double ControlWordIntegralEpsilon = 1e-12; // Maximum fractional deviation allowed when interpreting control word double as integer
   const int SegmentNameLength = 40; // NC for ND=2, NI=6 (SPK typical)
 
   readonly Stream _stream;
@@ -233,7 +234,7 @@ internal sealed class FullDafReader : IDisposable
     if (!double.IsNaN(dv) && Math.Abs(dv) < int.MaxValue)
     {
       long lv = (long)Math.Round(dv);
-      if (Math.Abs(dv - lv) < 1e-12)
+      if (Math.Abs(dv - lv) < ControlWordIntegralEpsilon)
         return (int)lv;
     }
     return low; // conservative fallback
