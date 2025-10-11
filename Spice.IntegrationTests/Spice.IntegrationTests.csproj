@@ -27,4 +27,7 @@
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestData\BodyMapping.json" CopyToOutputDirectory="Always" />
+  </ItemGroup>
 </Project>

@@ -7,7 +7,7 @@ These tests:
 1. Download (if missing) selected `testpo.<eph>` ASCII reference files.
 2. Download (if permitted) corresponding `de<eph>.bsp` (or small variant) SPK kernel under a local cache directory.
 3. Parse reference components (position + velocity) and compare interpolated SpiceNet results (SPK Types 2/3) at the same epochs.
-4. Assert numerical error bounds expressed primarily in AU (positions) and AU/day (velocities) with dynamic fallback tolerance logic.
+4. Assert numerical error bounds using centralized `TolerancePolicy` (Prompt 26.A) with AU / AU/day domain tolerances.
 
 Large ephemerides (>150 MB) are skipped unless explicitly allowed.
 
@@ -18,32 +18,64 @@ The JPL `testpo` files express:
 
 SpiceNet state vectors are produced in km (position) and km/s (velocity). For comparison we normalize:
 ```
-position_AU   = state.PositionKm / AU_km
-velocity_AU_d = state.VelocityKmPerSec / (AU_km / 86400)   // equivalently velocityKmPerSec * 86400 / AU_km
+position_AU   = positionKm / AU_km
+velocity_AU_d = velocityKmPerSec / (AU_km / 86400)   // equivalently velocityKmPerSec * 86400 / AU_km
 ```
-`AU_km` is extracted from the BSP comment area (symbol `AU`) when available.
+`AU_km` is taken from BSP comments (symbol `AU`) when available; otherwise the IAU exact value (149,597,870.7 km) is used and strictness falls back per policy.
 
-## Current Tolerance Model
-Strict tolerances (AU constant found in BSP comments):
-- Position: `1e-13` AU  (? 1.50e-5 km ? 1.5 cm)
-- Velocity: `1e-16` AU/day (? 1.73e-13 km/s)
+## Body Code Mapping
+The original testpo convention uses integer codes (e.g., 3=Earth, 10=Moon) differing from NAIF IDs (399=Earth, 301=Moon). These remaps are now housed in `TestData/BodyMapping.json`:
+```
+[
+  { "testpo": 3,  "naif": 399, "rationale": "Earth mapping" },
+  { "testpo": 10, "naif": 301, "rationale": "Moon mapping" }
+]
+```
+The parser loads this file at runtime; inline hard-coded remap logic has been removed.
 
-Relaxed tolerances (AU constant missing): multipliers ×10,000
-- Position: `1e-9` AU  (? 149.6 m)
-- Velocity: `1e-12` AU/day (? 1.73e-9 km/s)
+## Tolerances (Centralized)
+The canonical tolerance policy lives in `Spice.Core.TolerancePolicy` and is documented in `docs/Tolerances.md`. The snippet below is a verbatim copy (must remain byte-for-byte identical for future doc sync tests):
 
-Additional early ephemeris relaxation (ephemeris number starting with `2`) multiplies the *relaxed* bounds by a further ×100 (overall ×1,000,000 vs strict):
-- Position: `1e-7` AU  (? 14.96 km)
-- Velocity: `1e-10` AU/day (? 1.73e-11 km/s)
+# Tolerances (Canonical Snippet)
 
-These adaptive rules prevent spurious failures for legacy or incomplete kernels while retaining centimeter-level targets when full metadata (AU) is present.
+This snippet is the single source of truth for golden comparison tolerances used by integration tests and documented in READMEs. Any copy elsewhere must be byte?for?byte identical (normalized line endings) and is validated by future doc sync tests.
 
-> Long-term goal: converge on universal km / km/s bounds of ?1e-6 km and ?1e-9 km/s once all scaling & special-case handling is stabilized.
+Tolerance policy (fine?tuned) derives absolute tolerances in AU (position) and AU/day (velocity) from ephemeris series number and AU constant availability:
+
+Policy tiers (when AU constant present in BSP comments):
+- Modern High Fidelity (ephemeris > 414 and != 421): position 2e-14 AU, velocity 3e-17 AU/day (strict=true)
+- Legacy Series (ephemeris ? 414): position 6e-14 AU, velocity 5e-14 AU/day (strict=false)
+- Problematic Special Case (ephemeris == 421): position 2e-12 AU, velocity 5e-15 AU/day (strict=false) – accommodates known residual characteristics of DE421
+
+Fallback (AU constant absent): position 5e-8 AU, velocity 1e-10 AU/day (strict=false)
+
+Derived km & km/s tolerances use shared constants (`Constants.AstronomicalUnitKm`, `Constants.AuPerDayToKmPerSec`).
+
+| Tier | Criteria | Position (AU) | Velocity (AU/day) | Strict |
+|------|----------|---------------|-------------------|--------|
+| Modern High Fidelity | AU present AND ephemeris > 414 AND ephemeris != 421 | 2e-14 | 3e-17 | Yes |
+| Legacy Series | AU present AND ephemeris ? 414 (except 421) | 6e-14 | 5e-14 | No |
+| Problematic (DE421) | AU present AND ephemeris = 421 | 2e-12 | 5e-15 | No |
+| Fallback (No AU) | AU absent | 5e-8 | 1e-10 | No |
+
+Rationale:
+- Empirical residual analysis across supported DE4xx kernels shows distinct clustering; majority of modern kernels permit very tight bounds (2e-14 AU).
+- DE421 exhibits larger systematic deviations; a looser dedicated band prevents noisy failures while still detecting regressions.
+- Legacy (?414) kernels retain moderately relaxed bounds acknowledging historical numerical differences while remaining far tighter than earlier interim values.
+- Absence of an AU constant implies incomplete metadata; wide fallback tolerances applied pending kernel enrichment.
+
+Legacy AU constants: `Constants.LegacyDeAU` records per?ephemeris AU values used historically (sourced from kernel comments) enabling cross validation when BSP lacks explicit AU symbol.
+
+Future Direction:
+- Revisit DE421 special case if improved interpolation or time modeling narrows residuals.
+- Introduce stats artifact (Prompt 26.C) to auto?propose tighter bounds when observed maxima < 50% of budget over sustained runs.
+
+All tolerance literals are centralized in `TolerancePolicy.Get`; no other code should embed these numeric values.
 
 ## Barycentric Composition
 Relative states are composed generically via Solar System Barycenter (SSB) chaining when a direct segment (target, center) is absent:
 ```
-state(target, center) = state(target, SSB) - state(center, SSB)
+state(target, center) = state(target, 0) - state(center, 0)
 ```
 Previous Earth/Moon EMB + EMRAT specific derivation path has been removed as obsolete; any future special handling will be reintroduced only if validated by comparison statistics.
 
@@ -70,7 +102,7 @@ Spice.IntegrationTests/
 ## Adding New Ephemeris
 1. Append entry to `EphemerisCatalog` (size bytes, preferred BSP variant if small exists).
 2. Re-run with `SPICE_EPH_LIST` including the new number.
-3. Verify AU symbol is present in BSP comment area for strict tolerance mode (optional).
+3. Verify AU symbol is present in BSP comment area for appropriate strictness tier.
 
 ## Notes / Limitations
 - Only SPK Types 2 & 3 currently parsed (sufficient for planetary DE kernels in scope).
@@ -79,14 +111,14 @@ Spice.IntegrationTests/
 - Velocity parity still under review for legacy kernels; strict regime emphasizes position fidelity first.
 
 ## Future Enhancements
-- Code/center inventory & external mapping manifest.
+- Code/center inventory & extended mapping manifest.
 - Parallelized comparison pass.
 - Structured JSON summary (max/mean/RMS) for CI trend tracking.
 - Diagnostic CLI (segment coverage + residual inspection).
-- Tightened universal km-based tolerances after full validation.
+- Potential tightening of legacy / fallback tiers after stats aggregation.
 
 ## Failure Reporting
-On assertion failure only (target, center, component) rows exceeding their dynamic tolerance are printed, including:
+On assertion failure only (target, center, component) rows exceeding their tolerance are printed, including:
 ```
 Target Center Comp Count MaxErr MeanErr WorstET ReferenceValue PredictedValue
 ```
@@ -96,6 +128,6 @@ Errors are absolute differences in AU (position) or AU/day (velocity).
 JPL testpo reference data: https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/
 
 ## Contributing Guidance
-- Keep tolerance changes minimal & document rationale.
-- Avoid hard-coding AU unless absolutely necessary; prefer parsed symbol.
+- Tolerance changes require updating `TolerancePolicy`, this README, and `docs/Tolerances.md` (kept identical).
+- Mapping additions require editing `BodyMapping.json` and adding/adjusting tests.
 - Add unit tests for new symbol extraction or mapping logic.

@@ -1,0 +1,4 @@
+[
+  { "testpo": 3,  "naif": 399, "rationale": "Earth mapping (testpo uses 3, NAIF planetary ID 399)" },
+  { "testpo": 10, "naif": 301, "rationale": "Moon mapping (testpo uses 10, NAIF natural satellite ID 301)" }
+]

@@ -1,40 +1,25 @@
 # Prompt 26: Consolidation / Quality Alignment Pass
 
-Status: Planned
+Status: In Progress (Phase 0 Completed; proceeding with Tasks A–J; CI lock (Step 7) deferred to final integration)
 Priority: High (execute before expanding feature surface beyond Prompt 25)
 Owner: Core maintainers
 
 ## Rationale
 Phase 2 deliverables (Prompts 13–25) introduced overlapping tolerance logic, duplicated documentation of AU/EMRAT handling, partially diverging roadmap status tables, and provisional mapping rules (testpo code ? NAIF ID). A focused consolidation pass reduces drift, prevents silent tolerance regressions, and establishes a stable baseline prior to adding new kernel / time model complexity.
 
-## Phase 0: Public API Surface Audit (Precedes All Other Work)
+## Phase 0: Public API Surface Audit (Completed)
 Goal: Minimize and lock the externally supported API before deeper consolidation so later internalization does not create churn.
 
-Tasks:
-1. Inventory Current Public Surface
-   - Script: reflection over each runtime assembly (excluding test/bench) capturing: namespace, type (class/struct/record/interface), member kind, accessibility.
-   - Output JSON: `artifacts/api-scan.json` (checked into repo for diff in PR).
-2. Classify Symbols
-   - Categories: Facade (must stay public), Value Primitive, Parsing Entry Point, Internal Helper (candidate for `internal`), Accidental Exposure (should be removed or internalized).
-   - Produce `docs/PublicApiClassification.md` summarizing decisions table.
-3. Internalize
-   - Change accessibility of non-facade types to `internal` (keep value structs like `Vector3d`, `BodyId`, `Instant`, `StateVector`, and `EphemerisService` public; others by decision).
-   - Add `InternalsVisibleTo` for `Spice.Tests`, `Spice.IntegrationTests`, `Spice.Benchmarks` only if required.
-4. Introduce Public API Baseline Analyzer
-   - Add Roslyn analyzer package (Microsoft.CodeAnalysis.PublicApiAnalyzers) via central package management.
-   - Generate `PublicAPI.Shipped.txt` & `PublicAPI.Unshipped.txt` in each packable project (initial content = post-pruning surface).
-5. Documentation Update
-   - Add README section: "Supported Public Surface" referencing the baseline + stability policy (semantic versioning statement placeholder).
-6. Verification
-   - Build with analyzers: zero new public API warnings after baseline capture.
-   - Tests compile & pass referencing internalized members through `InternalsVisibleTo`.
-7. Lock
-   - Add CI step to fail if public surface changes without updating PublicAPI files.
+Outcome Summary:
+- Public surface pruned to primitives (BodyId, FrameId, Duration, Instant, StateVector, Vector3d) and EphemerisService.
+- PublicApiAnalyzers enabled with baseline captured (shipped file).
+- XML documentation added for all public symbols.
+- Lock (CI enforcement) intentionally deferred to final Step 7 after remaining consolidation to avoid churn in intermediate PRs.
 
-Exit Criteria:
-- No accidental parsing/IO helpers left public.
-- Analyzer baseline committed; subsequent changes require explicit approval.
-- Classification doc explains rationale for any temporarily public items that might be internal later.
+Original Tasks (1–6) Completed; Task 7 (Lock) deferred.
+
+Deferred Step 7 Plan:
+Add CI workflow gate verifying: (a) no diff vs PublicAPI.Shipped.txt unless Unshipped updated, (b) failing build on unexpected additions. Will be implemented after tasks A–J stabilize internal refactors to reduce maintenance friction.
 
 ## Objectives
 1. Single Source of Truth (SSOT) for numeric tolerances & unit conversion constants.
@@ -43,10 +28,10 @@ Exit Criteria:
 4. Central tolerance policy service reused by integration + unit tests (no duplicated literals).
 5. Diagnostic artifacts (JSON) for integration comparison statistics (basis for future CI trend graphs).
 6. Dead / divergent doc sections reconciled (e.g., 40x vs 2xx relaxation discrepancies).
-7. Lightweight quality gates (analyzers / style) added where gaps exist.
+7. Lightweight quality gates (analyzers / style) added where gaps exist (public API gate postponed to final lock step).
 8. Remove obsolete Earth/Moon EMB + EMRAT special-case documentation & confirm no residual code path remains.
 9. Prepare scaffolding for later prompts (stats + mapping feed golden regression & metadata enrichment).
-10. Minimized, locked public API surface (Phase 0) to reduce long-term maintenance.
+10. Minimized, locked public API surface (Phase 0 complete; CI enforcement pending).
 
 ## Scope (In / Out)
 In:
@@ -78,11 +63,11 @@ C. Stats Artifact
 D. Documentation Synchronization
   D1. Author single canonical tolerance section snippet in `docs/Tolerances.md` and include (verbatim copy) in root README, IntegrationTests README, manifest.
   D2. Add doc sync test: compute SHA256 of normalized snippet vs embedded copies.
-  D3. Harmonize roadmap tables; ensure Prompt 26 present everywhere.
+  D3. Harmonize roadmap tables; ensure Prompt 26 present everywhere (Phase 0 marked complete).
   D4. Remove all EMB/EMRAT historical explanatory blocks; add short note: "Previously documented EARTH/MOON EMB + EMRAT derivation removed; generic barycentric chaining now used.".
 
 E. Analyzer / Quality Gate
-  E1. Enable `#nullable enable` in each project (add to top-level `Directory.Build.props` or individual csproj) & address new warnings minimally (suppress or fix where trivial).
+  E1. Ensure `#nullable enable` (done) – maintain zero warnings policy.
   E2. Introduce simple CI script (test) that parses each README roadmap table into JSON and asserts equality of prompt set + statuses.
   E3. Add guard test scanning repository for forbidden tolerance literals outside `TolerancePolicy`.
 
@@ -122,12 +107,12 @@ J. Housekeeping
 - Control word heuristic mixes endian pieces; clarify & test (F4).
 - Duplicate word->byte offset math scattered (F3).
 - Stats artifact & regression harness missing (C).
-- Nullability disabled; future correctness aid (E1).
+- Nullability disabled; future correctness aid (E1) – now enabled.
 - EMB/EMRAT removed in docs but ensure absence in code (D4, validation search test).
-- Public API surface larger than necessary prior to consolidation (Phase 0).
+- Public API surface larger than necessary prior to consolidation (Phase 0) – now minimized.
 
 ## Acceptance Criteria
-- Public API audit completed; classification & baseline analyzer files committed.
+- Public API audit completed (Phase 0) & baseline analyzer files committed (ship file reflects current surface).
 - No remaining hard-coded numeric tolerances outside `TolerancePolicy` (search proves single definition path).
 - Mapping file drives Earth/Moon remap; removal of old literals verified via search.
 - All README tolerance sections identical (byte-for-byte when normalized for line endings) except intentional context preamble differences.
@@ -136,6 +121,7 @@ J. Housekeeping
 - Documentation clearly indicates current parity goals & relaxation pathways.
 - Binary search record selection passes existing evaluator tests.
 - Control word tests cover synthetic + native double encodings.
+- CI public API lock (Step 7) added at finalization.
 
 ## Non-Goals
 - Tightening tolerances beyond existing logic.
@@ -158,11 +144,11 @@ J. Housekeeping
 - Mapping file forms seed for Prompt 20 (body metadata enrichment).
 - Central constants facilitate Prompt 19 advanced time model plugging (shared units).
 - Binary search & index enhancements foundation for further segment type support.
-- Public API baseline enables stable semantic versioning once initial release prepared.
+- Public API baseline enables stable semantic versioning once initial release prepared (CI lock forthcoming).
 
 ## Implementation Order Suggestion
-0. Phase 0 (Public API Audit & Pruning)
-1. A (constants) ? 2. B (mapping) ? 3. D (docs sync) ? 4. C (stats artifact) ? 5. E (gate) ? 6. F/G (refactors) ? 7. H (tests) ? 8. I (benchmarks) ? 9. J (report) ? Final verification.
+0. Phase 0 (Completed)
+1. A (constants) ? 2. B (mapping) ? 3. D (docs sync) ? 4. C (stats artifact) ? 5. E (gate) ? 6. F/G (refactors) ? 7. H (tests) ? 8. I (benchmarks) ? 9. J (report) ? Final verification & Step 7 public API lock.
 
 ## Success Metric
-Post-consolidation diff shows net deletion > addition for duplicated literals and doc inconsistencies while test coverage unchanged or improved (added mapping & stats tests). Benchmarks show no >5% regression in existing evaluator / state query scenarios. Public API analyzer baseline prevents accidental surface growth.
+Post-consolidation diff shows net deletion > addition for duplicated literals and doc inconsistencies while test coverage unchanged or improved (added mapping & stats tests). Benchmarks show no >5% regression in existing evaluator / state query scenarios. Public API analyzer baseline prevents accidental surface growth; CI enforcement added at final step.

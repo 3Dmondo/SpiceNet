@@ -1,5 +1,6 @@
 // Original design: Parser for JPL testpo reference files.
 using System.Globalization;
+using System.Text.Json;
 
 namespace Spice.IntegrationTests;
 
@@ -39,6 +40,28 @@ internal sealed record TestPoComponent(
 
 internal static class TestPoParser
 {
+  private static readonly Lazy<Dictionary<int,int>> _codeMap = new(() => LoadMapping());
+
+  private static Dictionary<int,int> LoadMapping()
+  {
+    try
+    {
+      var path = Path.Combine(AppContext.BaseDirectory, "TestData", "BodyMapping.json");
+      if (!File.Exists(path)) return new();
+      using var stream = File.OpenRead(path);
+      var items = JsonSerializer.Deserialize<List<BodyMapEntry>>(stream, new JsonSerializerOptions{PropertyNameCaseInsensitive=true}) ?? new();
+      var dict = new Dictionary<int,int>();
+      foreach (var e in items)
+      {
+        if (!dict.ContainsKey(e.Testpo)) dict[e.Testpo] = e.Naif;
+      }
+      return dict;
+    }
+    catch { return new(); }
+  }
+
+  private sealed record BodyMapEntry(int Testpo, int Naif, string? Rationale);
+
   /// <summary>
   /// Legacy aggregation (requires all 6 components) – retained for reference but unused now.
   /// </summary>
@@ -61,11 +84,14 @@ internal static class TestPoParser
       if (parts.Length < 7) continue;
       if (!int.TryParse(parts[0], out _)) continue; // eph not used
       if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var jd)) continue;
-      if (!int.TryParse(parts[3], out var tcode)) continue;
-      if (!int.TryParse(parts[4], out var ccode)) continue;
+      if (!int.TryParse(parts[3], out var tcodeRaw)) continue;
+      if (!int.TryParse(parts[4], out var ccodeRaw)) continue;
       if (!int.TryParse(parts[5], out var compIndex)) continue;
       if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) continue;
       if (compIndex is < 1 or > 6) continue;
+
+      var tcode = Remap(tcodeRaw);
+      var ccode = Remap(ccodeRaw);
 
       var key = (jd, tcode, ccode);
       if (!map.TryGetValue(key, out var arr))
@@ -105,23 +131,20 @@ internal static class TestPoParser
       if (parts.Length < 7) continue;
       if (!int.TryParse(parts[0], out _)) continue; // eph not needed
       if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var jd)) continue;
-      if (!int.TryParse(parts[3], out var tcode)) continue;
-      if (!int.TryParse(parts[4], out var ccode)) continue;
+      if (!int.TryParse(parts[3], out var tcodeRaw)) continue;
+      if (!int.TryParse(parts[4], out var ccodeRaw)) continue;
       if (!int.TryParse(parts[5], out var compIndex)) continue;
       if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) continue;
       if (compIndex is < 1 or > 6) continue;
-      if (tcode == 3)
-        tcode = 399; // testpo uses 3 for Earth, SPICE uses 399
-      if (tcode == 10)
-        tcode = 301; // testpo uses 10 for Moon, SPICE uses 301
-      if (ccode == 3)
-        ccode = 399; // testpo uses 3 for Earth, SPICE uses 399
-      if (ccode == 10)
-        ccode = 301; // testpo uses 10 for Moon, SPICE uses 301
+      var tcode = Remap(tcodeRaw);
+      var ccode = Remap(ccodeRaw);
       yield return new TestPoComponent(tcode, ccode, jd, compIndex, value);
       if (++count >= maxComponents) yield break;
     }
   }
+
+  private static int Remap(int code)
+    => _codeMap.Value.TryGetValue(code, out var mapped) ? mapped : code;
 
   static string[] SplitColumns(string line)
     => line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

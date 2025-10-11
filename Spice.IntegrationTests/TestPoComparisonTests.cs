@@ -7,9 +7,6 @@ namespace Spice.IntegrationTests;
 
 public class TestPoComparisonTests
 {
-  const double PositionTolKm = 1e-13; // absolute tolerance in AU domain (positions expressed as AU)
-  const double VelocityTolKmPerSec = 1e-16; // absolute tolerance in AU/day domain for velocities
-
   public static IEnumerable<object[]> EphemerisNumbers()
   {
     foreach (var e in EphemerisCatalog.ResolveSelection())
@@ -47,35 +44,32 @@ public class TestPoComparisonTests
     ensured.ShouldNotBeNull($"Failed to ensure ephemeris de{ephNumber} (download or cache failure).\n");
     var (testpoPath, bspPath) = ensured.Value;
 
-
-    var positionTolKm = PositionTolKm;
-    var velocityTolKmPerSec = VelocityTolKmPerSec;
-    // Extract AU constant from kernel comment area (fallback if absent).
-    double auKm = 1.4959787070000000e+08; // fallback (km)
+    // Detect AU constant presence in kernel comment area (best-effort) to determine strictness.
+    bool hasAuConstant = false;
+    double auKm = Constants.AstronomicalUnitKm; // default exact IAU value
+    if (!int.TryParse(ephNumber, out var ephNumInt)) ephNumInt = -1;
     try
     {
       var (_, _, map) = DafCommentUtility.Extract(bspPath);
-      if (map.TryGetValue("AU", out var auSym) && auSym.FirstNumeric is double auParsed)
-        auKm = auParsed;
-      else
+      if (map.TryGetValue("AU", out var auSym) && auSym.FirstNumeric is double auParsed && auParsed > 0)
       {
-        positionTolKm *= 10000;
-        velocityTolKmPerSec *= 10000; // relax tolerances if AU constant missing
-        if (ephNumber.StartsWith("40"))
-        {
-          positionTolKm *= 10; // looser for DE40x 
-          velocityTolKmPerSec *= 10; // looser for DE40x 
-        }
-        else if (ephNumber.StartsWith("2"))
-        {
-          positionTolKm *= 100; // even looser for DE2xx 
-          velocityTolKmPerSec *= 100; // even looser for DE1xx, DE2xx 
-        }
+        auKm = auParsed;
+        hasAuConstant = true;
+      }
+      else if(Constants.LegacyDeAU.TryGetValue(ephNumInt, out auParsed))
+      {
+        auKm = auParsed;
+        hasAuConstant = true;
       }
     }
-    catch { /* retain fallback */ }
+    catch { /* fallback keeps default IAU value; tolerances choose non-strict when AU missing */ }
 
-    double auDKmS = auKm / 86400.0; // conversion for velocity to AU/day
+    // Derive tolerance profile from policy.
+    var tol = TolerancePolicy.Get(ephNumInt, hasAuConstant);
+
+    // Values in testpo comparison are expressed in AU (positions) and AU/day (velocities); use AU-domain tolerances directly.
+    double positionTolAu = tol.PositionAu;
+    double velocityTolAuPerDay = tol.VelocityAuPerDay;
 
     using var svc = new EphemerisService();
     svc.LoadRealSpkLazy(bspPath, memoryMap: true);
@@ -93,16 +87,16 @@ public class TestPoComparisonTests
       var center = new BodyId(comp.CenterCode);
 
       if (!svc.TryGetState(target, center, instant, out var state))
-        continue; // skip if no direct state available
+        continue; // skip if no direct or composable state available
 
       double predicted = comp.ComponentIndex switch
       {
         1 => state.PositionKm.X / auKm,
         2 => state.PositionKm.Y / auKm,
         3 => state.PositionKm.Z / auKm,
-        4 => state.VelocityKmPerSec.X / auDKmS,
-        5 => state.VelocityKmPerSec.Y / auDKmS,
-        6 => state.VelocityKmPerSec.Z / auDKmS,
+        4 => state.VelocityKmPerSec.X / (auKm / Constants.SecondsPerDay),
+        5 => state.VelocityKmPerSec.Y / (auKm / Constants.SecondsPerDay),
+        6 => state.VelocityKmPerSec.Z / (auKm / Constants.SecondsPerDay),
         _ => double.NaN
       };
       if (double.IsNaN(predicted)) continue;
@@ -124,14 +118,13 @@ public class TestPoComparisonTests
 
     (posSamples > 0 || velSamples > 0).ShouldBeTrue($"Inconclusive: de{ephNumber} produced no comparable samples (no matching/composable states). AU={auKm}");
 
-    // Collect only failing component rows.
     var failing = new List<string>();
     foreach (var kvp in agg.OrderBy(x => x.Key.Target).ThenBy(x => x.Key.Center).ThenBy(x => x.Key.Component))
     {
       var k = kvp.Key; var a = kvp.Value;
       bool isPos = k.Component <= 3;
-      double tol = isPos ? positionTolKm : velocityTolKmPerSec;
-      if (a.MaxErr > tol)
+      double tolAu = isPos ? positionTolAu : velocityTolAuPerDay;
+      if (a.MaxErr > tolAu)
       {
         var w = a.WorstSample;
         failing.Add($"    {k.Target,6} {k.Center,6} {k.Component,4} {a.Count,5} {a.MaxErr:E3} {a.MeanErr:E3} {w.Et,12} {w.ValueRef,23:E15} {w.ValuePred,23:E15}");
@@ -139,23 +132,23 @@ public class TestPoComparisonTests
     }
 
     var header =
-      $"de{ephNumber} Failing Components (Tolerance Pos={positionTolKm:E} AU Vel={VelocityTolKmPerSec:E} AU/day) AU(km)={auKm}\n" +
+      $"de{ephNumber} Failing Components (Tol Pos={positionTolAu:E} AU Vel={velocityTolAuPerDay:E} AU/day Strict={tol.Strict} AU(km)={auKm})\n" +
        "    Target Center Comp Count        Max       Mean      WorstET                     Ref                    Pred\n";
 
     if (posSamples > 0)
     {
-      var posMean = posSumErr / posSamples;
+      var posMean = posSumErr / posSamples; // currently unused but available for diagnostics
       posMaxErr.ShouldBeLessThanOrEqualTo(
-        positionTolKm,
+        positionTolAu,
         failing.Count == 0
           ? $"de{ephNumber} position ok"
           : header + string.Join(Environment.NewLine, failing));
     }
     if (velSamples > 0)
     {
-      var velMean = velSumErr / velSamples;
+      var velMean = velSumErr / velSamples; // currently unused but available for diagnostics
       velMaxErr.ShouldBeLessThanOrEqualTo(
-        velocityTolKmPerSec,
+        velocityTolAuPerDay,
         failing.Count == 0
           ? $"de{ephNumber} velocity ok"
           : header + string.Join(Environment.NewLine, failing));

@@ -127,7 +127,7 @@ PROMPT 25:
 "Consolidate performance improvements guided by BenchmarkDotNet: (a) vectorized Chebyshev evaluation for position+velocity, (b) pooling scratch buffers, (c) minimizing bounds checks with ref locals. Document improvements under /docs/perf.md with before/after tables." 
 
 PROMPT 26:
-"Consolidation / Quality Alignment: unify tolerance & constant sources, introduce mapping inventory JSON, remove obsolete EMB+EMRAT special-case documentation, add comparison statistics artifact, synchronize roadmap tables, enable quality gates."
+"Consolidation / Quality Alignment: Phase 0 (public API pruning & baseline) completed; proceed with tolerance/constant unification, mapping inventory, stats artifact, doc synchronization, quality gates, evaluator/index refinements, and final CI public API lock at end." 
 
 ============================================================
 SECTION: DATA SOURCES & TEST FIXTURES GUIDELINES
@@ -142,6 +142,7 @@ SECTION: VALIDATION & ERROR BUDGET
 - Target double-precision parity vs CSPICE; any systematic deviation > 1e-10 relative requires investigation.
 - Document known approximations (current TT->TDB series order, ignored frame transformations) in README.
 - Relative states resolved generically via Solar System Barycenter composition; no special EMB+EMRAT path retained.
+- Public API baseline enforced locally via PublicApiAnalyzers; CI enforcement deferred until end of Prompt 26.
 
 ============================================================
 SECTION: CONTRIBUTION WORKFLOW (UPDATED NOTES)
