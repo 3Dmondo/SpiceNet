@@ -1,7 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <PackageId>Spice.IO</PackageId>
+    <Authors>Edmondo Silvestri</Authors>
+    <Company>Edmondo Silvestri</Company>
+    <Description>Low-level DAF/SPK IO utilities for SpiceNet (binary traversal, data sources).</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/3Dmondo/SpiceNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>SPICE;Ephemeris;Astronomy;NAIF;IO</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Spice.Core\Spice.Core.csproj" />
   </ItemGroup>
-
 </Project>

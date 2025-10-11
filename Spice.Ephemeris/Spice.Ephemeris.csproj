@@ -1,5 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <PackageId>Spice.Ephemeris</PackageId>
+    <Authors>Edmondo Silvestri</Authors>
+    <Company>Edmondo Silvestri</Company>
+    <Description>High-level ephemeris service facade for querying SPK kernel state vectors (SpiceNet).</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/3Dmondo/SpiceNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>SPICE;Ephemeris;Astronomy;NAIF;Facade</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Spice.Kernels\Spice.Kernels.csproj" />
     <ProjectReference Include="..\Spice.IO\Spice.IO.csproj" />

@@ -1,7 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- Public API analyzers re-enabled -->
+    <PackageId>Spice.Core</PackageId>
+    <Authors>Edmondo Silvestri</Authors>
+    <Company>Edmondo Silvestri</Company>
+    <Description>Core primitives (vectors, instants, state) and time conversion utilities for SpiceNet ephemeris querying.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/3Dmondo/SpiceNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>SPICE;Ephemeris;Astronomy;NAIF</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />

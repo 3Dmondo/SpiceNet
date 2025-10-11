@@ -13,74 +13,112 @@ Build a cohesive set of narrowly-scoped C# libraries (prefer multiple small proj
      state vectors, orientations) with clear unit semantics.
   3. Offer a clean, discoverable API for: (a) loading kernels, (b) querying states (position & velocity) between bodies,
      (c) handling leap seconds & time conversions (UTC <-> TAI <-> TDB/ET), (d) performing basic frame transformations (initial minimal subset).
-  4. Embrace modern .NET 9 performance features while retaining clarity.
-  5. Maintain rigorous automated test coverage and auditable numeric tolerances.
-  6. Provide an extensible foundation for later kernel support.
+  4. Embrace modern .NET 9 performance features (Span<T>, ReadOnlySpan<T>, vectorization via System.Numerics, optional SIMD intrinsics) while
+     retaining readability and SRP.
+  5. Enable rigorous automated test coverage (golden numeric comparisons vs authoritative CSPICE output for selected cases).
+  6. Provide an extensible foundation to incrementally add other kernel support (CK, PCK, DSK, etc.) later.
 
 ============================================================
 SECTION: ARCHITECTURAL GUIDING PRINCIPLES
 ============================================================
-1. SOLID / SRP.
-2. Immutability by default.
-3. Strict separation: IO/parsing vs domain math vs query orchestration.
-4. Minimal necessary abstraction; interfaces only when multiple implementations are expected.
-5. Explicit units in all public APIs.
-6. Encapsulate DAF/SPK complexity; facade exposes semantic operations.
-7. Optimize after correctness; benchmark before & after.
-8. Minimal public surface (primitives + `EphemerisService`).
-9. Deterministic artifacts (stats JSON) for regression tracking.
-10. Comprehensive XML documentation.
+1. SOLID with emphasis on SRP; each class/record has a single reason to change.
+2. Immutability by default: use records / readonly structs.
+3. Separation of concerns: parsing/IO vs math vs orchestration.
+4. Avoid premature abstraction; add interfaces only when multiple implementations are plausible.
+5. Favor static extension methods for pure transformations.
+6. Explicit units (km, km/s, TDB seconds past J2000).
+7. Hide unsafe / pointer details internally.
+8. Optimize after correctness (benchmark driven).
+9. Internalize DAF complexity; external API is semantic (GetState).
+10. Rich XML docs for public APIs.
 
 ============================================================
-SECTION: PROJECT STRUCTURE
+SECTION: PROJECT STRUCTURE (INITIAL)
 ============================================================
 Solution: SpiceNet.sln
-Projects (net9.0): Core, IO, Kernels, Ephemeris, Tests, IntegrationTests, Benchmarks (optional), Console.Demo.
+Projects (net9.0):
+  1. Spice.Core
+  2. Spice.IO
+  3. Spice.Kernels
+  4. Spice.Ephemeris
+  5. Spice.Tests
+  6. Spice.IntegrationTests
+  7. (Optional) Spice.Benchmarks
+  8. Tooling (Console, ApiScan)
 
 ============================================================
-SECTION: CODING CONVENTIONS
+SECTION: CODING CONVENTIONS / STYLE ALIGNMENT
 ============================================================
-(Refer to .editorconfig; summarized previously – unchanged.)
+Honor .editorconfig: 2-space indent, file-scoped namespaces, predefined types, readonly fields, span-based parsing, minimal allocations, collection expressions, no duplicate tolerance literals (central policy only), all new public APIs need XML docs & tests.
 
 ============================================================
-SECTION: SEQUENTIAL PROMPTS (PHASE 2)
+SECTION: DOMAIN MODEL (INITIAL SKETCH)
 ============================================================
-Status Legend: ✅ Completed | ▶ Pending | ⭕ Optional
-
-| Prompt | Title | Status | Notes |
-|--------|-------|--------|-------|
-| 13 | Full DAF Reader | ✅ | Endianness + summaries + names + control words |
-| 14 | Real SPK Multi-Record | ✅ | Types 2/3 trailer & per-record MID/RADIUS |
-| 15 | EphemerisDataSource (Lazy/MM) | ✅ | Stream vs memory-map abstraction |
-| 16 | testpo Integration | ✅ | Parser + mapping JSON + comparisons |
-| 17 | Tolerance Golden Tests | ✅ | Policy tiers + stats JSON artifact |
-| 18 | Segment Indexing | ✅ | Binary search + boundary fast path |
-| 19 | Extended TT->TDB Model | ✅ | Pluggable offset strategy (basic vs extended harmonics) |
-| 20 | Body/Frame Metadata Loader | ▶ | Minimal FK/PCK subset |
-| 21 | Diagnostic CLI Enrichment | ▶ | Public facade only tooling |
-| 22 | CI Workflow | ▶ | Build/test + artifact publish |
-| 23 | Pluggable Time Strategies | ▶ | ILeapSecondProvider / ITdbOffsetModel refactor |
-| 24 | Structured Logging | ▶ | Segment selection trace |
-| 25 | Perf Consolidation | ▶ | SIMD Chebyshev + pooling + perf report |
-| 26 | Consolidation | ✅ | Tolerances, mapping, stats, docs, meta-kernel removal |
-
-Post-Consolidation Sub-Prompts:
-
-| Prompt | Description | Status | Priority |
-|--------|-------------|--------|----------|
-| 26B | Public API Analyzer Baseline (API Lock) | ✅ | High |
-| 26C | Diagnostic CLI Audit (H1) ensure public-only | ▶ | High |
-| 26D | Micro Benchmarks (record selection, barycentric warm/cold) | ⭕ | Optional |
+Core primitives: BodyId, FrameId, Duration, Instant, StateVector, Vector3d.
 
 ============================================================
-SECTION: PROMPT 19 IMPLEMENTATION SUMMARY
+SECTION: SEQUENTIAL PROMPTS FOR COPILOT AGENT (PHASE 1 COMPLETED)
 ============================================================
-Added pluggable TT->TDB offset model inside `TimeConversionService` with interface `ITdbOffsetModel` and two strategies: basic (2-term) and extended (adds 3rd & 4th harmonics). Default remains basic to preserve prior behavior; switching models resets J2000 alignment.
+PROMPT 1 .. PROMPT 12 (Completed) — see Git history & tests.
 
 ============================================================
-SECTION: NEXT RECOMMENDED STEP
+SECTION: NEXT PHASE ROADMAP (PHASE 2: REAL KERNEL SUPPORT)
 ============================================================
-Proceed to Prompt 20 (Body/Frame Metadata Loader) after completing diagnostics audit (26C) if tooling requires frame name resolution; otherwise implement minimal FK/PCK parser returning radii & frame name map (internal) + tests.
+Status Legend: ✅ Done | ▶ Pending | ⏸ Postponed
+
+PROMPT 13: ✅ Full DAF low-level reader (directory traversal, endianness, validation).
+PROMPT 14: ✅ Real SPK multi-record Type 2 & 3 parsing (descriptors, per-record MID/RADIUS).
+PROMPT 15: ✅ EphemerisDataSource abstraction (stream vs memory-mapped, lazy loading).
+PROMPT 16: ✅ JPL testpo integration (parser, mapping JSON, comparison harness).
+PROMPT 17: ✅ Tolerance-based golden tests; stats artifact emission.
+PROMPT 18: ✅ Caching/index layer (binary search segment lookup, fast path).
+PROMPT 19: ✅ Extended TT->TDB conversion (higher-order periodic terms, pluggable strategy stub).
+PROMPT 20: ⏸ Body & frame metadata loader (FK/PCK minimal subset) – postponed.
+PROMPT 21: ⏸ Diagnostic / validation CLI enrichment – postponed.
+PROMPT 22: ✅ GitHub Actions CI workflow (PR/master tests; tag -> full tests + NuGet publish; caching implemented).
+PROMPT 23: ▶ Refactor TimeConversionService into pluggable strategies (ILeapSecondProvider, ITdbOffsetModel).
+PROMPT 24: ▶ Structured logging (loading & segment selection trace via ILogger, in-memory test logger).
+PROMPT 25: ▶ Performance consolidation (SIMD Chebyshev, pooling, bounds-check minimization, perf report).
+PROMPT 26: ✅ Consolidation / Quality Alignment (tolerances, mapping, stats, docs, meta-kernel removal, API lock prep).
+
+============================================================
+SECTION: PROMPT 22 – CI WORKFLOW SUMMARY
+============================================================
+GitHub Actions (./github/workflows/ci.yml):
+- pull_request (-> master): restore, build, unit tests only (Spice.Tests).
+- push to master: same unit tests.
+- tag push v*: full build + unit & integration tests + pack & publish NuGet packages (Spice.Core, Spice.IO, Spice.Kernels, Spice.Ephemeris) with version from tag (strip leading 'v').
+- Metadata in csproj: Author Edmondo Silvestri, License MIT, Repository URL.
+- Secret NUGET_API_KEY used on tag publish.
+- Artifacts: .nupkg uploaded on tag builds.
+
+============================================================
+SECTION: DATA SOURCES & TEST FIXTURES GUIDELINES
+============================================================
+- Keep fixtures minimal (time-window reduced public-domain kernels).
+- testpo subset curated; cite source.
+- No proprietary / license-restricted kernels.
+
+============================================================
+SECTION: VALIDATION & ERROR BUDGET
+============================================================
+- Target double-precision parity; investigate relative deviation > 1e-10.
+- Document approximations (TT->TDB series order, frame simplifications) in README.
+- All tolerances centralized (TolerancePolicy).
+
+============================================================
+SECTION: CONTRIBUTION WORKFLOW (UPDATED NOTES)
+============================================================
+- Update roadmap & docs when completing a prompt.
+- PRs: unit tests must pass; integration tests gated to tag releases.
+- Create tag vX.Y.Z to publish packages.
+- Public API changes require updating PublicAPI.Unshipped.txt.
+- Benchmark performance-sensitive changes before/after (when Benchmarks project active).
+
+============================================================
+SECTION: NEXT ACTION
+============================================================
+Proceed with Prompt 23 implementation (pluggable time strategies) keeping public surface unchanged.
 
 ============================================================
 END OF MANIFEST

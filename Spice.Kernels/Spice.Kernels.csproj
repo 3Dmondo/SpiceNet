@@ -1,5 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <PackageId>Spice.Kernels</PackageId>
+    <Authors>Edmondo Silvestri</Authors>
+    <Company>Edmondo Silvestri</Company>
+    <Description>SPK kernel segment representations and evaluators for SpiceNet (Types 2 &amp; 3, multi-record, lazy access).</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/3Dmondo/SpiceNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>SPICE;Ephemeris;Astronomy;NAIF;SPK</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Spice.IO\Spice.IO.csproj" />
     <ProjectReference Include="..\Spice.Core\Spice.Core.csproj" />
