@@ -23,6 +23,7 @@ Outcome Summary:
 7. Remove obsolete Earth/Moon derivation explanations & confirm no residual code path remains.
 8. Prepare scaffolding for later prompts (stats + mapping feed regression & metadata enrichment).
 9. Minimized, locked public API surface (Phase 0 complete; lock gate added at end).
+10. Simplify loading: remove meta-kernel parser indirection; load kernels directly via repeated `EphemerisService.Load` calls (explicit ordering preserved).
 
 ## Completion Matrix
 | Task | Status | Notes |
@@ -49,23 +50,24 @@ Outcome Summary:
 | G1 | ? | Segment index with sorted arrays + stop times |
 | G2 | ? | Exact boundary fast path in segment index |
 | G3 | ? | `TryGetBarycentric` helper exposed internally |
-| H1 | ?? Pending | Demo CLI relocation present; needs final audit vs public-only APIs |
+| H1 | ?? Pending | Demo CLI audit (meta-kernel removal reflected) |
 | H2 | ?? Pending | Benchmarks project placeholder only |
 | H3 | ? | Record boundary + control word + mapping tests added |
 | H4 | ? | Legacy Earth/Moon path gone; integration comparison passes tiers |
 | H5 | ? | Stats JSON schema validation (integration + test) |
-| I1 | ? Optional | Not yet implemented (micro benchmark scaffold) |
-| I2 | ? Optional | Not yet implemented |
+| I1 | ? Optional | Micro benchmark scaffold not added |
+| I2 | ? Optional | Warm/cold barycentric benchmark pending |
 | J1 | ? | Public types unchanged; existing XML docs retained |
-| J2 | ? | README updated with completed items |
-| J3 | ?? Pending | `docs/RefactorReport_Prompt26.md` added (initial draft) |
+| J2 | ? | README updated (direct Load workflow) |
+| J3 | ?? Pending | `docs/RefactorReport_Prompt26.md` final metrics |
+| Load Simplification | ? | Meta-kernel parser removed; direct multi-call `Load` pattern documented |
 | API Lock | ?? Pending | Add PublicAPI analyzer shipped file at close |
 
 Legend: ? done • ?? in progress/pending finalization • ? optional (not planned in this pass)
 
 ## Remaining Action Items (Short List)
-1. Finalize diagnostic CLI (public API only audit) and remove any lingering internal hooks if present (H1).
-2. (Optional) Add micro benchmarks (record selection, barycentric warm vs cold) (I1/I2).
+1. Finalize diagnostic CLI (public API only; reflect direct kernel loading, no .tm parsing).
+2. (Optional) Add micro benchmarks (record selection, barycentric warm vs cold).
 3. Complete `docs/RefactorReport_Prompt26.md` with final metrics (J3) post-merge diff.
 4. Introduce Public API analyzer baseline lock (shipped/unshipped files) just before tagging completion.
 5. CI gate enabling tolerance literal test & stats schema validation.

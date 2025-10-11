@@ -74,7 +74,7 @@ public class TestPoComparisonTests
     double velocityTolAuPerDay = tol.VelocityAuPerDay;
 
     using var svc = new EphemerisService();
-    svc.LoadRealSpkLazy(bspPath, memoryMap: true);
+    svc.Load(bspPath);
 
     int posSamples = 0, velSamples = 0;
     double posMaxErr = 0, posSumErr = 0;

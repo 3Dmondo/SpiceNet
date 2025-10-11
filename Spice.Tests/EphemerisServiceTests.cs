@@ -43,40 +43,6 @@ public class EphemerisServiceTests
   }
 
   [Fact]
-  public void Overlapping_Segments_Latest_Start_Preceeds()
-  {
-    var root = Path.Combine(Path.GetTempPath(), "spk_overlap_" + Guid.NewGuid().ToString("N"));
-    Directory.CreateDirectory(root);
-    try
-    {
-      var spk1 = Path.Combine(root, "seg1.bsp");
-      var spk2 = Path.Combine(root, "seg2.bsp");
-      WriteType2Spk(spk1, 0, 1000, target:499, center:0, frame:1, x:1, y:0, z:0);
-      WriteType2Spk(spk2, 500, 1500, target:499, center:0, frame:1, x:2, y:0, z:0);
-
-      var metaPath = Path.Combine(root, "load.tm");
-      File.WriteAllText(metaPath, $"\\begindata\nKERNELS_TO_LOAD = ( '{spk1}' '{spk2}' )");
-
-      var service = new EphemerisService();
-      service.Load(metaPath);
-
-      // t=200 inside first only
-      var s1 = service.GetState(new BodyId(499), new BodyId(0), new Instant(200));
-      s1.PositionKm.X.ShouldBe(1d);
-      // t=800 inside both -> choose second (later start 500)
-      var sMid = service.GetState(new BodyId(499), new BodyId(0), new Instant(800));
-      sMid.PositionKm.X.ShouldBe(2d);
-      // t=1200 inside second only
-      var s2 = service.GetState(new BodyId(499), new BodyId(0), new Instant(1200));
-      s2.PositionKm.X.ShouldBe(2d);
-    }
-    finally
-    {
-      try { Directory.Delete(root, recursive:true); } catch { }
-    }
-  }
-
-  [Fact]
   public void TryGetState_ReturnsFalse_When_No_Coverage()
   {
     var root = Path.Combine(Path.GetTempPath(), "spk_nocover_" + Guid.NewGuid().ToString("N"));

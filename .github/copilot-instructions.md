@@ -21,7 +21,7 @@ Build a cohesive set of narrowly-scoped C# libraries (prefer multiple small proj
 Initial functional scope (Phase 1 / MVP):
   - Binary SPK kernel reading (minimum necessary SPK segment types to support common planetary ephemerides: clarify subset).
   - LSK (Leap Seconds) text kernel parsing.
-  - Basic meta-kernel (FURNSH-equivalent) loader for grouping kernel paths.
+  - Direct loading of individual kernel files (meta-kernel indirection removed) via repeated `EphemerisService.Load` calls.
   - Time system conversions: UTC <-> TAI <-> TT <-> TDB/ET using loaded leap second + analytic approximation for TT-TDB (allow pluggable refinement).
   - Retrieval of barycentric/planet-centric state vectors for planetary bodies and major satellites from loaded kernels.
   - Unit tests validating state retrieval vs reference values.
@@ -34,7 +34,7 @@ SECTION: ARCHITECTURAL GUIDING PRINCIPLES
 3. Separation of concerns:
    - Parsing/IO layer (kernel decoding, binary layouts, endianness, indexing) isolated from domain math & query orchestration.
    - Domain math primitives independent of kernel format specifics.
-   - Query facade orchestrates: (a) time conversion, (b) segment selection, (c) interpolation, (d) frame assumptions).
+   - Query facade orchestrates: (a) time conversion, (b) segment selection, (c) interpolation, (d) frame assumptions.
 4. Avoid premature abstraction; introduce interfaces only when multiple implementations are plausible.
 5. Favor static extension methods for pure functional transformations (Vector math, interpolation, time scale conversions) grouped by thematic static classes.
 6. Enforce explicit units. Adopt kilometers (km) for position, km/s for velocity, seconds (SI) for durations, TDB seconds past J2000 for ephemeris time.
@@ -91,58 +91,40 @@ PROMPT 13:
 "Implement full DAF low-level reader capable of traversing record directory (forward/backward pointers), summary & name records, supporting big/little endianness detection. Expose enumerator for arrays (segments) with raw address ranges. Add robust validation & tests using a minimal handcrafted true DAF structure (not synthetic header shortcut)."
 
 PROMPT 14:
-"Enhance SpkKernelParser to consume real SPK files: parse segment descriptor (DC + IC components), handle multiple records per segment (directory of coefficient records), and support Types 2 & 3 with scaling factors (MID, RADIUS) stored in each record. Add tests with a small truncated official SPK (public domain) or synthetic binary matching real layout." 
+"Enhance real SPK loader to consume multi-record segments: parse segment descriptor (DC + IC components), handle multiple records per segment (directory of coefficient records), and support Types 2 & 3 with scaling factors (MID, RADIUS) stored in each record."
 
 PROMPT 15:
-"Introduce EphemerisDataSource abstraction allowing: (a) Stream, (b) MemoryMapped file. Provide async open methods. Update EphemerisService to lazily map SPK coefficients (no full materialization) using spans over a shared byte buffer / memory-mapped accessor. Add benchmarks comparing stream vs mmap for large sequential and random segment access."
+"Introduce EphemerisDataSource abstraction allowing: (a) Stream, (b) MemoryMapped file. Provide async open methods. Update EphemerisService to lazily map SPK coefficients (no full materialization) using spans over a shared byte buffer / memory-mapped accessor."
 
 PROMPT 16:
-"Integrate JPL 'testpo' planetary position reference data (https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/) for integration tests: implement TestPoLoader that parses ASCII testpo files producing barycentric state vectors at listed epochs. Add comparison tests (state deltas) vs SpiceNet interpolation from loaded real SPK (DE440/DE441 excerpt)." 
+"Integrate JPL 'testpo' reference data for integration tests; implement parser and comparison harness (AU-domain)."
 
 PROMPT 17:
-"Add tolerance-based golden tests vs testpo: absolute position error < 1e-6 km, velocity < 1e-9 km/s for supported epochs. Collect statistics (mean / max error) and output to test log for regression tracking." 
+"Add tolerance-based golden tests vs testpo using centralized tolerance policy; emit stats artifact (JSON)."
 
 PROMPT 18:
-"Implement caching/index layer: build per-target segment interval tree or binary-searchable array (sorted by start ET) to accelerate segment lookup; update benchmarks. Provide TryGetState fast path avoiding LINQ/allocations." 
+"Implement segment indexing / binary search + boundary fast path for O(log n) lookup."
 
-PROMPT 19:
-"Extend TT->TDB conversion: add higher-order periodic terms and optional relativistic correction strategy interface. Provide configuration knob and ensure previous simple approximation remains default for performance. Verify deltas vs CSPICE < 10 microseconds across multi-year span via sampled epochs." 
-
-PROMPT 20:
-"Add body & frame metadata loader (FK / PCK minimal subset): parse simple text kernels for body radii & frame names required for future orientation work. Keep scope minimal; tests confirm parsing of a handful of entries." 
-
-PROMPT 21:
-"Introduce diagnostic / validation tool (command-line) that loads a meta-kernel, enumerates segments, prints coverage windows, and optionally exports sampled states to CSV for comparison with testpo or CSPICE output." 
-
-PROMPT 22:
-"Add GitHub Actions workflow: build, test, (optional) run lightweight benchmark, publish artifacts (diagnostic tool). Cache .nuget & possibly testpo subset using license-compliant approach." 
-
-PROMPT 23:
-"Refactor TimeConversionService into pluggable strategy (ILeapSecondProvider, ITdbOffsetModel). Add tests injecting mock providers. Prepare for future TCB / relativistic models." 
-
-PROMPT 24:
-"Implement structured logging (ILogger abstractions) around kernel loading & segment selection decisions. Provide an in-memory logger for test assertions (ensuring correct precedence path)." 
-
-PROMPT 25:
-"Consolidate performance improvements guided by BenchmarkDotNet: (a) vectorized Chebyshev evaluation for position+velocity, (b) pooling scratch buffers, (c) minimizing bounds checks with ref locals. Document improvements under /docs/perf.md with before/after tables." 
+PROMPT 19–25:
+Performance & fidelity enhancements (advanced TT->TDB model, logging, benchmarks, additional segment types) — deferred.
 
 PROMPT 26:
-"Consolidation / Quality Alignment: Phase 0 (public API pruning & baseline) completed; proceed with tolerance/constant unification, mapping inventory, stats artifact, doc synchronization, quality gates, evaluator/index refinements, and final CI public API lock at end." 
+"Consolidation: tolerance/constant unification, mapping inventory, stats artifact, doc synchronization, quality gates, evaluator/index refinements, public API lock prep, removal of meta-kernel indirection."
 
 ============================================================
 SECTION: DATA SOURCES & TEST FIXTURES GUIDELINES
 ============================================================
-- Real kernel fixtures SHOULD be the smallest public-domain slices sufficient for tests (e.g., time-window truncated). Provide scripts (not large binaries) when possible.
-- 'testpo' reference files: store a curated subset (few epochs per planet) under test assets with clear source citation & retrieval script.
+- Real kernel fixtures SHOULD be the smallest public-domain slices sufficient for tests (time-window truncated). Provide scripts (not large binaries) when possible.
+- 'testpo' reference files: store curated subset only (few epochs per planet) with source citation.
 - Never commit large proprietary or license-restricted kernels.
 
 ============================================================
 SECTION: VALIDATION & ERROR BUDGET
 ============================================================
-- Target double-precision parity vs CSPICE; any systematic deviation > 1e-10 relative requires investigation.
+- Target double-precision parity vs CSPICE; investigate systematic deviation > 1e-10 relative.
 - Document known approximations (current TT->TDB series order, ignored frame transformations) in README.
-- Relative states resolved generically via Solar System Barycenter composition; no special EMB+EMRAT path retained.
-- Public API baseline enforced locally via PublicApiAnalyzers; CI enforcement deferred until end of Prompt 26.
+- Relative states resolved generically via SSB composition.
+- Public API baseline enforced locally (analyzer lock at end of Prompt 26).
 
 ============================================================
 SECTION: CONTRIBUTION WORKFLOW (UPDATED NOTES)
@@ -150,6 +132,7 @@ SECTION: CONTRIBUTION WORKFLOW (UPDATED NOTES)
 - For each new prompt (13+), update README roadmap and tick completed items.
 - Benchmarks must run locally before merging performance-related PRs; include summary in PR description.
 - During Prompt 26, ensure all tolerance literals are centralized and docs synchronized.
+- Load kernels directly: call `EphemerisService.Load("file.tls")`, `Load("file.bsp")` multiple times (meta-kernel removed).
 
 ============================================================
 END OF MANIFEST

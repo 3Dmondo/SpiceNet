@@ -8,7 +8,7 @@ Phase 1 (synthetic kernel support) complete:
 - Leap second handling + TT?TDB periodic approximation (baseline)
 - Synthetic DAF reader + SPK (Types 2 & 3) parser (single-record simplified format)
 - Segment evaluator (Type 2 derived velocity, Type 3 direct)
-- LSK parser (minimal) & meta-kernel parser
+- LSK parser (minimal)
 - Ephemeris service with precedence-based segment selection
 - Integration tests (synthetic SPK + LSK) and time conversion tests
 - Initial benchmarks scaffold
@@ -47,13 +47,27 @@ Pre-1.0.0: surface may evolve with explicit baseline updates.
 ## Implementation Notes (Current)
 - DAF reader: control words (NEXT, PREV, NSUM) + synthetic 32-bit fallback, dual endianness helper (`DafAddress`).
 - SPK Types 2 & 3 parsed with trailer `[INIT, INTLEN, RSIZE, N]`; validation: `RecordCount * RecordSize + 4 == totalDoubles`.
-- Lazy coefficient loading via data source abstraction (stream / mmap).
+- Lazy coefficient loading via data source abstraction (stream / mmap) – configured per call to `EphemerisService.Load` on `.bsp`.
 - Per-record MID/RADIUS arrays with binary search + boundary fast path.
 - Barycentric composition generic (no legacy Earth/Moon path); cycle guard present.
 - Central tolerance policy + tests; repository search enforces no stray literals.
 - Mapping JSON + validation test (Earth/Moon baseline; extendable).
 - Stats JSON artifact emitted per ephemeris with deterministic key order + schema validation.
 - Control word decoding tests (double, synthetic int) and record boundary evaluator tests.
+- Meta-kernel parsing removed: load individual kernels directly via the service (call `Load` multiple times as needed).
+
+## EphemerisService.Load
+```
+public void Load(string path, bool memoryMap = true)
+```
+Accepted inputs:
+- `.tls` Leap second kernel: parsed and applied (TAI-UTC steps).
+- `.bsp` SPK kernel (Types 2 & 3): segments registered. When `memoryMap=true` a lazy memory-mapped data source is used; otherwise the file is streamed and parsed eagerly.
+
+Behavior:
+- Multiple calls accumulate kernels (order of addition preserved for diagnostic listing).
+- No meta-kernel (.tm) indirection in current design (deferred).
+- Subsequent state queries use direct segments or barycentric composition if a direct segment is absent.
 
 ## Tolerances
 Single authoritative specification lives in `docs/Tolerances.md` (no duplication here). All tests obtain bounds via `TolerancePolicy.Get`.
@@ -87,7 +101,8 @@ Source: https://ssd.jpl.nasa.gov/ftp/eph/planets/test-data/
 using Spice.Ephemeris;
 using Spice.Core;
 var service = new EphemerisService();
-service.Load("planets.tm");
+service.Load("naif0012.tls");   // leap seconds
+service.Load("de440s.bsp");     // SPK
 var state = service.GetState(new BodyId(399), new BodyId(0), Instant.FromSeconds(1_000_000));
 ```
 

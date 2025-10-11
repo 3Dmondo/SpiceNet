@@ -43,7 +43,7 @@ try
   using var svc = new EphemerisService();
   var ext = Path.GetExtension(path).ToLowerInvariant();
   if (ext == ".tm") svc.Load(path);
-  else if (ext == ".bsp") svc.LoadRealSpkLazy(path, memoryMap: true);
+  else if (ext == ".bsp") svc.Load(path);
   else { Console.WriteLine($"Unsupported extension '{ext}'. Expected .tm or .bsp"); return; }
 
   if (!svc.TryGetState(target, center, instant, out var state))

@@ -3,8 +3,6 @@ Spice.Ephemeris.EphemerisService
 Spice.Ephemeris.EphemerisService.Dispose() -> void
 Spice.Ephemeris.EphemerisService.EphemerisService() -> void
 Spice.Ephemeris.EphemerisService.GetState(Spice.Core.BodyId target, Spice.Core.BodyId center, Spice.Core.Instant t) -> Spice.Core.StateVector
-Spice.Ephemeris.EphemerisService.KernelPaths.get -> System.Collections.Generic.IReadOnlyList<string!>!
-Spice.Ephemeris.EphemerisService.Load(string! metaKernelPath) -> void
-Spice.Ephemeris.EphemerisService.LoadRealSpkLazy(string! spkPath, bool memoryMap = true) -> void
+Spice.Ephemeris.EphemerisService.Load(string! spkPath, bool memoryMap = true) -> void
 Spice.Ephemeris.EphemerisService.TryGetRelativeState(Spice.Core.BodyId target, Spice.Core.BodyId center, Spice.Core.Instant t, out Spice.Core.StateVector state) -> bool
 Spice.Ephemeris.EphemerisService.TryGetState(Spice.Core.BodyId target, Spice.Core.BodyId center, Spice.Core.Instant t, out Spice.Core.StateVector state) -> bool
