@@ -2,6 +2,8 @@ using Shouldly;
 using Spice.Core;
 using Spice.Kernels;
 using Spice.Ephemeris;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Spice.IntegrationTests;
 
@@ -116,6 +118,17 @@ public class TestPoComparisonTests
       }
     }
 
+    // Produce stats artifact (prior to assertions so failures still emit data)
+    try
+    {
+      var statsDir = Path.Combine(Path.GetDirectoryName(testpoPath)!, $"de{ephNumber}");
+      Directory.CreateDirectory(statsDir);
+      var statsPath = Path.Combine(statsDir, $"comparison_stats.{ephNumber}.json");
+      var json = BuildStatsJson(ephNumber, posSamples, velSamples, posMaxErr, posSumErr, velMaxErr, velSumErr, tol, hasAuConstant);
+      File.WriteAllText(statsPath, json);
+    }
+    catch { /* non-fatal */ }
+
     (posSamples > 0 || velSamples > 0).ShouldBeTrue($"Inconclusive: de{ephNumber} produced no comparable samples (no matching/composable states). AU={auKm}");
 
     var failing = new List<string>();
@@ -132,7 +145,7 @@ public class TestPoComparisonTests
     }
 
     var header =
-      $"de{ephNumber} Failing Components (Tol Pos={positionTolAu:E} AU Vel={velocityTolAuPerDay:E} AU/day Strict={tol.Strict} AU(km)={auKm})\n" +
+      $"de{ephNumber} Failing Components (Tol Pos={positionTolAu:E} AU Vel={velocityTolAuPerDay:E} AU/day Strict={tol.Strict})\n" +
        "    Target Center Comp Count        Max       Mean      WorstET                     Ref                    Pred\n";
 
     if (posSamples > 0)
@@ -153,5 +166,58 @@ public class TestPoComparisonTests
           ? $"de{ephNumber} velocity ok"
           : header + string.Join(Environment.NewLine, failing));
     }
+  }
+
+  static string BuildStatsJson(string eph,
+    int posSamples, int velSamples,
+    double posMax, double posSum,
+    double velMax, double velSum,
+    TolerancePolicy.Tolerances tol,
+    bool hasAu)
+  {
+    int totalSamples = posSamples + velSamples;
+    double posMean = posSamples == 0 ? 0 : posSum / posSamples;
+    double velMean = velSamples == 0 ? 0 : velSum / velSamples;
+
+    // 3 decimal scientific formatting for max/mean as per plan (E3)
+    static string F(double v) => v.ToString("E3", System.Globalization.CultureInfo.InvariantCulture);
+
+    var doc = new Dictionary<string, object?>
+    {
+      ["ephemeris"] = eph,
+      ["samples"] = totalSamples,
+      ["strictMode"] = tol.Strict,
+      ["positionMaxAu"] = F(posMax),
+      ["positionMeanAu"] = F(posMean),
+      ["velocityMaxAuDay"] = F(velMax),
+      ["velocityMeanAuDay"] = F(velMean),
+      ["hasAuConstant"] = hasAu,
+      ["generatedUtc"] = DateTime.UtcNow.ToString("O")
+    };
+
+    var options = new JsonSerializerOptions
+    {
+      WriteIndented = true,
+      Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+      DefaultIgnoreCondition = JsonIgnoreCondition.Never
+    };
+    // Deterministic ordering: serialize manually by key order inserted above
+    using var ms = new MemoryStream();
+    using (var writer = new Utf8JsonWriter(ms, new JsonWriterOptions { Indented = true }))
+    {
+      writer.WriteStartObject();
+      foreach (var kv in doc)
+      {
+        switch (kv.Value)
+        {
+          case string s: writer.WriteString(kv.Key, s); break;
+          case int i: writer.WriteNumber(kv.Key, i); break;
+          case bool b: writer.WriteBoolean(kv.Key, b); break;
+          default: writer.WriteString(kv.Key, kv.Value?.ToString()); break;
+        }
+      }
+      writer.WriteEndObject();
+    }
+    return System.Text.Encoding.UTF8.GetString(ms.ToArray());
   }
 }

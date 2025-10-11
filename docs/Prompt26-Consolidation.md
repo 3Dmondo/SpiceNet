@@ -1,154 +1,122 @@
 # Prompt 26: Consolidation / Quality Alignment Pass
 
-Status: In Progress (Phase 0 Completed; proceeding with Tasks A–J; CI lock (Step 7) deferred to final integration)
-Priority: High (execute before expanding feature surface beyond Prompt 25)
+Status: In Progress (Phase 0 Completed; proceeding with Tasks A–J; CI lock deferred to final integration)
+Priority: High
 Owner: Core maintainers
 
 ## Rationale
-Phase 2 deliverables (Prompts 13–25) introduced overlapping tolerance logic, duplicated documentation of AU/EMRAT handling, partially diverging roadmap status tables, and provisional mapping rules (testpo code ? NAIF ID). A focused consolidation pass reduces drift, prevents silent tolerance regressions, and establishes a stable baseline prior to adding new kernel / time model complexity.
+Phase 2 deliverables (Prompts 13–25) introduced overlapping tolerance logic, duplicated mapping handling, diverging roadmap tables, and provisional remap rules. This pass reduces drift, prevents silent tolerance regressions, and establishes a stable baseline prior to adding kernel / time model complexity.
 
 ## Phase 0: Public API Surface Audit (Completed)
-Goal: Minimize and lock the externally supported API before deeper consolidation so later internalization does not create churn.
-
 Outcome Summary:
-- Public surface pruned to primitives (BodyId, FrameId, Duration, Instant, StateVector, Vector3d) and EphemerisService.
-- PublicApiAnalyzers enabled with baseline captured (shipped file).
-- XML documentation added for all public symbols.
-- Lock (CI enforcement) intentionally deferred to final Step 7 after remaining consolidation to avoid churn in intermediate PRs.
-
-Original Tasks (1–6) Completed; Task 7 (Lock) deferred.
-
-Deferred Step 7 Plan:
-Add CI workflow gate verifying: (a) no diff vs PublicAPI.Shipped.txt unless Unshipped updated, (b) failing build on unexpected additions. Will be implemented after tasks A–J stabilize internal refactors to reduce maintenance friction.
+- Public surface pruned to primitives (`BodyId`, `FrameId`, `Duration`, `Instant`, `StateVector`, `Vector3d`) plus `EphemerisService`.
+- Baseline analyzer (public API) captured; CI enforcement deferred until end of Prompt 26 to avoid churn.
+- XML documentation present for public symbols.
 
 ## Objectives
-1. Single Source of Truth (SSOT) for numeric tolerances & unit conversion constants.
-2. Consistent documentation (root README, per-project READMEs, copilot-instructions manifest) with synchronized roadmap status & tolerance narrative.
+1. Single Source of Truth (SSOT) for numeric tolerances & unit conversion constants (refer to `docs/Tolerances.md`).
+2. Consistent documentation with synchronized roadmap status & tolerance narrative (link, not duplicate).
 3. Formalized mapping inventory (testpo codes ? NAIF body IDs) with validation test.
-4. Central tolerance policy service reused by integration + unit tests (no duplicated literals).
+4. Central tolerance policy service reused by integration + unit tests (no duplicated literals – all references indirect).
 5. Diagnostic artifacts (JSON) for integration comparison statistics (basis for future CI trend graphs).
-6. Dead / divergent doc sections reconciled (e.g., 40x vs 2xx relaxation discrepancies).
-7. Lightweight quality gates (analyzers / style) added where gaps exist (public API gate postponed to final lock step).
-8. Remove obsolete Earth/Moon EMB + EMRAT special-case documentation & confirm no residual code path remains.
-9. Prepare scaffolding for later prompts (stats + mapping feed golden regression & metadata enrichment).
-10. Minimized, locked public API surface (Phase 0 complete; CI enforcement pending).
+6. Dead / divergent doc sections reconciled.
+7. Remove obsolete Earth/Moon derivation explanations & confirm no residual code path remains.
+8. Prepare scaffolding for later prompts (stats + mapping feed regression & metadata enrichment).
+9. Minimized, locked public API surface (Phase 0 complete; lock gate added at end).
 
 ## Scope (In / Out)
-In:
-- Refactors limited to test harness, docs, internal constant centralization.
-- Non-breaking public API clarifications (XML docs) where missing.
-- Build scripts / CI additions strictly for validation (fail on unsynchronized docs?).
-Out:
-- New kernel types, new time models (remain in future prompts).
-- Performance micro-optimizations (Prompt 25 domain) unless required by refactor side-effects.
+In: test harness refactors, docs, internal constant/tolerance centralization, mapping & stats infrastructure, light defensive validation.
+Out: new kernel types, new time models, performance micro-optimizations beyond side?effect fixes.
 
 ## Work Breakdown
 A. Tolerance & Constants Unification
-  A1. Introduce internal static class `Spice.Core.Constants` exposing: `AstronomicalUnitKm`, `SecondsPerDay`, `AuPerDayToKmPerSecFactor`, maybe `J2000EpochTdbSeconds`.
-  A2. Add internal `TolerancePolicy.Get(ephemerisNumber, hasAuConstant)` returning (posAu, velAuPerDay) & derived km/km/s conversions.
-  A3. Replace literals (`1e-13`, `1e-16`, `1e-9`, `1e-12`, `1e-8`, `1e-11`, `1e-7`, `1e-10`) across tests & integration harness.
-  A4. Add unit tests targeting `TolerancePolicy` matrix: combinations of (hasAU true/false, ephemeris prefix 2xx / 40x / other).
+  A1. Introduce internal central constants & `TolerancePolicy` (documented once in `docs/Tolerances.md`).
+  A2. Replace literals across tests & integration harness.
+  A3. Add unit tests covering tolerance tier matrix (modern / legacy / problematic / fallback).
 
 B. Mapping Inventory
-  B1. Create `Spice.IntegrationTests/TestData/BodyMapping.json` entries: `{ "testpo": 3, "naif": 399, "rationale": "Earth mapping" }`, Moon etc. (extendable).
-  B2. Implement loader `TestPoBodyMapping.Load()` returning dictionary; integrate into testpo parser normalization path.
-  B3. Remove inline remap logic (3?399,10?301) from any code (verify none remain after edit) & update docs.
-  B4. Add validation test: duplicate testpo codes, missing required Earth/Moon pairs fail.
+  B1. `Spice.IntegrationTests/TestData/BodyMapping.json` (testpo?NAIF entries: Earth, Moon, extendable).
+  B2. Loader to apply remaps during parsing.
+  B3. Remove any inline remap logic.
+  B4. Validation test for duplicates & required pairs.
 
 C. Stats Artifact
-  C1. Extend comparison harness to aggregate per-ephemeris metrics: max/mean position error (AU), max/mean velocity error (AU/day), sample count, strictMode flag, ephemerisNumber.
-  C2. Serialize to `TestData/cache/de<eph>/comparison_stats.<eph>.json` (overwrite each run). Keep deterministic ordering & 3 decimal scientific formatting.
-  C3. Add schema test ensuring keys: `ephemeris`, `samples`, `strictMode`, `positionMaxAu`, `positionMeanAu`, `velocityMaxAuDay`, `velocityMeanAuDay`, `generatedUtc`.
+  C1. Aggregate per-ephemeris metrics: position/velocity max & mean (AU / AU/day), sample count, strict flag, ephemeris number.
+  C2. Serialize deterministic JSON: `TestData/cache/de<eph>/comparison_stats.<eph>.json`.
+  C3. Schema test (presence & type of keys only).
 
 D. Documentation Synchronization
-  D1. Author single canonical tolerance section snippet in `docs/Tolerances.md` and include (verbatim copy) in root README, IntegrationTests README, manifest.
-  D2. Add doc sync test: compute SHA256 of normalized snippet vs embedded copies.
-  D3. Harmonize roadmap tables; ensure Prompt 26 present everywhere (Phase 0 marked complete).
-  D4. Remove all EMB/EMRAT historical explanatory blocks; add short note: "Previously documented EARTH/MOON EMB + EMRAT derivation removed; generic barycentric chaining now used.".
+  D1. Canonical tolerance snippet lives solely in `docs/Tolerances.md`; other docs link instead of duplicating.
+  D2. Roadmap tables harmonized (single authoritative table in root README; others reference/link or lightweight mirror without tolerance duplication).
+  D3. Remove obsolete EMB/EMRAT narrative; add short note referencing generic barycentric chaining.
 
-E. Analyzer / Quality Gate
-  E1. Ensure `#nullable enable` (done) – maintain zero warnings policy.
-  E2. Introduce simple CI script (test) that parses each README roadmap table into JSON and asserts equality of prompt set + statuses.
-  E3. Add guard test scanning repository for forbidden tolerance literals outside `TolerancePolicy`.
-
-F. Kernel & Evaluator Micro Refactors (Correctness / Clarity – Non-breaking)
-  F1. `SpkSegmentEvaluator`: replace linear record search with binary search over `RecordMids` using uniform spacing assumption (or fallback to linear if radii non-uniform). Provide benchmark to confirm neutral impact for small N.
-  F2. Add explicit check ensuring `RecordCount * RecordSizeDoubles + 4 == totalDoubles` (redundant defensive validation optionally in parser).
-  F3. Expose helper `DafAddress.ToByteOffset(long wordAddress)` centralizing 1-based to byte computation (used in parser & data source) to reduce duplication.
-  F4. `FullDafReader.ReadControlWord` – clarify mixed synthetic/double logic; add explicit branch & test cases for: (a) native double int representable, (b) synthetic 32-bit, (c) invalid large double -> throw.
-  F5. Add guard in barycentric recursion (`EphemerisService.TryResolveBarycentric`) tracking visited centers to avoid theoretical cycles.
-  F6. Replace repeated LINQ in hot paths (`_segments.Where(...).OrderBy(...)`) with pre-built lookup or simple loops; micro-benchmark after.
+F. Kernel & Evaluator Micro Refactors
+  F1. `SpkSegmentEvaluator` record selection binary search (fallback to linear if spacing non-uniform beyond epsilon).
+  F2. Validation check: `RecordCount * RecordSizeDoubles + 4 == totalDoubles`.
+  F3. Helper for DAF word?byte conversion to remove duplication.
+  F4. Clarify control word decoding branches; add tests (native, synthetic 32-bit, invalid).
+  F5. Cycle guard in barycentric recursion (`EphemerisService.TryResolveBarycentric`).
+  F6. Replace repeated LINQ in hot paths with simple loops / precomputed lookups.
 
 G. Service & Index Improvements
-  G1. `EphemerisService` segment index: store per key sorted array plus separate array of stop times enabling single pass bound check.
-  G2. Add fast path for exact segment start boundary ET (BinarySearch equality branch exit early).
-  G3. Provide `TryGetBarycentric(BodyId body, Instant t, out StateVector)` public convenience (wraps internal barycentric path) for diagnostics/tests.
+  G1. Segment index: per key sorted arrays + stop time arrays for O(log n) lookup & bound check.
+  G2. Fast path for exact segment boundary epoch.
+  G3. Convenience `TryGetBarycentric` for diagnostics/tests.
 
 H. Testing Enhancements
-  H1. Add unit tests for: segment record boundary selection (et exactly mid±radius), tolerance policy matrix, mapping loader, control word decoding edge cases.
-  H2. Add integration test verifying removal of EMB/EMRAT logic does not regress Earth/Moon testpo deltas beyond legacy tolerance.
-  H3. Add snapshot test capturing stats JSON structural stability (ignore numeric values, assert presence & type).
+  H1. Unit tests: record boundary selection, tolerance tiers, mapping loader, control word edge cases.
+  H2. Integration test ensuring removal of legacy Earth/Moon path does not regress deltas beyond legacy tier.
+  H3. Snapshot-style structure test for stats JSON (ignoring numeric values).
 
-I. Benchmark Updates (Optional but Recommended)
-  I1. Add benchmark for new binary search record selection vs old linear.
-  I2. Add benchmark for `EphemerisService` barycentric retrieval (warm cache vs cold) to watch for regressions after cycle guard addition.
+I. Benchmark Updates (Optional)
+  I1. Record selection (binary vs linear) micro-benchmark.
+  I2. Barycentric retrieval (warm vs cold) benchmark.
 
 J. Housekeeping
-  J1. Ensure all public types touched receive/retain XML docs after refactor.
-  J2. Update root README checklist to mark mapping/tolerance centralization once merged.
-  J3. Add `docs/RefactorReport_Prompt26.md` summarizing changes & metrics (lines removed, tests added) generated manually.
+  J1. Ensure public types touched retain XML docs.
+  J2. Root README checklist updated (mapping & tolerance centralization complete once merged).
+  J3. `docs/RefactorReport_Prompt26.md` summarizing diffs (lines removed, tests added, tolerance literal purge count).
 
-## Code Review Findings (Summary ? Drives Above Tasks)
-- Duplicated numeric tolerance literals across docs & tests (A, D, E).
-- Inline mapping (3?399, 10?301) not externalized (B).
-- No central constants for AU, seconds/day (A1).
-- Record search linear (F1) – acceptable now but easy binary search improvement.
-- Potential recursive cycle risk in barycentric resolution if malformed segments (F5).
-- Control word heuristic mixes endian pieces; clarify & test (F4).
-- Duplicate word->byte offset math scattered (F3).
-- Stats artifact & regression harness missing (C).
-- Nullability disabled; future correctness aid (E1) – now enabled.
-- EMB/EMRAT removed in docs but ensure absence in code (D4, validation search test).
-- Public API surface larger than necessary prior to consolidation (Phase 0) – now minimized.
+## Code Review Findings Driving Tasks
+- Tolerance literals scattered (A, D).
+- Inline mapping logic persisted (B).
+- Record search linear (F1).
+- Potential recursion cycle risk (F5).
+- Control word decoding ambiguity (F4).
+- Word?byte math duplicated (F3).
+- Missing stats artifact (C).
+- Need consolidated doc narrative (D).
 
 ## Acceptance Criteria
-- Public API audit completed (Phase 0) & baseline analyzer files committed (ship file reflects current surface).
-- No remaining hard-coded numeric tolerances outside `TolerancePolicy` (search proves single definition path).
-- Mapping file drives Earth/Moon remap; removal of old literals verified via search.
-- All README tolerance sections identical (byte-for-byte when normalized for line endings) except intentional context preamble differences.
-- Integration run produces JSON stats; schema validated by test.
-- Roadmap tables synchronized (automated comparison test passes).
-- Documentation clearly indicates current parity goals & relaxation pathways.
-- Binary search record selection passes existing evaluator tests.
-- Control word tests cover synthetic + native double encodings.
-- CI public API lock (Step 7) added at finalization.
-
-## Non-Goals
-- Tightening tolerances beyond existing logic.
-- Introducing new external dependencies (keep pure BCL unless analyzer already used).
-- Large-scale performance rework (reserved for later prompts if needed).
+- Single authoritative tolerance snippet only in `docs/Tolerances.md`; other docs link to it.
+- No remaining hard-coded tolerance literals outside `TolerancePolicy`.
+- Mapping file drives Earth/Moon remap; search confirms absence of inline remap code.
+- Stats JSON produced; schema test passes.
+- Roadmap tables synchronized (no drift in listed prompts/status where mirrored).
+- Binary search record selection passes existing & new evaluator tests.
+- Control word tests cover native, synthetic, invalid branches.
+- Public API unchanged post Phase 0 until final lock; final gate added at end.
 
 ## Risks & Mitigations
 | Risk | Mitigation |
 |------|------------|
-| Hidden duplicate tolerance literal persists | Use solution-wide text search for `1e-13`, `1e-16`, `1e-9`, etc. in CI gate |
-| Mapping file drift vs code logic | Single loader + test ensuring every special-case branch references mapping |
-| Stats JSON increases CI noise | Gate commit size; keep files small (<5 KB) & optionally gitignore large variants |
-| Doc divergence reoccurs | Add roadmap sync test (E2) |
-| Binary search incorrect radius assumption | Fallback to linear if radii unequal beyond epsilon |
-| Control word heuristic regression | Add explicit regression tests for legacy synthetic test file |
-| Over-internalization breaks tests | Use reflection scan after internalization to ensure facade types remain |
+| Hidden tolerance literal persists | Repository search in test validating absence outside policy |
+| Mapping drift | Central JSON + validation test |
+| Stats JSON noise | Keep schema small & deterministic ordering |
+| Binary search incorrect radius assumption | Fallback to linear when non-uniform spacing detected |
+| Control word regression | Dedicated unit test suite |
+| Cycle in barycentric chain | Visited set guard |
 
-## Follow-Up (Outputs Feeding Later Prompts)
-- Stats JSON becomes baseline for Prompt 17 golden regression tracking.
-- Mapping file forms seed for Prompt 20 (body metadata enrichment).
-- Central constants facilitate Prompt 19 advanced time model plugging (shared units).
-- Binary search & index enhancements foundation for further segment type support.
-- Public API baseline enables stable semantic versioning once initial release prepared (CI lock forthcoming).
+## Follow-Up (Feeds Later Prompts)
+- Stats JSON seeds regression tracking.
+- Mapping file seeds body metadata enrichment.
+- Central constants facilitate advanced time model plug-in.
+- Index/evaluator refinements prepare for additional segment types.
+- Public API baseline supports future semantic versioning.
 
 ## Implementation Order Suggestion
 0. Phase 0 (Completed)
-1. A (constants) ? 2. B (mapping) ? 3. D (docs sync) ? 4. C (stats artifact) ? 5. E (gate) ? 6. F/G (refactors) ? 7. H (tests) ? 8. I (benchmarks) ? 9. J (report) ? Final verification & Step 7 public API lock.
+1. A (constants/tolerance centralization) ? 2. B (mapping) ? 3. D (doc sync) ? 4. C (stats artifact) ? 5. F/G (refactors) ? 6. H (tests) ? 7. I (benchmarks) ? 8. J (report) ? Final verification & public API lock.
 
 ## Success Metric
-Post-consolidation diff shows net deletion > addition for duplicated literals and doc inconsistencies while test coverage unchanged or improved (added mapping & stats tests). Benchmarks show no >5% regression in existing evaluator / state query scenarios. Public API analyzer baseline prevents accidental surface growth; CI enforcement added at final step.
+Net deletion > addition for duplicated literals & doc redundancy; coverage stable or improved; benchmarks show no >5% regression in state queries; tolerance policy changes auditable via single source file.
