@@ -1,0 +1,1744 @@
+{
+  "Root": "https://ssd.jpl.nasa.gov/ftp/eph/",
+  "GeneratedUtc": "2025-10-12T13:19:14.2000435Z",
+  "FileCount": 193,
+  "Files": [
+    {
+      "Name": "TTmTDB.de430.19feb2015.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/TTmTDB.de430.19feb2015.bsp",
+      "RelativePath": "planets/bsp/TTmTDB.de430.19feb2015.bsp",
+      "LastModified": "2015-09-10T17:22:00Z",
+      "SizeDisplay": "31.4M",
+      "SizeBytes": 32925286,
+      "CollectedUtc": "2025-10-12T13:19:12.9234525Z"
+    },
+    {
+      "Name": "de102.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de102.bsp",
+      "RelativePath": "planets/bsp/de102.bsp",
+      "LastModified": "2011-03-24T01:30:00Z",
+      "SizeDisplay": "228.1M",
+      "SizeBytes": 239180185,
+      "CollectedUtc": "2025-10-12T13:19:12.9234763Z"
+    },
+    {
+      "Name": "de200.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de200.bsp",
+      "RelativePath": "planets/bsp/de200.bsp",
+      "LastModified": "2011-03-18T01:03:00Z",
+      "SizeDisplay": "54.2M",
+      "SizeBytes": 56832819,
+      "CollectedUtc": "2025-10-12T13:19:12.9234912Z"
+    },
+    {
+      "Name": "de202.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de202.bsp",
+      "RelativePath": "planets/bsp/de202.bsp",
+      "LastModified": "2011-03-28T19:07:00Z",
+      "SizeDisplay": "14.3M",
+      "SizeBytes": 14994636,
+      "CollectedUtc": "2025-10-12T13:19:12.9235083Z"
+    },
+    {
+      "Name": "de403.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de403.bsp",
+      "RelativePath": "planets/bsp/de403.bsp",
+      "LastModified": "2000-10-10T00:46:00Z",
+      "SizeDisplay": "62.3M",
+      "SizeBytes": 65326284,
+      "CollectedUtc": "2025-10-12T13:19:12.9235221Z"
+    },
+    {
+      "Name": "de405.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de405.bsp",
+      "RelativePath": "planets/bsp/de405.bsp",
+      "LastModified": "2000-10-10T00:46:00Z",
+      "SizeDisplay": "62.4M",
+      "SizeBytes": 65431142,
+      "CollectedUtc": "2025-10-12T13:19:12.9235505Z"
+    },
+    {
+      "Name": "de405_1960_2020.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de405_1960_2020.bsp",
+      "RelativePath": "planets/bsp/de405_1960_2020.bsp",
+      "LastModified": "2002-02-26T20:14:00Z",
+      "SizeDisplay": "6.2M",
+      "SizeBytes": 6501171,
+      "CollectedUtc": "2025-10-12T13:19:12.9235654Z"
+    },
+    {
+      "Name": "de406.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de406.bsp",
+      "RelativePath": "planets/bsp/de406.bsp",
+      "LastModified": "2000-10-10T00:46:00Z",
+      "SizeDisplay": "286.9M",
+      "SizeBytes": 300836454,
+      "CollectedUtc": "2025-10-12T13:19:12.9235853Z"
+    },
+    {
+      "Name": "de410.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de410.bsp",
+      "RelativePath": "planets/bsp/de410.bsp",
+      "LastModified": "2011-03-18T01:04:00Z",
+      "SizeDisplay": "12.5M",
+      "SizeBytes": 13107200,
+      "CollectedUtc": "2025-10-12T13:19:12.9235993Z"
+    },
+    {
+      "Name": "de413.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de413.bsp",
+      "RelativePath": "planets/bsp/de413.bsp",
+      "LastModified": "2011-03-18T01:04:00Z",
+      "SizeDisplay": "15.6M",
+      "SizeBytes": 16357785,
+      "CollectedUtc": "2025-10-12T13:19:12.9236225Z"
+    },
+    {
+      "Name": "de414.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de414.bsp",
+      "RelativePath": "planets/bsp/de414.bsp",
+      "LastModified": "2011-03-18T01:05:00Z",
+      "SizeDisplay": "62.4M",
+      "SizeBytes": 65431142,
+      "CollectedUtc": "2025-10-12T13:19:12.9236365Z"
+    },
+    {
+      "Name": "de418.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de418.bsp",
+      "RelativePath": "planets/bsp/de418.bsp",
+      "LastModified": "2011-03-18T01:05:00Z",
+      "SizeDisplay": "15.7M",
+      "SizeBytes": 16462643,
+      "CollectedUtc": "2025-10-12T13:19:12.9236545Z"
+    },
+    {
+      "Name": "de421.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de421.bsp",
+      "RelativePath": "planets/bsp/de421.bsp",
+      "LastModified": "2008-02-12T20:41:00Z",
+      "SizeDisplay": "16.0M",
+      "SizeBytes": 16777216,
+      "CollectedUtc": "2025-10-12T13:19:12.9236686Z"
+    },
+    {
+      "Name": "de422.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de422.bsp",
+      "RelativePath": "planets/bsp/de422.bsp",
+      "LastModified": "2012-05-11T19:56:00Z",
+      "SizeDisplay": "622.7M",
+      "SizeBytes": 652948275,
+      "CollectedUtc": "2025-10-12T13:19:12.9236871Z"
+    },
+    {
+      "Name": "de422_1850_2050.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de422_1850_2050.bsp",
+      "RelativePath": "planets/bsp/de422_1850_2050.bsp",
+      "LastModified": "2009-09-29T18:59:00Z",
+      "SizeDisplay": "20.8M",
+      "SizeBytes": 21810380,
+      "CollectedUtc": "2025-10-12T13:19:12.9237011Z"
+    },
+    {
+      "Name": "de423.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de423.bsp",
+      "RelativePath": "planets/bsp/de423.bsp",
+      "LastModified": "2010-02-12T18:42:00Z",
+      "SizeDisplay": "41.5M",
+      "SizeBytes": 43515904,
+      "CollectedUtc": "2025-10-12T13:19:12.9237189Z"
+    },
+    {
+      "Name": "de424.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de424.bsp",
+      "RelativePath": "planets/bsp/de424.bsp",
+      "LastModified": "2012-02-06T18:33:00Z",
+      "SizeDisplay": "62.3M",
+      "SizeBytes": 65326284,
+      "CollectedUtc": "2025-10-12T13:19:12.9237494Z"
+    },
+    {
+      "Name": "de424s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de424s.bsp",
+      "RelativePath": "planets/bsp/de424s.bsp",
+      "LastModified": "2013-02-01T21:53:00Z",
+      "SizeDisplay": "6.2M",
+      "SizeBytes": 6501171,
+      "CollectedUtc": "2025-10-12T13:19:12.9237685Z"
+    },
+    {
+      "Name": "de425.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de425.bsp",
+      "RelativePath": "planets/bsp/de425.bsp",
+      "LastModified": "2014-04-02T17:59:00Z",
+      "SizeDisplay": "62.3M",
+      "SizeBytes": 65326284,
+      "CollectedUtc": "2025-10-12T13:19:12.9237827Z"
+    },
+    {
+      "Name": "de430_1850-2150.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de430_1850-2150.bsp",
+      "RelativePath": "planets/bsp/de430_1850-2150.bsp",
+      "LastModified": "2014-06-30T22:27:00Z",
+      "SizeDisplay": "31.2M",
+      "SizeBytes": 32715571,
+      "CollectedUtc": "2025-10-12T13:19:12.9237993Z"
+    },
+    {
+      "Name": "de430_plus_MarsPC.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de430_plus_MarsPC.bsp",
+      "RelativePath": "planets/bsp/de430_plus_MarsPC.bsp",
+      "LastModified": "2014-06-30T22:33:00Z",
+      "SizeDisplay": "132.3M",
+      "SizeBytes": 138726604,
+      "CollectedUtc": "2025-10-12T13:19:12.9238135Z"
+    },
+    {
+      "Name": "de430t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de430t.bsp",
+      "RelativePath": "planets/bsp/de430t.bsp",
+      "LastModified": "2014-06-30T22:17:00Z",
+      "SizeDisplay": "127.7M",
+      "SizeBytes": 133903155,
+      "CollectedUtc": "2025-10-12T13:19:12.9238383Z"
+    },
+    {
+      "Name": "de431t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de431t.bsp",
+      "RelativePath": "planets/bsp/de431t.bsp",
+      "LastModified": "2014-06-30T22:58:00Z",
+      "SizeDisplay": "3.44G",
+      "SizeBytes": 3693671874,
+      "CollectedUtc": "2025-10-12T13:19:12.9238539Z"
+    },
+    {
+      "Name": "de432t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de432t.bsp",
+      "RelativePath": "planets/bsp/de432t.bsp",
+      "LastModified": "2014-06-30T22:11:00Z",
+      "SizeDisplay": "127.7M",
+      "SizeBytes": 133903155,
+      "CollectedUtc": "2025-10-12T13:19:12.9238728Z"
+    },
+    {
+      "Name": "de433.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de433.bsp",
+      "RelativePath": "planets/bsp/de433.bsp",
+      "LastModified": "2018-04-27T20:02:00Z",
+      "SizeDisplay": "389.3M",
+      "SizeBytes": 408210636,
+      "CollectedUtc": "2025-10-12T13:19:12.9238865Z"
+    },
+    {
+      "Name": "de433_plus_MarsPC.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de433_plus_MarsPC.bsp",
+      "RelativePath": "planets/bsp/de433_plus_MarsPC.bsp",
+      "LastModified": "2015-02-11T23:40:00Z",
+      "SizeDisplay": "129.4M",
+      "SizeBytes": 135685734,
+      "CollectedUtc": "2025-10-12T13:19:12.9238997Z"
+    },
+    {
+      "Name": "de433t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de433t.bsp",
+      "RelativePath": "planets/bsp/de433t.bsp",
+      "LastModified": "2018-04-27T20:02:00Z",
+      "SizeDisplay": "145.6M",
+      "SizeBytes": 152672665,
+      "CollectedUtc": "2025-10-12T13:19:12.9239183Z"
+    },
+    {
+      "Name": "de434.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de434.bsp",
+      "RelativePath": "planets/bsp/de434.bsp",
+      "LastModified": "2016-02-20T01:19:00Z",
+      "SizeDisplay": "114.2M",
+      "SizeBytes": 119747379,
+      "CollectedUtc": "2025-10-12T13:19:12.9239318Z"
+    },
+    {
+      "Name": "de434s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de434s.bsp",
+      "RelativePath": "planets/bsp/de434s.bsp",
+      "LastModified": "2016-02-20T01:19:00Z",
+      "SizeDisplay": "20.8M",
+      "SizeBytes": 21810380,
+      "CollectedUtc": "2025-10-12T13:19:12.9239501Z"
+    },
+    {
+      "Name": "de434t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de434t.bsp",
+      "RelativePath": "planets/bsp/de434t.bsp",
+      "LastModified": "2016-02-20T01:19:00Z",
+      "SizeDisplay": "145.6M",
+      "SizeBytes": 152672665,
+      "CollectedUtc": "2025-10-12T13:19:12.9239635Z"
+    },
+    {
+      "Name": "de435.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de435.bsp",
+      "RelativePath": "planets/bsp/de435.bsp",
+      "LastModified": "2016-03-05T00:54:00Z",
+      "SizeDisplay": "114.2M",
+      "SizeBytes": 119747379,
+      "CollectedUtc": "2025-10-12T13:19:12.9239815Z"
+    },
+    {
+      "Name": "de435s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de435s.bsp",
+      "RelativePath": "planets/bsp/de435s.bsp",
+      "LastModified": "2016-03-05T00:54:00Z",
+      "SizeDisplay": "20.8M",
+      "SizeBytes": 21810380,
+      "CollectedUtc": "2025-10-12T13:19:12.9239952Z"
+    },
+    {
+      "Name": "de435t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de435t.bsp",
+      "RelativePath": "planets/bsp/de435t.bsp",
+      "LastModified": "2016-03-05T00:54:00Z",
+      "SizeDisplay": "145.6M",
+      "SizeBytes": 152672665,
+      "CollectedUtc": "2025-10-12T13:19:12.9240132Z"
+    },
+    {
+      "Name": "de436.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de436.bsp",
+      "RelativePath": "planets/bsp/de436.bsp",
+      "LastModified": "2016-11-02T00:45:00Z",
+      "SizeDisplay": "114.2M",
+      "SizeBytes": 119747379,
+      "CollectedUtc": "2025-10-12T13:19:12.9240265Z"
+    },
+    {
+      "Name": "de436s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de436s.bsp",
+      "RelativePath": "planets/bsp/de436s.bsp",
+      "LastModified": "2016-11-02T22:05:00Z",
+      "SizeDisplay": "20.8M",
+      "SizeBytes": 21810380,
+      "CollectedUtc": "2025-10-12T13:19:12.924048Z"
+    },
+    {
+      "Name": "de436t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de436t.bsp",
+      "RelativePath": "planets/bsp/de436t.bsp",
+      "LastModified": "2016-11-02T00:45:00Z",
+      "SizeDisplay": "145.6M",
+      "SizeBytes": 152672665,
+      "CollectedUtc": "2025-10-12T13:19:12.9240615Z"
+    },
+    {
+      "Name": "de438.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de438.bsp",
+      "RelativePath": "planets/bsp/de438.bsp",
+      "LastModified": "2018-03-30T23:44:00Z",
+      "SizeDisplay": "114.2M",
+      "SizeBytes": 119747379,
+      "CollectedUtc": "2025-10-12T13:19:12.9240777Z"
+    },
+    {
+      "Name": "de438_plus_MarsPC.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de438_plus_MarsPC.bsp",
+      "RelativePath": "planets/bsp/de438_plus_MarsPC.bsp",
+      "LastModified": "2018-03-30T23:44:00Z",
+      "SizeDisplay": "132.3M",
+      "SizeBytes": 138726604,
+      "CollectedUtc": "2025-10-12T13:19:12.9240915Z"
+    },
+    {
+      "Name": "de438s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de438s.bsp",
+      "RelativePath": "planets/bsp/de438s.bsp",
+      "LastModified": "2018-03-30T23:44:00Z",
+      "SizeDisplay": "20.8M",
+      "SizeBytes": 21810380,
+      "CollectedUtc": "2025-10-12T13:19:12.9241157Z"
+    },
+    {
+      "Name": "de438t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de438t.bsp",
+      "RelativePath": "planets/bsp/de438t.bsp",
+      "LastModified": "2018-04-03T22:55:00Z",
+      "SizeDisplay": "145.6M",
+      "SizeBytes": 152672665,
+      "CollectedUtc": "2025-10-12T13:19:12.92413Z"
+    },
+    {
+      "Name": "de440.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de440.bsp",
+      "RelativePath": "planets/bsp/de440.bsp",
+      "LastModified": "2020-12-22T00:56:00Z",
+      "SizeDisplay": "114.3M",
+      "SizeBytes": 119852236,
+      "CollectedUtc": "2025-10-12T13:19:12.9241492Z"
+    },
+    {
+      "Name": "de440s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de440s.bsp",
+      "RelativePath": "planets/bsp/de440s.bsp",
+      "LastModified": "2020-12-22T00:56:00Z",
+      "SizeDisplay": "31.2M",
+      "SizeBytes": 32715571,
+      "CollectedUtc": "2025-10-12T13:19:12.924163Z"
+    },
+    {
+      "Name": "de440s_plus_MarsPC.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de440s_plus_MarsPC.bsp",
+      "RelativePath": "planets/bsp/de440s_plus_MarsPC.bsp",
+      "LastModified": "2020-12-22T00:58:00Z",
+      "SizeDisplay": "66.2M",
+      "SizeBytes": 69415731,
+      "CollectedUtc": "2025-10-12T13:19:12.9241807Z"
+    },
+    {
+      "Name": "de440t.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de440t.bsp",
+      "RelativePath": "planets/bsp/de440t.bsp",
+      "LastModified": "2020-12-22T00:56:00Z",
+      "SizeDisplay": "145.7M",
+      "SizeBytes": 152777523,
+      "CollectedUtc": "2025-10-12T13:19:12.9241944Z"
+    },
+    {
+      "Name": "de441.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de441.bsp",
+      "RelativePath": "planets/bsp/de441.bsp",
+      "LastModified": "2020-12-22T00:57:00Z",
+      "SizeDisplay": "3.08G",
+      "SizeBytes": 3307124817,
+      "CollectedUtc": "2025-10-12T13:19:12.9242142Z"
+    },
+    {
+      "Name": "130412AP_RE_90165_18018.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/130412AP_RE_90165_18018.bsp",
+      "RelativePath": "satellites/bsp/130412AP_RE_90165_18018.bsp",
+      "LastModified": "2013-04-12T22:32:00Z",
+      "SizeDisplay": "142.6M",
+      "SizeBytes": 149526937,
+      "CollectedUtc": "2025-10-12T13:19:12.9577075Z"
+    },
+    {
+      "Name": "130528BP_IRRE_00256_25017.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/130528BP_IRRE_00256_25017.bsp",
+      "RelativePath": "satellites/bsp/130528BP_IRRE_00256_25017.bsp",
+      "LastModified": "2013-05-28T17:12:00Z",
+      "SizeDisplay": "5.4M",
+      "SizeBytes": 5662310,
+      "CollectedUtc": "2025-10-12T13:19:12.9577541Z"
+    },
+    {
+      "Name": "140127AP_RE_90165_18018.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/140127AP_RE_90165_18018.bsp",
+      "RelativePath": "satellites/bsp/140127AP_RE_90165_18018.bsp",
+      "LastModified": "2014-01-28T01:05:00Z",
+      "SizeDisplay": "157.7M",
+      "SizeBytes": 165360435,
+      "CollectedUtc": "2025-10-12T13:19:12.9577707Z"
+    },
+    {
+      "Name": "140809BP_IRRE_00256_25017.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/140809BP_IRRE_00256_25017.bsp",
+      "RelativePath": "satellites/bsp/140809BP_IRRE_00256_25017.bsp",
+      "LastModified": "2014-08-09T17:12:00Z",
+      "SizeDisplay": "5.4M",
+      "SizeBytes": 5662310,
+      "CollectedUtc": "2025-10-12T13:19:12.9577921Z"
+    },
+    {
+      "Name": "150422AP_RE_90165_18018.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/150422AP_RE_90165_18018.bsp",
+      "RelativePath": "satellites/bsp/150422AP_RE_90165_18018.bsp",
+      "LastModified": "2015-04-22T19:01:00Z",
+      "SizeDisplay": "156.5M",
+      "SizeBytes": 164102144,
+      "CollectedUtc": "2025-10-12T13:19:12.9578063Z"
+    },
+    {
+      "Name": "150720AP_RE_90165_18018.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/150720AP_RE_90165_18018.bsp",
+      "RelativePath": "satellites/bsp/150720AP_RE_90165_18018.bsp",
+      "LastModified": "2015-07-20T21:45:00Z",
+      "SizeDisplay": "156.5M",
+      "SizeBytes": 164102144,
+      "CollectedUtc": "2025-10-12T13:19:12.9578249Z"
+    },
+    {
+      "Name": "161011AP_RE_90165_18018.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/161011AP_RE_90165_18018.bsp",
+      "RelativePath": "satellites/bsp/161011AP_RE_90165_18018.bsp",
+      "LastModified": "2016-10-11T17:32:00Z",
+      "SizeDisplay": "156.5M",
+      "SizeBytes": 164102144,
+      "CollectedUtc": "2025-10-12T13:19:12.9578395Z"
+    },
+    {
+      "Name": "161101AP_RE_90165_18018.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/161101AP_RE_90165_18018.bsp",
+      "RelativePath": "satellites/bsp/161101AP_RE_90165_18018.bsp",
+      "LastModified": "2016-11-01T16:45:00Z",
+      "SizeDisplay": "156.5M",
+      "SizeBytes": 164102144,
+      "CollectedUtc": "2025-10-12T13:19:12.9578591Z"
+    },
+    {
+      "Name": "180927AP_RE_90165_18018.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/180927AP_RE_90165_18018.bsp",
+      "RelativePath": "satellites/bsp/180927AP_RE_90165_18018.bsp",
+      "LastModified": "2018-09-27T23:36:00Z",
+      "SizeDisplay": "176.6M",
+      "SizeBytes": 185178521,
+      "CollectedUtc": "2025-10-12T13:19:12.9578729Z"
+    },
+    {
+      "Name": "20000617.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/20000617.bsp",
+      "RelativePath": "satellites/bsp/20000617.bsp",
+      "LastModified": "2024-01-21T19:53:00Z",
+      "SizeDisplay": "2.4M",
+      "SizeBytes": 2516582,
+      "CollectedUtc": "2025-10-12T13:19:12.9578898Z"
+    },
+    {
+      "Name": "Triton.nep097.30kyr.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/Triton.nep097.30kyr.bsp",
+      "RelativePath": "satellites/bsp/Triton.nep097.30kyr.bsp",
+      "LastModified": "2022-03-28T23:29:00Z",
+      "SizeDisplay": "2.40G",
+      "SizeBytes": 2576980377,
+      "CollectedUtc": "2025-10-12T13:19:12.9579042Z"
+    },
+    {
+      "Name": "daphnis.sat393.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/daphnis.sat393.bsp",
+      "RelativePath": "satellites/bsp/daphnis.sat393.bsp",
+      "LastModified": "2016-10-11T21:12:00Z",
+      "SizeDisplay": "9.0K",
+      "SizeBytes": 9216,
+      "CollectedUtc": "2025-10-12T13:19:12.9579409Z"
+    },
+    {
+      "Name": "jup340.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup340.bsp",
+      "RelativePath": "satellites/bsp/jup340.bsp",
+      "LastModified": "2016-09-01T22:50:00Z",
+      "SizeDisplay": "1.06G",
+      "SizeBytes": 1138166333,
+      "CollectedUtc": "2025-10-12T13:19:12.9579565Z"
+    },
+    {
+      "Name": "jup341.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup341.bsp",
+      "RelativePath": "satellites/bsp/jup341.bsp",
+      "LastModified": "2017-09-28T18:05:00Z",
+      "SizeDisplay": "1.09G",
+      "SizeBytes": 1170378588,
+      "CollectedUtc": "2025-10-12T13:19:12.9579779Z"
+    },
+    {
+      "Name": "jup343.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup343.bsp",
+      "RelativePath": "satellites/bsp/jup343.bsp",
+      "LastModified": "2019-11-07T22:21:00Z",
+      "SizeDisplay": "545.0M",
+      "SizeBytes": 571473920,
+      "CollectedUtc": "2025-10-12T13:19:12.9579925Z"
+    },
+    {
+      "Name": "jup344.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup344.bsp",
+      "RelativePath": "satellites/bsp/jup344.bsp",
+      "LastModified": "2024-08-13T20:10:00Z",
+      "SizeDisplay": "289.4M",
+      "SizeBytes": 303457894,
+      "CollectedUtc": "2025-10-12T13:19:12.9580128Z"
+    },
+    {
+      "Name": "jup345.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup345.bsp",
+      "RelativePath": "satellites/bsp/jup345.bsp",
+      "LastModified": "2023-02-07T19:23:00Z",
+      "SizeDisplay": "43.1M",
+      "SizeBytes": 45193625,
+      "CollectedUtc": "2025-10-12T13:19:12.9580479Z"
+    },
+    {
+      "Name": "jup346.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup346.bsp",
+      "RelativePath": "satellites/bsp/jup346.bsp",
+      "LastModified": "2023-03-02T01:14:00Z",
+      "SizeDisplay": "53.9M",
+      "SizeBytes": 56518246,
+      "CollectedUtc": "2025-10-12T13:19:12.9580859Z"
+    },
+    {
+      "Name": "jup347.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup347.bsp",
+      "RelativePath": "satellites/bsp/jup347.bsp",
+      "LastModified": "2025-05-11T16:14:00Z",
+      "SizeDisplay": "836.2M",
+      "SizeBytes": 876819251,
+      "CollectedUtc": "2025-10-12T13:19:12.9581201Z"
+    },
+    {
+      "Name": "jup357.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup357.bsp",
+      "RelativePath": "satellites/bsp/jup357.bsp",
+      "LastModified": "2020-09-09T18:08:00Z",
+      "SizeDisplay": "945.8M",
+      "SizeBytes": 991743180,
+      "CollectedUtc": "2025-10-12T13:19:12.9581533Z"
+    },
+    {
+      "Name": "jup357_1600.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup357_1600.bsp",
+      "RelativePath": "satellites/bsp/jup357_1600.bsp",
+      "LastModified": "2020-10-27T21:51:00Z",
+      "SizeDisplay": "699.7M",
+      "SizeBytes": 733688627,
+      "CollectedUtc": "2025-10-12T13:19:12.9581686Z"
+    },
+    {
+      "Name": "jup363.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup363.bsp",
+      "RelativePath": "satellites/bsp/jup363.bsp",
+      "LastModified": "2021-01-11T19:34:00Z",
+      "SizeDisplay": "51.6M",
+      "SizeBytes": 54106521,
+      "CollectedUtc": "2025-10-12T13:19:12.9581848Z"
+    },
+    {
+      "Name": "jup365.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup365.bsp",
+      "RelativePath": "satellites/bsp/jup365.bsp",
+      "LastModified": "2021-01-15T00:56:00Z",
+      "SizeDisplay": "1.03G",
+      "SizeBytes": 1105954078,
+      "CollectedUtc": "2025-10-12T13:19:12.9581998Z"
+    },
+    {
+      "Name": "jup380s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup380s.bsp",
+      "RelativePath": "satellites/bsp/jup380s.bsp",
+      "LastModified": "2021-12-07T17:04:00Z",
+      "SizeDisplay": "51.6M",
+      "SizeBytes": 54106521,
+      "CollectedUtc": "2025-10-12T13:19:12.9582411Z"
+    },
+    {
+      "Name": "jup387.2021_2400.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup387.2021_2400.bsp",
+      "RelativePath": "satellites/bsp/jup387.2021_2400.bsp",
+      "LastModified": "2022-12-28T17:44:00Z",
+      "SizeDisplay": "1.28G",
+      "SizeBytes": 1374389534,
+      "CollectedUtc": "2025-10-12T13:19:12.9582758Z"
+    },
+    {
+      "Name": "jup387xl.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup387xl.bsp",
+      "RelativePath": "satellites/bsp/jup387xl.bsp",
+      "LastModified": "2022-10-28T16:00:00Z",
+      "SizeDisplay": "1.38G",
+      "SizeBytes": 1481763717,
+      "CollectedUtc": "2025-10-12T13:19:12.9582899Z"
+    },
+    {
+      "Name": "mar097.2100-2500.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/mar097.2100-2500.bsp",
+      "RelativePath": "satellites/bsp/mar097.2100-2500.bsp",
+      "LastModified": "2015-05-29T16:33:00Z",
+      "SizeDisplay": "878.4M",
+      "SizeBytes": 921069158,
+      "CollectedUtc": "2025-10-12T13:19:12.9583095Z"
+    },
+    {
+      "Name": "mar097.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/mar097.bsp",
+      "RelativePath": "satellites/bsp/mar097.bsp",
+      "LastModified": "2015-05-13T18:44:00Z",
+      "SizeDisplay": "439.2M",
+      "SizeBytes": 460534579,
+      "CollectedUtc": "2025-10-12T13:19:12.9583233Z"
+    },
+    {
+      "Name": "mar099.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/mar099.bsp",
+      "RelativePath": "satellites/bsp/mar099.bsp",
+      "LastModified": "2025-05-23T00:57:00Z",
+      "SizeDisplay": "1.10G",
+      "SizeBytes": 1181116006,
+      "CollectedUtc": "2025-10-12T13:19:12.9583417Z"
+    },
+    {
+      "Name": "nep090.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep090.bsp",
+      "RelativePath": "satellites/bsp/nep090.bsp",
+      "LastModified": "2018-12-13T20:32:00Z",
+      "SizeDisplay": "1.88G",
+      "SizeBytes": 2018634629,
+      "CollectedUtc": "2025-10-12T13:19:12.9583731Z"
+    },
+    {
+      "Name": "nep096.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep096.bsp",
+      "RelativePath": "satellites/bsp/nep096.bsp",
+      "LastModified": "2020-10-01T17:12:00Z",
+      "SizeDisplay": "2.01G",
+      "SizeBytes": 2158221066,
+      "CollectedUtc": "2025-10-12T13:19:12.9583867Z"
+    },
+    {
+      "Name": "nep097.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep097.bsp",
+      "RelativePath": "satellites/bsp/nep097.bsp",
+      "LastModified": "2021-01-22T17:13:00Z",
+      "SizeDisplay": "3.01G",
+      "SizeBytes": 3231962890,
+      "CollectedUtc": "2025-10-12T13:19:12.9584044Z"
+    },
+    {
+      "Name": "nep100.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep100.bsp",
+      "RelativePath": "satellites/bsp/nep100.bsp",
+      "LastModified": "2021-01-22T17:12:00Z",
+      "SizeDisplay": "9.4M",
+      "SizeBytes": 9856614,
+      "CollectedUtc": "2025-10-12T13:19:12.9584182Z"
+    },
+    {
+      "Name": "nep101.30kyr.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep101.30kyr.bsp",
+      "RelativePath": "satellites/bsp/nep101.30kyr.bsp",
+      "LastModified": "2022-04-14T22:32:00Z",
+      "SizeDisplay": "2.19G",
+      "SizeBytes": 2351494594,
+      "CollectedUtc": "2025-10-12T13:19:12.9584364Z"
+    },
+    {
+      "Name": "nep101.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep101.bsp",
+      "RelativePath": "satellites/bsp/nep101.bsp",
+      "LastModified": "2022-04-14T22:25:00Z",
+      "SizeDisplay": "351.1M",
+      "SizeBytes": 368155033,
+      "CollectedUtc": "2025-10-12T13:19:12.9584503Z"
+    },
+    {
+      "Name": "nep102.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep102.bsp",
+      "RelativePath": "satellites/bsp/nep102.bsp",
+      "LastModified": "2023-01-30T00:04:00Z",
+      "SizeDisplay": "195.1M",
+      "SizeBytes": 204577177,
+      "CollectedUtc": "2025-10-12T13:19:12.958467Z"
+    },
+    {
+      "Name": "nep103.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep103.bsp",
+      "RelativePath": "satellites/bsp/nep103.bsp",
+      "LastModified": "2024-02-25T20:58:00Z",
+      "SizeDisplay": "273.1M",
+      "SizeBytes": 286366105,
+      "CollectedUtc": "2025-10-12T13:19:12.9585059Z"
+    },
+    {
+      "Name": "nep104.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep104.bsp",
+      "RelativePath": "satellites/bsp/nep104.bsp",
+      "LastModified": "2024-09-25T22:32:00Z",
+      "SizeDisplay": "273.1M",
+      "SizeBytes": 286366105,
+      "CollectedUtc": "2025-10-12T13:19:12.9585391Z"
+    },
+    {
+      "Name": "nep105.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/nep105.bsp",
+      "RelativePath": "satellites/bsp/nep105.bsp",
+      "LastModified": "2024-07-29T21:35:00Z",
+      "SizeDisplay": "156.1M",
+      "SizeBytes": 163682713,
+      "CollectedUtc": "2025-10-12T13:19:12.9585711Z"
+    },
+    {
+      "Name": "plu022.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/plu022.bsp",
+      "RelativePath": "satellites/bsp/plu022.bsp",
+      "LastModified": "2012-07-06T21:02:00Z",
+      "SizeDisplay": "68.3M",
+      "SizeBytes": 71617740,
+      "CollectedUtc": "2025-10-12T13:19:12.9586057Z"
+    },
+    {
+      "Name": "plu043.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/plu043.bsp",
+      "RelativePath": "satellites/bsp/plu043.bsp",
+      "LastModified": "2014-05-13T15:50:00Z",
+      "SizeDisplay": "67.6M",
+      "SizeBytes": 70883737,
+      "CollectedUtc": "2025-10-12T13:19:12.9586202Z"
+    },
+    {
+      "Name": "plu049.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/plu049.bsp",
+      "RelativePath": "satellites/bsp/plu049.bsp",
+      "LastModified": "2015-07-12T20:44:00Z",
+      "SizeDisplay": "18.4M",
+      "SizeBytes": 19293798,
+      "CollectedUtc": "2025-10-12T13:19:12.9586335Z"
+    },
+    {
+      "Name": "plu055.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/plu055.bsp",
+      "RelativePath": "satellites/bsp/plu055.bsp",
+      "LastModified": "2021-01-22T04:15:00Z",
+      "SizeDisplay": "72.1M",
+      "SizeBytes": 75602329,
+      "CollectedUtc": "2025-10-12T13:19:12.9586515Z"
+    },
+    {
+      "Name": "plu058.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/plu058.bsp",
+      "RelativePath": "satellites/bsp/plu058.bsp",
+      "LastModified": "2021-06-07T15:48:00Z",
+      "SizeDisplay": "34.7M",
+      "SizeBytes": 36385587,
+      "CollectedUtc": "2025-10-12T13:19:12.9586651Z"
+    },
+    {
+      "Name": "plu060.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/plu060.bsp",
+      "RelativePath": "satellites/bsp/plu060.bsp",
+      "LastModified": "2024-04-03T00:56:00Z",
+      "SizeDisplay": "111.5M",
+      "SizeBytes": 116916224,
+      "CollectedUtc": "2025-10-12T13:19:12.9586837Z"
+    },
+    {
+      "Name": "s2003_j24.jup344.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/s2003_j24.jup344.bsp",
+      "RelativePath": "satellites/bsp/s2003_j24.jup344.bsp",
+      "LastModified": "2021-11-19T02:33:00Z",
+      "SizeDisplay": "34.2M",
+      "SizeBytes": 35861299,
+      "CollectedUtc": "2025-10-12T13:19:12.9587546Z"
+    },
+    {
+      "Name": "sat143.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat143.bsp",
+      "RelativePath": "satellites/bsp/sat143.bsp",
+      "LastModified": "2023-10-29T16:53:00Z",
+      "SizeDisplay": "137.0M",
+      "SizeBytes": 143654912,
+      "CollectedUtc": "2025-10-12T13:19:12.9587779Z"
+    },
+    {
+      "Name": "sat360xl.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat360xl.bsp",
+      "RelativePath": "satellites/bsp/sat360xl.bsp",
+      "LastModified": "2016-02-09T22:42:00Z",
+      "SizeDisplay": "1.32G",
+      "SizeBytes": 1417339207,
+      "CollectedUtc": "2025-10-12T13:19:12.9587926Z"
+    },
+    {
+      "Name": "sat427l.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat427l.bsp",
+      "RelativePath": "satellites/bsp/sat427l.bsp",
+      "LastModified": "2020-09-17T01:23:00Z",
+      "SizeDisplay": "609.0M",
+      "SizeBytes": 638582784,
+      "CollectedUtc": "2025-10-12T13:19:12.9588187Z"
+    },
+    {
+      "Name": "sat428.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat428.bsp",
+      "RelativePath": "satellites/bsp/sat428.bsp",
+      "LastModified": "2019-10-09T22:49:00Z",
+      "SizeDisplay": "40.4M",
+      "SizeBytes": 42362470,
+      "CollectedUtc": "2025-10-12T13:19:12.9588331Z"
+    },
+    {
+      "Name": "sat440l.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat440l.bsp",
+      "RelativePath": "satellites/bsp/sat440l.bsp",
+      "LastModified": "2021-05-21T18:08:00Z",
+      "SizeDisplay": "609.0M",
+      "SizeBytes": 638582784,
+      "CollectedUtc": "2025-10-12T13:19:12.9588529Z"
+    },
+    {
+      "Name": "sat441l.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat441l.bsp",
+      "RelativePath": "satellites/bsp/sat441l.bsp",
+      "LastModified": "2021-12-01T18:57:00Z",
+      "SizeDisplay": "609.0M",
+      "SizeBytes": 638582784,
+      "CollectedUtc": "2025-10-12T13:19:12.9588668Z"
+    },
+    {
+      "Name": "sat441xl.back.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat441xl.back.bsp",
+      "RelativePath": "satellites/bsp/sat441xl.back.bsp",
+      "LastModified": "2022-05-22T23:47:00Z",
+      "SizeDisplay": "1.91G",
+      "SizeBytes": 2050846883,
+      "CollectedUtc": "2025-10-12T13:19:12.9588981Z"
+    },
+    {
+      "Name": "sat441xl.fwrd.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat441xl.fwrd.bsp",
+      "RelativePath": "satellites/bsp/sat441xl.fwrd.bsp",
+      "LastModified": "2022-05-22T23:45:00Z",
+      "SizeDisplay": "1.88G",
+      "SizeBytes": 2018634629,
+      "CollectedUtc": "2025-10-12T13:19:12.9589166Z"
+    },
+    {
+      "Name": "sat450.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat450.bsp",
+      "RelativePath": "satellites/bsp/sat450.bsp",
+      "LastModified": "2021-11-18T00:48:00Z",
+      "SizeDisplay": "61.9M",
+      "SizeBytes": 64906854,
+      "CollectedUtc": "2025-10-12T13:19:12.9589306Z"
+    },
+    {
+      "Name": "sat452.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat452.bsp",
+      "RelativePath": "satellites/bsp/sat452.bsp",
+      "LastModified": "2022-10-10T23:14:00Z",
+      "SizeDisplay": "95.8M",
+      "SizeBytes": 100453580,
+      "CollectedUtc": "2025-10-12T13:19:12.9589632Z"
+    },
+    {
+      "Name": "sat453.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat453.bsp",
+      "RelativePath": "satellites/bsp/sat453.bsp",
+      "LastModified": "2023-06-06T22:57:00Z",
+      "SizeDisplay": "142.0M",
+      "SizeBytes": 148897792,
+      "CollectedUtc": "2025-10-12T13:19:12.9589946Z"
+    },
+    {
+      "Name": "sat454.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat454.bsp",
+      "RelativePath": "satellites/bsp/sat454.bsp",
+      "LastModified": "2024-09-18T19:43:00Z",
+      "SizeDisplay": "209.1M",
+      "SizeBytes": 219257241,
+      "CollectedUtc": "2025-10-12T13:19:12.9590263Z"
+    },
+    {
+      "Name": "sat455.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat455.bsp",
+      "RelativePath": "satellites/bsp/sat455.bsp",
+      "LastModified": "2025-03-18T22:47:00Z",
+      "SizeDisplay": "230.0M",
+      "SizeBytes": 241172480,
+      "CollectedUtc": "2025-10-12T13:19:12.9590561Z"
+    },
+    {
+      "Name": "sat456.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat456.bsp",
+      "RelativePath": "satellites/bsp/sat456.bsp",
+      "LastModified": "2025-08-06T16:56:00Z",
+      "SizeDisplay": "67.1M",
+      "SizeBytes": 70359449,
+      "CollectedUtc": "2025-10-12T13:19:12.9591003Z"
+    },
+    {
+      "Name": "sat457.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/sat457.bsp",
+      "RelativePath": "satellites/bsp/sat457.bsp",
+      "LastModified": "2025-08-06T23:34:00Z",
+      "SizeDisplay": "142.0M",
+      "SizeBytes": 148897792,
+      "CollectedUtc": "2025-10-12T13:19:12.959139Z"
+    },
+    {
+      "Name": "se_jup342.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/se_jup342.bsp",
+      "RelativePath": "satellites/bsp/se_jup342.bsp",
+      "LastModified": "2018-09-17T16:23:00Z",
+      "SizeDisplay": "104.6M",
+      "SizeBytes": 109681049,
+      "CollectedUtc": "2025-10-12T13:19:12.959176Z"
+    },
+    {
+      "Name": "se_pluto058.xl.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/se_pluto058.xl.bsp",
+      "RelativePath": "satellites/bsp/se_pluto058.xl.bsp",
+      "LastModified": "2021-06-07T15:48:00Z",
+      "SizeDisplay": "34.7M",
+      "SizeBytes": 36385587,
+      "CollectedUtc": "2025-10-12T13:19:12.9591921Z"
+    },
+    {
+      "Name": "tnosat_v001_20000617_jpl082_20230601.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20000617_jpl082_20230601.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20000617_jpl082_20230601.bsp",
+      "LastModified": "2024-01-18T19:15:00Z",
+      "SizeDisplay": "283.8M",
+      "SizeBytes": 297585868,
+      "CollectedUtc": "2025-10-12T13:19:12.9592158Z"
+    },
+    {
+      "Name": "tnosat_v001_20050000_jpl043_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20050000_jpl043_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20050000_jpl043_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9592316Z"
+    },
+    {
+      "Name": "tnosat_v001_20090482_jpl043_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20090482_jpl043_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20090482_jpl043_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9592511Z"
+    },
+    {
+      "Name": "tnosat_v001_20120347_jpl025_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20120347_jpl025_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20120347_jpl025_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9592663Z"
+    },
+    {
+      "Name": "tnosat_v001_20136108_jpl110_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20136108_jpl110_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20136108_jpl110_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "251.4M",
+      "SizeBytes": 263612006,
+      "CollectedUtc": "2025-10-12T13:19:12.9592861Z"
+    },
+    {
+      "Name": "tnosat_v001_20136199_jpl080_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20136199_jpl080_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20136199_jpl080_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9593052Z"
+    },
+    {
+      "Name": "tnosat_v001_20469705_jpl009_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20469705_jpl009_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20469705_jpl009_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9593205Z"
+    },
+    {
+      "Name": "tnosat_v001_20612095_jpl006_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20612095_jpl006_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20612095_jpl006_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9593369Z"
+    },
+    {
+      "Name": "tnosat_v001_20612687_jpl008_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_20612687_jpl008_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_20612687_jpl008_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9593519Z"
+    },
+    {
+      "Name": "tnosat_v001_53031823_jpl010_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_53031823_jpl010_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_53031823_jpl010_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9593984Z"
+    },
+    {
+      "Name": "tnosat_v001_53092511_jpl005_20220908.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001_53092511_jpl005_20220908.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001_53092511_jpl005_20220908.bsp",
+      "LastModified": "2022-09-08T22:21:00Z",
+      "SizeDisplay": "167.8M",
+      "SizeBytes": 175951052,
+      "CollectedUtc": "2025-10-12T13:19:12.9594172Z"
+    },
+    {
+      "Name": "tnosat_v001b_20136108_jpl110_20221014.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/tnosat_v001b_20136108_jpl110_20221014.bsp",
+      "RelativePath": "satellites/bsp/tnosat_v001b_20136108_jpl110_20221014.bsp",
+      "LastModified": "2022-10-15T00:16:00Z",
+      "SizeDisplay": "251.4M",
+      "SizeBytes": 263612006,
+      "CollectedUtc": "2025-10-12T13:19:12.9594375Z"
+    },
+    {
+      "Name": "ura111.30kyr.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura111.30kyr.bsp",
+      "RelativePath": "satellites/bsp/ura111.30kyr.bsp",
+      "LastModified": "2022-03-28T23:32:00Z",
+      "SizeDisplay": "6.78G",
+      "SizeBytes": 7279969566,
+      "CollectedUtc": "2025-10-12T13:19:12.959452Z"
+    },
+    {
+      "Name": "ura111.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura111.bsp",
+      "RelativePath": "satellites/bsp/ura111.bsp",
+      "LastModified": "2019-10-09T16:11:00Z",
+      "SizeDisplay": "153.4M",
+      "SizeBytes": 160851558,
+      "CollectedUtc": "2025-10-12T13:19:12.95947Z"
+    },
+    {
+      "Name": "ura111.xl.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura111.xl.bsp",
+      "RelativePath": "satellites/bsp/ura111.xl.bsp",
+      "LastModified": "2021-11-07T19:17:00Z",
+      "SizeDisplay": "766.9M",
+      "SizeBytes": 804152934,
+      "CollectedUtc": "2025-10-12T13:19:12.9594846Z"
+    },
+    {
+      "Name": "ura112.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura112.bsp",
+      "RelativePath": "satellites/bsp/ura112.bsp",
+      "LastModified": "2021-01-22T04:22:00Z",
+      "SizeDisplay": "104.2M",
+      "SizeBytes": 109261619,
+      "CollectedUtc": "2025-10-12T13:19:12.9595028Z"
+    },
+    {
+      "Name": "ura115.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura115.bsp",
+      "RelativePath": "satellites/bsp/ura115.bsp",
+      "LastModified": "2019-09-12T16:46:00Z",
+      "SizeDisplay": "1.42G",
+      "SizeBytes": 1524713390,
+      "CollectedUtc": "2025-10-12T13:19:12.9595167Z"
+    },
+    {
+      "Name": "ura116.30kyr.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura116.30kyr.bsp",
+      "RelativePath": "satellites/bsp/ura116.30kyr.bsp",
+      "LastModified": "2022-03-28T23:33:00Z",
+      "SizeDisplay": "659.5M",
+      "SizeBytes": 691535872,
+      "CollectedUtc": "2025-10-12T13:19:12.9595304Z"
+    },
+    {
+      "Name": "ura116.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura116.bsp",
+      "RelativePath": "satellites/bsp/ura116.bsp",
+      "LastModified": "2021-09-30T22:04:00Z",
+      "SizeDisplay": "53.6M",
+      "SizeBytes": 56203673,
+      "CollectedUtc": "2025-10-12T13:19:12.9595483Z"
+    },
+    {
+      "Name": "ura117.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura117.bsp",
+      "RelativePath": "satellites/bsp/ura117.bsp",
+      "LastModified": "2024-02-25T20:49:00Z",
+      "SizeDisplay": "19.4M",
+      "SizeBytes": 20342374,
+      "CollectedUtc": "2025-10-12T13:19:12.9595615Z"
+    },
+    {
+      "Name": "ura155.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura155.bsp",
+      "RelativePath": "satellites/bsp/ura155.bsp",
+      "LastModified": "2023-03-29T19:39:00Z",
+      "SizeDisplay": "235.9M",
+      "SizeBytes": 247359078,
+      "CollectedUtc": "2025-10-12T13:19:12.9595928Z"
+    },
+    {
+      "Name": "ura158.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura158.bsp",
+      "RelativePath": "satellites/bsp/ura158.bsp",
+      "LastModified": "2023-04-20T04:22:00Z",
+      "SizeDisplay": "121.1M",
+      "SizeBytes": 126982553,
+      "CollectedUtc": "2025-10-12T13:19:12.959611Z"
+    },
+    {
+      "Name": "ura159.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura159.bsp",
+      "RelativePath": "satellites/bsp/ura159.bsp",
+      "LastModified": "2023-04-24T18:54:00Z",
+      "SizeDisplay": "121.1M",
+      "SizeBytes": 126982553,
+      "CollectedUtc": "2025-10-12T13:19:12.9596245Z"
+    },
+    {
+      "Name": "ura160.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura160.bsp",
+      "RelativePath": "satellites/bsp/ura160.bsp",
+      "LastModified": "2023-04-24T18:25:00Z",
+      "SizeDisplay": "121.1M",
+      "SizeBytes": 126982553,
+      "CollectedUtc": "2025-10-12T13:19:12.9596416Z"
+    },
+    {
+      "Name": "ura161.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura161.bsp",
+      "RelativePath": "satellites/bsp/ura161.bsp",
+      "LastModified": "2023-04-25T16:44:00Z",
+      "SizeDisplay": "121.1M",
+      "SizeBytes": 126982553,
+      "CollectedUtc": "2025-10-12T13:19:12.9596555Z"
+    },
+    {
+      "Name": "ura167.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura167.bsp",
+      "RelativePath": "satellites/bsp/ura167.bsp",
+      "LastModified": "2023-07-27T22:12:00Z",
+      "SizeDisplay": "121.1M",
+      "SizeBytes": 126982553,
+      "CollectedUtc": "2025-10-12T13:19:12.9596811Z"
+    },
+    {
+      "Name": "ura178.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura178.bsp",
+      "RelativePath": "satellites/bsp/ura178.bsp",
+      "LastModified": "2023-08-12T16:57:00Z",
+      "SizeDisplay": "190.6M",
+      "SizeBytes": 199858585,
+      "CollectedUtc": "2025-10-12T13:19:12.9596954Z"
+    },
+    {
+      "Name": "ura182.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura182.bsp",
+      "RelativePath": "satellites/bsp/ura182.bsp",
+      "LastModified": "2025-01-28T00:47:00Z",
+      "SizeDisplay": "665.7M",
+      "SizeBytes": 698037043,
+      "CollectedUtc": "2025-10-12T13:19:12.9597151Z"
+    },
+    {
+      "Name": "ura183.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura183.bsp",
+      "RelativePath": "satellites/bsp/ura183.bsp",
+      "LastModified": "2025-01-28T00:51:00Z",
+      "SizeDisplay": "1.80G",
+      "SizeBytes": 1932735283,
+      "CollectedUtc": "2025-10-12T13:19:12.9597675Z"
+    },
+    {
+      "Name": "ura184.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/ura184.bsp",
+      "RelativePath": "satellites/bsp/ura184.bsp",
+      "LastModified": "2025-09-24T17:27:00Z",
+      "SizeDisplay": "4.14G",
+      "SizeBytes": 4445291151,
+      "CollectedUtc": "2025-10-12T13:19:12.9597989Z"
+    },
+    {
+      "Name": "sb-67p-k151-6.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/67p/sb-67p-k151-6.bsp",
+      "RelativePath": "small_bodies/67p/sb-67p-k151-6.bsp",
+      "LastModified": "2021-01-26T01:52:00Z",
+      "SizeDisplay": "117.0K",
+      "SizeBytes": 119808,
+      "CollectedUtc": "2025-10-12T13:19:12.9882947Z"
+    },
+    {
+      "Name": "ast343de430.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/asteroids_de430/ast343de430.bsp",
+      "RelativePath": "small_bodies/asteroids_de430/ast343de430.bsp",
+      "LastModified": "2014-12-02T21:35:00Z",
+      "SizeDisplay": "1.12G",
+      "SizeBytes": 1202590842,
+      "CollectedUtc": "2025-10-12T13:19:13.0472155Z"
+    },
+    {
+      "Name": "sb441-n16.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/asteroids_de441/sb441-n16.bsp",
+      "RelativePath": "small_bodies/asteroids_de441/sb441-n16.bsp",
+      "LastModified": "2021-03-31T21:23:00Z",
+      "SizeDisplay": "615.8M",
+      "SizeBytes": 645713100,
+      "CollectedUtc": "2025-10-12T13:19:13.0772135Z"
+    },
+    {
+      "Name": "sb441-n373.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/asteroids_de441/sb441-n373.bsp",
+      "RelativePath": "small_bodies/asteroids_de441/sb441-n373.bsp",
+      "LastModified": "2021-03-31T21:50:00Z",
+      "SizeDisplay": "14.13G",
+      "SizeBytes": 15171971973,
+      "CollectedUtc": "2025-10-12T13:19:13.0772303Z"
+    },
+    {
+      "Name": "sb441-n373s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/asteroids_de441/sb441-n373s.bsp",
+      "RelativePath": "small_bodies/asteroids_de441/sb441-n373s.bsp",
+      "LastModified": "2021-09-02T22:54:00Z",
+      "SizeDisplay": "936.6M",
+      "SizeBytes": 982096281,
+      "CollectedUtc": "2025-10-12T13:19:13.0772615Z"
+    },
+    {
+      "Name": "sb-65803-181.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/didymos/archive/sb-65803-181.bsp",
+      "RelativePath": "small_bodies/dart/didymos/archive/sb-65803-181.bsp",
+      "LastModified": "2021-02-14T01:04:00Z",
+      "SizeDisplay": "15.0K",
+      "SizeBytes": 15360,
+      "CollectedUtc": "2025-10-12T13:19:13.3755592Z"
+    },
+    {
+      "Name": "sb-65803-198.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/didymos/archive/sb-65803-198.bsp",
+      "RelativePath": "small_bodies/dart/didymos/archive/sb-65803-198.bsp",
+      "LastModified": "2022-11-03T05:17:00Z",
+      "SizeDisplay": "17.0K",
+      "SizeBytes": 17408,
+      "CollectedUtc": "2025-10-12T13:19:13.3756298Z"
+    },
+    {
+      "Name": "sb-65803-202.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/didymos/archive/sb-65803-202.bsp",
+      "RelativePath": "small_bodies/dart/didymos/archive/sb-65803-202.bsp",
+      "LastModified": "2023-01-16T16:29:00Z",
+      "SizeDisplay": "17.0K",
+      "SizeBytes": 17408,
+      "CollectedUtc": "2025-10-12T13:19:13.3756623Z"
+    },
+    {
+      "Name": "sb-65803-205.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/didymos/sb-65803-205.bsp",
+      "RelativePath": "small_bodies/dart/didymos/sb-65803-205.bsp",
+      "LastModified": "2023-05-25T17:00:00Z",
+      "SizeDisplay": "231.0K",
+      "SizeBytes": 236544,
+      "CollectedUtc": "2025-10-12T13:19:13.1963407Z"
+    },
+    {
+      "Name": "dimorphos_s101.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s101.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s101.bsp",
+      "LastModified": "2021-02-17T22:55:00Z",
+      "SizeDisplay": "12.1M",
+      "SizeBytes": 12687769,
+      "CollectedUtc": "2025-10-12T13:19:13.4058352Z"
+    },
+    {
+      "Name": "dimorphos_s104.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s104.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s104.bsp",
+      "LastModified": "2021-09-28T18:04:00Z",
+      "SizeDisplay": "12.1M",
+      "SizeBytes": 12687769,
+      "CollectedUtc": "2025-10-12T13:19:13.405886Z"
+    },
+    {
+      "Name": "dimorphos_s104.v2.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s104.v2.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s104.v2.bsp",
+      "LastModified": "2021-11-04T21:47:00Z",
+      "SizeDisplay": "12.1M",
+      "SizeBytes": 12687769,
+      "CollectedUtc": "2025-10-12T13:19:13.4059182Z"
+    },
+    {
+      "Name": "dimorphos_s501-postimp.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s501-postimp.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s501-postimp.bsp",
+      "LastModified": "2022-10-28T08:39:00Z",
+      "SizeDisplay": "2.1M",
+      "SizeBytes": 2202009,
+      "CollectedUtc": "2025-10-12T13:19:13.4059651Z"
+    },
+    {
+      "Name": "dimorphos_s501-preimp.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s501-preimp.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s501-preimp.bsp",
+      "LastModified": "2022-10-28T08:39:00Z",
+      "SizeDisplay": "8.9M",
+      "SizeBytes": 9332326,
+      "CollectedUtc": "2025-10-12T13:19:13.4059965Z"
+    },
+    {
+      "Name": "dimorphos_s501.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s501.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s501.bsp",
+      "LastModified": "2022-10-28T08:24:00Z",
+      "SizeDisplay": "10.9M",
+      "SizeBytes": 11429478,
+      "CollectedUtc": "2025-10-12T13:19:13.4060274Z"
+    },
+    {
+      "Name": "dimorphos_s502.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s502.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s502.bsp",
+      "LastModified": "2022-11-03T02:34:00Z",
+      "SizeDisplay": "10.9M",
+      "SizeBytes": 11429478,
+      "CollectedUtc": "2025-10-12T13:19:13.4060735Z"
+    },
+    {
+      "Name": "dimorphos_s504.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s504.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s504.bsp",
+      "LastModified": "2022-11-03T22:51:00Z",
+      "SizeDisplay": "10.9M",
+      "SizeBytes": 11429478,
+      "CollectedUtc": "2025-10-12T13:19:13.4061355Z"
+    },
+    {
+      "Name": "dimorphos_s516.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s516.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s516.bsp",
+      "LastModified": "2023-01-19T02:38:00Z",
+      "SizeDisplay": "54.7M",
+      "SizeBytes": 57357107,
+      "CollectedUtc": "2025-10-12T13:19:13.4061983Z"
+    },
+    {
+      "Name": "dimorphos_s523.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s523.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s523.bsp",
+      "LastModified": "2023-05-24T23:55:00Z",
+      "SizeDisplay": "54.7M",
+      "SizeBytes": 57357107,
+      "CollectedUtc": "2025-10-12T13:19:13.4062607Z"
+    },
+    {
+      "Name": "dimorphos_s527.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/archive/dimorphos_s527.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/archive/dimorphos_s527.bsp",
+      "LastModified": "2023-06-12T21:09:00Z",
+      "SizeDisplay": "54.7M",
+      "SizeBytes": 57357107,
+      "CollectedUtc": "2025-10-12T13:19:13.4063299Z"
+    },
+    {
+      "Name": "dimorphos_s542.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/dart/dimorphos/dimorphos_s542.bsp",
+      "RelativePath": "small_bodies/dart/dimorphos/dimorphos_s542.bsp",
+      "LastModified": "2023-09-19T08:45:00Z",
+      "SizeDisplay": "48.8M",
+      "SizeBytes": 51170508,
+      "CollectedUtc": "2025-10-12T13:19:13.2253413Z"
+    },
+    {
+      "Name": "sb-101955-103.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/orex/asteroid/sb-101955-103.bsp",
+      "RelativePath": "small_bodies/orex/asteroid/sb-101955-103.bsp",
+      "LastModified": "2018-11-12T19:16:00Z",
+      "SizeDisplay": "25.0K",
+      "SizeBytes": 25600,
+      "CollectedUtc": "2025-10-12T13:19:13.284373Z"
+    },
+    {
+      "Name": "sb-101955-108.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/orex/asteroid/sb-101955-108.bsp",
+      "RelativePath": "small_bodies/orex/asteroid/sb-101955-108.bsp",
+      "LastModified": "2019-03-28T18:39:00Z",
+      "SizeDisplay": "61.0K",
+      "SizeBytes": 62464,
+      "CollectedUtc": "2025-10-12T13:19:13.2844349Z"
+    },
+    {
+      "Name": "sb-101955-110.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/orex/asteroid/sb-101955-110.bsp",
+      "RelativePath": "small_bodies/orex/asteroid/sb-101955-110.bsp",
+      "LastModified": "2019-08-19T22:10:00Z",
+      "SizeDisplay": "61.0K",
+      "SizeBytes": 62464,
+      "CollectedUtc": "2025-10-12T13:19:13.2844918Z"
+    },
+    {
+      "Name": "sb-101955-76.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/orex/asteroid/sb-101955-76.bsp",
+      "RelativePath": "small_bodies/orex/asteroid/sb-101955-76.bsp",
+      "LastModified": "2013-02-01T20:21:00Z",
+      "SizeDisplay": "25.0K",
+      "SizeBytes": 25600,
+      "CollectedUtc": "2025-10-12T13:19:13.2845978Z"
+    },
+    {
+      "Name": "de424.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/orex/planet/de424.bsp",
+      "RelativePath": "small_bodies/orex/planet/de424.bsp",
+      "LastModified": "2013-02-01T21:53:00Z",
+      "SizeDisplay": "6.2M",
+      "SizeBytes": 6501171,
+      "CollectedUtc": "2025-10-12T13:19:13.3426971Z"
+    },
+    {
+      "Name": "de441s.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/orex/planet/de441s.bsp",
+      "RelativePath": "small_bodies/orex/planet/de441s.bsp",
+      "LastModified": "2021-07-20T22:31:00Z",
+      "SizeDisplay": "26.0M",
+      "SizeBytes": 27262976,
+      "CollectedUtc": "2025-10-12T13:19:13.3427535Z"
+    },
+    {
+      "Name": "c2013a1_s101_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s101_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s101_merged_DE431.bsp",
+      "LastModified": "2014-10-13T23:35:00Z",
+      "SizeDisplay": "37.1M",
+      "SizeBytes": 38902169,
+      "CollectedUtc": "2025-10-12T13:19:13.1670393Z"
+    },
+    {
+      "Name": "c2013a1_s105_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s105_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s105_merged_DE431.bsp",
+      "LastModified": "2016-04-22T21:31:00Z",
+      "SizeDisplay": "14.2M",
+      "SizeBytes": 14889779,
+      "CollectedUtc": "2025-10-12T13:19:13.1670802Z"
+    },
+    {
+      "Name": "c2013a1_s105s_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s105s_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s105s_merged_DE431.bsp",
+      "LastModified": "2016-04-25T18:15:00Z",
+      "SizeDisplay": "1.0M",
+      "SizeBytes": 1048576,
+      "CollectedUtc": "2025-10-12T13:19:13.1671124Z"
+    },
+    {
+      "Name": "c2013a1_s46_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s46_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s46_merged_DE431.bsp",
+      "LastModified": "2014-03-14T23:34:00Z",
+      "SizeDisplay": "37.1M",
+      "SizeBytes": 38902169,
+      "CollectedUtc": "2025-10-12T13:19:13.1671546Z"
+    },
+    {
+      "Name": "c2013a1_s53_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s53_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s53_merged_DE431.bsp",
+      "LastModified": "2014-08-04T19:39:00Z",
+      "SizeDisplay": "37.0M",
+      "SizeBytes": 38797312,
+      "CollectedUtc": "2025-10-12T13:19:13.1671891Z"
+    },
+    {
+      "Name": "c2013a1_s67_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s67_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s67_merged_DE431.bsp",
+      "LastModified": "2014-09-12T22:46:00Z",
+      "SizeDisplay": "37.0M",
+      "SizeBytes": 38797312,
+      "CollectedUtc": "2025-10-12T13:19:13.1672308Z"
+    },
+    {
+      "Name": "c2013a1_s85_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s85_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s85_merged_DE431.bsp",
+      "LastModified": "2014-09-26T18:56:00Z",
+      "SizeDisplay": "37.0M",
+      "SizeBytes": 38797312,
+      "CollectedUtc": "2025-10-12T13:19:13.167263Z"
+    },
+    {
+      "Name": "c2013a1_s97_merged_DE431.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/small_bodies/siding_spring/c2013a1_s97_merged_DE431.bsp",
+      "RelativePath": "small_bodies/siding_spring/c2013a1_s97_merged_DE431.bsp",
+      "LastModified": "2014-10-07T21:44:00Z",
+      "SizeDisplay": "37.0M",
+      "SizeBytes": 38797312,
+      "CollectedUtc": "2025-10-12T13:19:13.1673119Z"
+    },
+    {
+      "Name": "cassini.ver1.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/cassini.ver1.bsp",
+      "RelativePath": "spacecraft/cassini.ver1.bsp",
+      "LastModified": "2020-01-07T21:11:00Z",
+      "SizeDisplay": "1.56G",
+      "SizeBytes": 1675037245,
+      "CollectedUtc": "2025-10-12T13:19:12.8926102Z"
+    },
+    {
+      "Name": "mariner6.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/mariner6.bsp",
+      "RelativePath": "spacecraft/mariner6.bsp",
+      "LastModified": "2016-08-31T16:59:00Z",
+      "SizeDisplay": "34.0K",
+      "SizeBytes": 34816,
+      "CollectedUtc": "2025-10-12T13:19:12.8926839Z"
+    },
+    {
+      "Name": "mariner7.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/mariner7.bsp",
+      "RelativePath": "spacecraft/mariner7.bsp",
+      "LastModified": "2016-08-31T18:18:00Z",
+      "SizeDisplay": "38.0K",
+      "SizeBytes": 38912,
+      "CollectedUtc": "2025-10-12T13:19:12.8927091Z"
+    },
+    {
+      "Name": "phobos2.mar097.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/phobos2.mar097.bsp",
+      "RelativePath": "spacecraft/phobos2.mar097.bsp",
+      "LastModified": "2012-04-20T16:39:00Z",
+      "SizeDisplay": "659.0K",
+      "SizeBytes": 674816,
+      "CollectedUtc": "2025-10-12T13:19:12.8927464Z"
+    },
+    {
+      "Name": "ura083.all.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/ura083.all.bsp",
+      "RelativePath": "spacecraft/ura083.all.bsp",
+      "LastModified": "2007-09-11T16:12:00Z",
+      "SizeDisplay": "507.0K",
+      "SizeBytes": 519168,
+      "CollectedUtc": "2025-10-12T13:19:12.8928244Z"
+    },
+    {
+      "Name": "vgr1.sat427.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr1.sat427.bsp",
+      "RelativePath": "spacecraft/vgr1.sat427.bsp",
+      "LastModified": "2020-01-07T20:52:00Z",
+      "SizeDisplay": "680.0K",
+      "SizeBytes": 696320,
+      "CollectedUtc": "2025-10-12T13:19:12.8928568Z"
+    },
+    {
+      "Name": "vgr1.x2100.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr1.x2100.bsp",
+      "RelativePath": "spacecraft/vgr1.x2100.bsp",
+      "LastModified": "2022-04-03T03:09:00Z",
+      "SizeDisplay": "3.1M",
+      "SizeBytes": 3250585,
+      "CollectedUtc": "2025-10-12T13:19:12.8928718Z"
+    },
+    {
+      "Name": "vgr2.nep097.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.nep097.bsp",
+      "RelativePath": "spacecraft/vgr2.nep097.bsp",
+      "LastModified": "2022-08-29T17:19:00Z",
+      "SizeDisplay": "1.1M",
+      "SizeBytes": 1153433,
+      "CollectedUtc": "2025-10-12T13:19:12.8929248Z"
+    },
+    {
+      "Name": "vgr2.sat427.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.sat427.bsp",
+      "RelativePath": "spacecraft/vgr2.sat427.bsp",
+      "LastModified": "2020-01-07T20:53:00Z",
+      "SizeDisplay": "815.0K",
+      "SizeBytes": 834560,
+      "CollectedUtc": "2025-10-12T13:19:12.8929388Z"
+    },
+    {
+      "Name": "vgr2.ura111.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura111.bsp",
+      "RelativePath": "spacecraft/vgr2.ura111.bsp",
+      "LastModified": "2014-10-24T17:57:00Z",
+      "SizeDisplay": "631.0K",
+      "SizeBytes": 646144,
+      "CollectedUtc": "2025-10-12T13:19:12.8929712Z"
+    },
+    {
+      "Name": "vgr2.ura155.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura155.bsp",
+      "RelativePath": "spacecraft/vgr2.ura155.bsp",
+      "LastModified": "2023-03-29T19:43:00Z",
+      "SizeDisplay": "678.0K",
+      "SizeBytes": 694272,
+      "CollectedUtc": "2025-10-12T13:19:12.8930164Z"
+    },
+    {
+      "Name": "vgr2.ura158.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura158.bsp",
+      "RelativePath": "spacecraft/vgr2.ura158.bsp",
+      "LastModified": "2023-04-20T04:14:00Z",
+      "SizeDisplay": "678.0K",
+      "SizeBytes": 694272,
+      "CollectedUtc": "2025-10-12T13:19:12.8930331Z"
+    },
+    {
+      "Name": "vgr2.ura159.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura159.bsp",
+      "RelativePath": "spacecraft/vgr2.ura159.bsp",
+      "LastModified": "2023-04-24T19:01:00Z",
+      "SizeDisplay": "683.0K",
+      "SizeBytes": 699392,
+      "CollectedUtc": "2025-10-12T13:19:12.8930466Z"
+    },
+    {
+      "Name": "vgr2.ura160.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura160.bsp",
+      "RelativePath": "spacecraft/vgr2.ura160.bsp",
+      "LastModified": "2023-04-24T19:02:00Z",
+      "SizeDisplay": "680.0K",
+      "SizeBytes": 696320,
+      "CollectedUtc": "2025-10-12T13:19:12.8930733Z"
+    },
+    {
+      "Name": "vgr2.ura161.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura161.bsp",
+      "RelativePath": "spacecraft/vgr2.ura161.bsp",
+      "LastModified": "2023-04-25T16:47:00Z",
+      "SizeDisplay": "677.0K",
+      "SizeBytes": 693248,
+      "CollectedUtc": "2025-10-12T13:19:12.8930867Z"
+    },
+    {
+      "Name": "vgr2.ura167.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura167.bsp",
+      "RelativePath": "spacecraft/vgr2.ura167.bsp",
+      "LastModified": "2023-07-27T21:50:00Z",
+      "SizeDisplay": "573.0K",
+      "SizeBytes": 586752,
+      "CollectedUtc": "2025-10-12T13:19:12.8931065Z"
+    },
+    {
+      "Name": "vgr2.ura178.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura178.bsp",
+      "RelativePath": "spacecraft/vgr2.ura178.bsp",
+      "LastModified": "2023-08-13T00:20:00Z",
+      "SizeDisplay": "572.0K",
+      "SizeBytes": 585728,
+      "CollectedUtc": "2025-10-12T13:19:12.8931197Z"
+    },
+    {
+      "Name": "vgr2.ura182.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.ura182.bsp",
+      "RelativePath": "spacecraft/vgr2.ura182.bsp",
+      "LastModified": "2024-07-03T19:31:00Z",
+      "SizeDisplay": "672.0K",
+      "SizeBytes": 688128,
+      "CollectedUtc": "2025-10-12T13:19:12.8931379Z"
+    },
+    {
+      "Name": "vgr2.x2100.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/vgr2.x2100.bsp",
+      "RelativePath": "spacecraft/vgr2.x2100.bsp",
+      "LastModified": "2022-04-03T03:27:00Z",
+      "SizeDisplay": "3.5M",
+      "SizeBytes": 3670016,
+      "CollectedUtc": "2025-10-12T13:19:12.8931512Z"
+    },
+    {
+      "Name": "viking1.mar085.bsp",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/spacecraft/viking1.mar085.bsp",
+      "RelativePath": "spacecraft/viking1.mar085.bsp",
+      "LastModified": "2010-04-07T16:22:00Z",
+      "SizeDisplay": "356.0K",
+      "SizeBytes": 364544,
+      "CollectedUtc": "2025-10-12T13:19:12.8931692Z"
+    }
+  ]
+}
