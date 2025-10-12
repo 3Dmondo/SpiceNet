@@ -1,0 +1,46 @@
+version: 2
+updates:
+  # NuGet dependencies (Central Package Management + project local packages)
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "Europe/Rome"
+    open-pull-requests-limit: 10
+    # Group routine patch/minor bumps to reduce PR noise; majors remain separate for review
+    groups:
+      nuget-patch-minor:
+        applies-to: security-updates
+        patterns:
+          - "*"
+        update-types: ["patch", "minor"]
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      # Example: ignore pre-release packages unless explicitly needed
+      - dependency-name: "*"
+        versions: ["*-preview.*", "*-alpha.*", "*-beta.*", "*-rc.*"]
+    labels:
+      - "dependencies"
+      - "nuget"
+    commit-message:
+      prefix: "deps(nuget)"
+      include: "scope"
+
+  # GitHub Actions workflow dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:30"
+      timezone: "Europe/Rome"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "deps(actions)"
+      include: "scope"
