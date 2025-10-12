@@ -54,14 +54,14 @@ jobs:
       - name: Stage updated artifacts
         if: steps.run_tool.outputs.changed == 'true'
         run: |
-          git add Docs/SsdCatalog/ssd_catalog.json Docs/SsdCatalog/SSDCatalog.md Docs/SsdCatalog/catalog.hash || true
+          git add Docs/SsdCatalog/ssd_catalog.json Docs/SsdCatalog/testpo_catalog.json Docs/SsdCatalog/SSDCatalog.md Docs/SsdCatalog/catalog.hash || true
 
       - name: Create Pull Request
         if: steps.run_tool.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: monthly SSD ephemerides catalog refresh (${ { steps.run_tool.outputs.hash } })"
+          commit-message: "chore: monthly SSD ephemerides catalog refresh (${{ steps.run_tool.outputs.hash }})"
           branch: chore/update-ssd-catalog-${{ github.run_id }}
           title: "Monthly SSD Ephemerides Catalog Refresh"
           body: |
@@ -73,6 +73,7 @@ jobs:
 
             Updated artifacts (written only if content changed):
             - Docs/SsdCatalog/ssd_catalog.json
+            - Docs/SsdCatalog/testpo_catalog.json (when testpo flag enabled)
             - Docs/SsdCatalog/SSDCatalog.md
             - Docs/SsdCatalog/catalog.hash (content signature)
 
