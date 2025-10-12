@@ -7,6 +7,12 @@ on:
     branches: [ master ]
     tags: [ 'v*' ]
 
+# Explicit permissions (least privilege). Adjust if future steps need more.
+permissions:
+  contents: read
+  # pull-requests: write    # uncomment only if workflow needs to update PRs (e.g., status comments)
+  # packages: write         # uncomment only if publishing to GitHub Packages (not needed for NuGet.org)
+
 jobs:
   build-test-pack:
     runs-on: ubuntu-latest
