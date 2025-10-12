@@ -1,0 +1,223 @@
+{
+  "Root": "https://ssd.jpl.nasa.gov/ftp/eph/",
+  "GeneratedUtc": "2025-10-12T13:26:44.0528369Z",
+  "FileCount": 24,
+  "Files": [
+    {
+      "EphemerisNumber": "102",
+      "Name": "testpo.102",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de102/testpo.102",
+      "RelativePath": "planets/ascii/de102/testpo.102",
+      "LastModified": "2008-04-01T19:16:00Z",
+      "SizeDisplay": "1.6M",
+      "SizeBytes": 1677721
+    },
+    {
+      "EphemerisNumber": "200",
+      "Name": "testpo.200",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de200/testpo.200",
+      "RelativePath": "planets/ascii/de200/testpo.200",
+      "LastModified": "2009-06-24T16:38:00Z",
+      "SizeDisplay": "380.5K",
+      "SizeBytes": 389632
+    },
+    {
+      "EphemerisNumber": "202",
+      "Name": "testpo.202",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de202/testpo.202",
+      "RelativePath": "planets/ascii/de202/testpo.202",
+      "LastModified": "2011-03-18T00:40:00Z",
+      "SizeDisplay": "114.5K",
+      "SizeBytes": 117248
+    },
+    {
+      "EphemerisNumber": "403",
+      "Name": "testpo.403",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de403/testpo.403",
+      "RelativePath": "planets/ascii/de403/testpo.403",
+      "LastModified": "2010-08-19T00:35:00Z",
+      "SizeDisplay": "457.3K",
+      "SizeBytes": 468275
+    },
+    {
+      "EphemerisNumber": "405",
+      "Name": "testpo.405",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de405/testpo.405",
+      "RelativePath": "planets/ascii/de405/testpo.405",
+      "LastModified": "2007-10-08T17:46:00Z",
+      "SizeDisplay": "578.2K",
+      "SizeBytes": 592076
+    },
+    {
+      "EphemerisNumber": "406",
+      "Name": "testpo.406",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de406/testpo.406",
+      "RelativePath": "planets/ascii/de406/testpo.406",
+      "LastModified": "2007-07-05T19:58:00Z",
+      "SizeDisplay": "2.2M",
+      "SizeBytes": 2306867
+    },
+    {
+      "EphemerisNumber": "410",
+      "Name": "testpo.410",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de410/testpo.410",
+      "RelativePath": "planets/ascii/de410/testpo.410",
+      "LastModified": "2011-03-18T00:58:00Z",
+      "SizeDisplay": "91.4K",
+      "SizeBytes": 93593
+    },
+    {
+      "EphemerisNumber": "413",
+      "Name": "testpo.413",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de413/testpo.413",
+      "RelativePath": "planets/ascii/de413/testpo.413",
+      "LastModified": "2007-07-05T20:03:00Z",
+      "SizeDisplay": "45.9K",
+      "SizeBytes": 47001
+    },
+    {
+      "EphemerisNumber": "414",
+      "Name": "testpo.414",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de414/testpo.414",
+      "RelativePath": "planets/ascii/de414/testpo.414",
+      "LastModified": "2006-04-21T21:22:00Z",
+      "SizeDisplay": "458.1K",
+      "SizeBytes": 469094
+    },
+    {
+      "EphemerisNumber": "418",
+      "Name": "testpo.418",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de418/testpo.418",
+      "RelativePath": "planets/ascii/de418/testpo.418",
+      "LastModified": "2007-08-29T02:02:00Z",
+      "SizeDisplay": "115.2K",
+      "SizeBytes": 117964
+    },
+    {
+      "EphemerisNumber": "421",
+      "Name": "testpo.421",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de421/testpo.421",
+      "RelativePath": "planets/ascii/de421/testpo.421",
+      "LastModified": "2013-02-07T19:42:00Z",
+      "SizeDisplay": "228.8K",
+      "SizeBytes": 234291
+    },
+    {
+      "EphemerisNumber": "422",
+      "Name": "testpo.422",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de422/testpo.422",
+      "RelativePath": "planets/ascii/de422/testpo.422",
+      "LastModified": "2011-03-18T00:49:00Z",
+      "SizeDisplay": "4.5M",
+      "SizeBytes": 4718592
+    },
+    {
+      "EphemerisNumber": "423",
+      "Name": "testpo.423",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de423/testpo.423",
+      "RelativePath": "planets/ascii/de423/testpo.423",
+      "LastModified": "2010-03-06T00:50:00Z",
+      "SizeDisplay": "305.0K",
+      "SizeBytes": 312320
+    },
+    {
+      "EphemerisNumber": "424",
+      "Name": "testpo.424",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de424/testpo.424",
+      "RelativePath": "planets/ascii/de424/testpo.424",
+      "LastModified": "2011-11-17T20:02:00Z",
+      "SizeDisplay": "4.5M",
+      "SizeBytes": 4718592
+    },
+    {
+      "EphemerisNumber": "430",
+      "Name": "testpo.430",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de430/testpo.430",
+      "RelativePath": "planets/ascii/de430/testpo.430",
+      "LastModified": "2013-08-07T01:57:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "431",
+      "Name": "testpo.431",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de431/testpo.431",
+      "RelativePath": "planets/ascii/de431/testpo.431",
+      "LastModified": "2013-08-07T01:51:00Z",
+      "SizeDisplay": "22.6M",
+      "SizeBytes": 23697817
+    },
+    {
+      "EphemerisNumber": "432",
+      "Name": "testpo.432",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de432/testpo.432",
+      "RelativePath": "planets/ascii/de432/testpo.432",
+      "LastModified": "2019-03-29T00:37:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "433",
+      "Name": "testpo.433",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de433/testpo.433",
+      "RelativePath": "planets/ascii/de433/testpo.433",
+      "LastModified": "2016-07-11T20:23:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "434",
+      "Name": "testpo.434",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de434/testpo.434",
+      "RelativePath": "planets/ascii/de434/testpo.434",
+      "LastModified": "2016-07-11T20:40:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "435",
+      "Name": "testpo.435",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de435/testpo.435",
+      "RelativePath": "planets/ascii/de435/testpo.435",
+      "LastModified": "2016-07-11T20:47:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "436",
+      "Name": "testpo.436",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de436/testpo.436",
+      "RelativePath": "planets/ascii/de436/testpo.436",
+      "LastModified": "2017-03-03T18:43:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "438",
+      "Name": "testpo.438",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de438/testpo.438",
+      "RelativePath": "planets/ascii/de438/testpo.438",
+      "LastModified": "2018-06-04T20:23:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "440",
+      "Name": "testpo.440",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de440/testpo.440",
+      "RelativePath": "planets/ascii/de440/testpo.440",
+      "LastModified": "2020-12-22T00:51:00Z",
+      "SizeDisplay": "838.1K",
+      "SizeBytes": 858214
+    },
+    {
+      "EphemerisNumber": "441",
+      "Name": "testpo.441",
+      "Url": "https://ssd.jpl.nasa.gov/ftp/eph/planets/ascii/de441/testpo.441",
+      "RelativePath": "planets/ascii/de441/testpo.441",
+      "LastModified": "2020-12-22T00:52:00Z",
+      "SizeDisplay": "22.6M",
+      "SizeBytes": 23697817
+    }
+  ]
+}
