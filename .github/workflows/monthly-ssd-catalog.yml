@@ -37,7 +37,7 @@ jobs:
         id: run_tool
         run: |
           set -e
-          OUTPUT=$(dotnet run --configuration Release --project Spice.SsdCatalog/Spice.SsdCatalog.csproj -- --stable | tee /dev/stderr)
+          OUTPUT=$(dotnet run --configuration Release --project Spice.SsdCatalog/Spice.SsdCatalog.csproj -- --stable --include-testpo | tee /dev/stderr)
           echo "raw-output<<EOF" >> $GITHUB_OUTPUT
           echo "$OUTPUT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

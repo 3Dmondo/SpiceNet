@@ -29,5 +29,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="TestData\BodyMapping.json" CopyToOutputDirectory="Always" />
+    <!-- Link in generated catalogs (if present) -->
+    <Content Include="..\Docs\SsdCatalog\ssd_catalog.json" Link="Catalog\ssd_catalog.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\Docs\SsdCatalog\ssd_catalog.json')" />
+    <Content Include="..\Docs\SsdCatalog\testpo_catalog.json" Link="Catalog\testpo_catalog.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('..\Docs\SsdCatalog\testpo_catalog.json')" />
   </ItemGroup>
 </Project>
