@@ -1,6 +1,6 @@
 [
   {
-    "Name": "Spice.Core",
+    "Name": "Spice",
     "Types": [
       {
         "Namespace": "Spice.Core",
@@ -94,50 +94,15 @@
         ]
       },
       {
-        "Namespace": "Spice.Core",
-        "Name": "Vector3dExtensions",
-        "Kind": "class",
-        "Members": [
-          "method Vector3d Add(Vector3d\u0026 a, Vector3d\u0026 b)",
-          "method Vector3d Subtract(Vector3d\u0026 a, Vector3d\u0026 b)",
-          "method Vector3d Scale(Vector3d\u0026 v, Double s)"
-        ]
-      }
-    ]
-  },
-  {
-    "Name": "Spice.Ephemeris",
-    "Types": [
-      {
         "Namespace": "Spice.Ephemeris",
         "Name": "EphemerisService",
         "Kind": "class",
         "Members": [
-          "method Void Load(String metaKernelPath)",
-          "method Void LoadRealSpkLazy(String spkPath, Boolean memoryMap)",
+          "method Void Load(String spkPath, Boolean memoryMap)",
           "method Boolean TryGetState(BodyId target, BodyId center, Instant t, StateVector\u0026 state)",
           "method Boolean TryGetRelativeState(BodyId target, BodyId center, Instant t, StateVector\u0026 state)",
           "method StateVector GetState(BodyId target, BodyId center, Instant t)",
-          "method Void Dispose()",
-          "property IReadOnlyList\u00601 KernelPaths get;"
-        ]
-      }
-    ]
-  },
-  {
-    "Name": "Spice.IO",
-    "Types": []
-  },
-  {
-    "Name": "Spice.Kernels",
-    "Types": [
-      {
-        "Namespace": "Spice.Kernels",
-        "Name": "DafCommentUtility",
-        "Kind": "class",
-        "Members": [
-          "method ValueTuple\u00603 Extract(String filePath)",
-          "method Boolean TryGetConstant(String filePath, String name, Double\u0026 value)"
+          "method Void Dispose()"
         ]
       },
       {
