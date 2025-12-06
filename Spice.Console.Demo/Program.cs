@@ -11,8 +11,7 @@ using Spice.Core;
 using Spice.Ephemeris;
 using System.Globalization;
 
-if (args.Length < 4)
-{
+if (args.Length < 4) {
   Console.WriteLine("SpiceNet Demo\n" +
                     "Args: <kernel-or-meta> <target> <center> <etSeconds> [--list] [--comments]\n" +
                     "Example: dotnet run --project Spice.Console.Demo -- de440.bsp 499 0 0\n" +
@@ -26,8 +25,10 @@ string path = args[0];
 if (!File.Exists(path)) { Console.WriteLine($"File not found: {path}"); return; }
 if (!int.TryParse(args[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var targetId) ||
     !int.TryParse(args[2], NumberStyles.Integer, CultureInfo.InvariantCulture, out var centerId) ||
-    !double.TryParse(args[3], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var et))
-{ Console.WriteLine("Invalid numeric arguments"); return; }
+    !double.TryParse(args[3], NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var et)) {
+  Console.WriteLine("Invalid numeric arguments");
+  return;
+}
 
 if (list)
   Console.WriteLine("--list requested: segment enumeration is not part of the current public API.");
@@ -38,16 +39,19 @@ var target = new BodyId(targetId);
 var center = new BodyId(centerId);
 var instant = new Instant((long)Math.Round(et));
 
-try
-{
+try {
   using var svc = new EphemerisService();
   var ext = Path.GetExtension(path).ToLowerInvariant();
-  if (ext == ".tm") svc.Load(path);
-  else if (ext == ".bsp") svc.Load(path);
-  else { Console.WriteLine($"Unsupported extension '{ext}'. Expected .tm or .bsp"); return; }
+  if (ext == ".tm")
+    svc.Load(path);
+  else if (ext == ".bsp")
+    svc.Load(path);
+  else {
+    Console.WriteLine($"Unsupported extension '{ext}'. Expected .tm or .bsp");
+    return;
+  }
 
-  if (!svc.TryGetState(target, center, instant, out var state))
-  {
+  if (!svc.TryGetState(target, center, instant, out var state)) {
     Console.WriteLine("No state available (no covering segment or barycentric composition path).");
     return;
   }
@@ -57,7 +61,6 @@ try
   Console.WriteLine($"Position (km):  X={state.PositionKm.X:F9}  Y={state.PositionKm.Y:F9}  Z={state.PositionKm.Z:F9}");
   Console.WriteLine($"Velocity (km/s): VX={state.VelocityKmPerSec.X:F12}  VY={state.VelocityKmPerSec.Y:F12}  VZ={state.VelocityKmPerSec.Z:F12}");
 }
-catch (Exception ex)
-{
+catch (Exception ex) {
   Console.WriteLine("Error: " + ex.Message);
 }

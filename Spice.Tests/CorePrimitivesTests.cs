@@ -8,8 +8,7 @@ public class CorePrimitivesTests
   const double Tol = 1e-12;
 
   [Fact]
-  public void Vector3d_Arithmetic_Works()
-  {
+  public void Vector3d_Arithmetic_Works() {
     var a = new Vector3d(1, 2, 3);
     var b = new Vector3d(-4, 5, 0.5);
 
@@ -29,8 +28,7 @@ public class CorePrimitivesTests
   }
 
   [Fact]
-  public void StateVector_Arithmetic_Works()
-  {
+  public void StateVector_Arithmetic_Works() {
     var s1 = new StateVector(new Vector3d(1, 0, 0), new Vector3d(0.1, 0.2, 0.3));
     var s2 = new StateVector(new Vector3d(-1, 2, 5), new Vector3d(0.05, -0.2, 0));
 
@@ -54,8 +52,7 @@ public class CorePrimitivesTests
   }
 
   [Fact]
-  public void Duration_And_Instant_Operations()
-  {
+  public void Duration_And_Instant_Operations() {
     var d1 = new Duration(10.5);
     var d2 = new Duration(5.25);
     (d1 + d2).Seconds.ShouldBe(15.75);
@@ -68,30 +65,27 @@ public class CorePrimitivesTests
   }
 
   [Fact]
-  public void Chebyshev_Scalar_Correct()
-  {
+  public void Chebyshev_Scalar_Correct() {
     // f(tau)= c0*T0 + c1*T1 + c2*T2 where T0=1, T1=t, T2=2t^2-1
     // c0=1, c1=2, c2=3 => f(t) = 1 + 2t + 3*(2t^2-1) = 6t^2 +2t -2
-    double[] coeffs = [1,2,3];
+    double[] coeffs = [1, 2, 3];
     var val = Chebyshev.Evaluate(coeffs, 0.5); // 6*0.25 + 1 -2 = 0.5
     val.ShouldBe(0.5, Tol);
   }
 
   [Fact]
-  public void Chebyshev_Vector_Correct()
-  {
-    double[] cx = [1,0,0]; // => 1
-    double[] cy = [0,1,0]; // => tau
-    double[] cz = [0,0,1]; // => T2=2tau^2 -1
+  public void Chebyshev_Vector_Correct() {
+    double[] cx = [1, 0, 0]; // => 1
+    double[] cy = [0, 1, 0]; // => tau
+    double[] cz = [0, 0, 1]; // => T2=2tau^2 -1
     var v = Chebyshev.EvaluateVector(cx, cy, cz, 0.25);
     v.X.ShouldBe(1d, Tol);
     v.Y.ShouldBe(0.25, Tol);
-    v.Z.ShouldBe(2*0.25*0.25 -1, Tol);
+    v.Z.ShouldBe(2 * 0.25 * 0.25 - 1, Tol);
   }
 
   [Fact]
-  public void Chebyshev_Interleaved_Equals_Separate()
-  {
+  public void Chebyshev_Interleaved_Equals_Separate() {
     // Two components degree 2: layout [c0_a,c0_b,c1_a,c1_b,c2_a,c2_b]
     double[] interleaved = [1, 0, 2, -1, 3, 4];
     Span<double> results = stackalloc double[2];
@@ -100,9 +94,9 @@ public class CorePrimitivesTests
     Chebyshev.EvaluateInterleaved(interleaved, 2, 2, results, tau);
 
     // Component 0 coefficients: 1,2,3
-    var a = Chebyshev.Evaluate([1d,2d,3d], tau);
+    var a = Chebyshev.Evaluate([1d, 2d, 3d], tau);
     // Component 1 coefficients: 0,-1,4
-    var b = Chebyshev.Evaluate([0d,-1d,4d], tau);
+    var b = Chebyshev.Evaluate([0d, -1d, 4d], tau);
 
     results[0].ShouldBe(a, Tol);
     results[1].ShouldBe(b, Tol);

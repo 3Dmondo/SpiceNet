@@ -35,7 +35,7 @@ internal sealed record SpkSegment(
   double[]? RecordRadii = null,
   int ComponentsPerSet = 0, // 3 (type2) or 6 (type3) when multi-record
   int RecordSizeDoubles = 0,  // total doubles per record including MID & RADIUS
-  // Real kernel trailer metadata (type 2/3)
+                              // Real kernel trailer metadata (type 2/3)
   double Init = 0d,
   double IntervalLength = 0d,
   int TrailerRecordSize = 0,
