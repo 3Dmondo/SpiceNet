@@ -15,19 +15,16 @@ internal static class SpkSegmentEvaluator
 {
   static readonly ThreadLocal<double[]> Scratch = new(() => Array.Empty<double>());
 
-  internal static StateVector EvaluateState(SpkSegment seg, Instant t)
-  {
+  internal static StateVector EvaluateState(SpkSegment seg, Instant t) {
     double et = t.TdbSecondsFromJ2000;
     if (et < seg.StartTdbSec || et > seg.StopTdbSec)
       throw new ArgumentOutOfRangeException(nameof(t), "Epoch outside segment coverage.");
 
-    if (seg.RecordCount <= 1 || seg.RecordMids is null || seg.RecordRadii is null || seg.RecordSizeDoubles == 0)
-    {
+    if (seg.RecordCount <= 1 || seg.RecordMids is null || seg.RecordRadii is null || seg.RecordSizeDoubles == 0) {
       double mid = 0.5 * (seg.StartTdbSec + seg.StopTdbSec);
       double radius = 0.5 * (seg.StopTdbSec - seg.StartTdbSec);
       double tau = radius == 0 ? 0 : (et - mid) / radius;
-      return seg.DataType switch
-      {
+      return seg.DataType switch {
         2 => EvaluateType2Single(seg, tau, radius),
         3 => EvaluateType3Single(seg, tau),
         _ => throw new NotSupportedException($"Unsupported data type {seg.DataType} in evaluator")
@@ -44,21 +41,19 @@ internal static class SpkSegmentEvaluator
 
     int n1 = seg.Degree + 1;
 
-    if (!seg.Lazy)
-    {
+    if (!seg.Lazy) {
       int per = seg.RecordSizeDoubles;
       int offset = recIndex * per + 2; // skip MID/RADIUS
       var block = seg.Coefficients.AsSpan(offset, seg.ComponentsPerSet * n1);
-      return seg.DataType switch
-      {
+      return seg.DataType switch {
         2 => EvaluateType2Multi(block, n1, tauRec, rRad),
         3 => EvaluateType3Multi(block, n1, tauRec),
         _ => throw new NotSupportedException($"Unsupported data type {seg.DataType} in evaluator")
       };
     }
-    else
-    {
-      if (seg.DataSource is null) throw new InvalidOperationException("Lazy segment missing data source");
+    else {
+      if (seg.DataSource is null)
+        throw new InvalidOperationException("Lazy segment missing data source");
       int coeffCount = seg.ComponentsPerSet * n1;
       var scratch = Scratch.Value!;
       if (scratch.Length < coeffCount)
@@ -67,8 +62,7 @@ internal static class SpkSegmentEvaluator
       long coeffStartAddress = recordStartAddress + 2; // skip MID/RADIUS
       seg.DataSource.ReadDoubles(coeffStartAddress, scratch.AsSpan(0, coeffCount));
       var coeffSpan = scratch.AsSpan(0, coeffCount);
-      return seg.DataType switch
-      {
+      return seg.DataType switch {
         2 => EvaluateType2Multi(coeffSpan, n1, tauRec, rRad),
         3 => EvaluateType3Multi(coeffSpan, n1, tauRec),
         _ => throw new NotSupportedException($"Unsupported data type {seg.DataType} in evaluator")
@@ -76,34 +70,41 @@ internal static class SpkSegmentEvaluator
     }
   }
 
-  static int LocateRecord(double[] mids, double[] radii, int count, double et)
-  {
+  static int LocateRecord(double[] mids, double[] radii, int count, double et) {
     // Binary search on mids to find closest candidate then local scan.
     int lo = 0, hi = count - 1;
-    while (lo <= hi)
-    {
+    while (lo <= hi) {
       int midIndex = (int)((uint)(lo + hi) >> 1);
       double mid = mids[midIndex];
       double rad = radii[midIndex];
-      if (et < mid - rad) { hi = midIndex - 1; continue; }
-      if (et > mid + rad) { lo = midIndex + 1; continue; }
+      if (et < mid - rad) {
+        hi = midIndex - 1;
+        continue;
+      }
+      if (et > mid + rad) {
+        lo = midIndex + 1;
+        continue;
+      }
       return midIndex; // inside interval
     }
     // Not inside interval of exact bsearch candidate; check nearest neighbors (lo and hi) just in case of slight ordering anomalies.
-    if (lo >= 0 && lo < count && et >= mids[lo] - radii[lo] && et <= mids[lo] + radii[lo]) return lo;
-    if (hi >= 0 && hi < count && et >= mids[hi] - radii[hi] && et <= mids[hi] + radii[hi]) return hi;
+    if (lo >= 0 && lo < count && et >= mids[lo] - radii[lo] && et <= mids[lo] + radii[lo])
+      return lo;
+    if (hi >= 0 && hi < count && et >= mids[hi] - radii[hi] && et <= mids[hi] + radii[hi])
+      return hi;
 
     // Fallback linear scan (should be rare; defensive if ordering assumptions broken)
     for (int i = 0; i < count; i++)
-      if (et >= mids[i] - radii[i] && et <= mids[i] + radii[i]) return i;
+      if (et >= mids[i] - radii[i] && et <= mids[i] + radii[i])
+        return i;
     return -1;
   }
 
-  static StateVector EvaluateType2Single(SpkSegment seg, double tau, double radius)
-  {
+  static StateVector EvaluateType2Single(SpkSegment seg, double tau, double radius) {
     var coeffs = seg.Coefficients;
     int n1 = coeffs.Length / 3;
-    if (n1 * 3 != coeffs.Length) throw new InvalidOperationException("Invalid coefficient count for type 2 segment");
+    if (n1 * 3 != coeffs.Length)
+      throw new InvalidOperationException("Invalid coefficient count for type 2 segment");
     var span = coeffs.AsSpan();
     var x = span.Slice(0, n1);
     var y = span.Slice(n1, n1);
@@ -116,11 +117,11 @@ internal static class SpkSegmentEvaluator
     return new StateVector(pos, new Vector3d(vx, vy, vz));
   }
 
-  static StateVector EvaluateType3Single(SpkSegment seg, double tau)
-  {
+  static StateVector EvaluateType3Single(SpkSegment seg, double tau) {
     var coeffs = seg.Coefficients;
     int n1 = coeffs.Length / 6;
-    if (n1 * 6 != coeffs.Length) throw new InvalidOperationException("Invalid coefficient count for type 3 segment");
+    if (n1 * 6 != coeffs.Length)
+      throw new InvalidOperationException("Invalid coefficient count for type 3 segment");
     var span = coeffs.AsSpan();
     var px = span.Slice(0, n1);
     var py = span.Slice(n1, n1);
@@ -133,8 +134,7 @@ internal static class SpkSegmentEvaluator
     return new StateVector(pos, vel);
   }
 
-  static StateVector EvaluateType2Multi(ReadOnlySpan<double> coeffBlock, int n1, double tau, double radius)
-  {
+  static StateVector EvaluateType2Multi(ReadOnlySpan<double> coeffBlock, int n1, double tau, double radius) {
     var x = coeffBlock.Slice(0, n1);
     var y = coeffBlock.Slice(n1, n1);
     var z = coeffBlock.Slice(2 * n1, n1);
@@ -146,8 +146,7 @@ internal static class SpkSegmentEvaluator
     return new StateVector(pos, new Vector3d(vx, vy, vz));
   }
 
-  static StateVector EvaluateType3Multi(ReadOnlySpan<double> coeffBlock, int n1, double tau)
-  {
+  static StateVector EvaluateType3Multi(ReadOnlySpan<double> coeffBlock, int n1, double tau) {
     var px = coeffBlock.Slice(0, n1);
     var py = coeffBlock.Slice(n1, n1);
     var pz = coeffBlock.Slice(2 * n1, n1);
@@ -159,22 +158,23 @@ internal static class SpkSegmentEvaluator
     return new StateVector(pos, vel);
   }
 
-  static double EvaluateChebyshevDerivative(ReadOnlySpan<double> coeffs, double tau)
-  {
+  static double EvaluateChebyshevDerivative(ReadOnlySpan<double> coeffs, double tau) {
     // Derivative of T_n expressed via Chebyshev polynomials of the second kind U_{n-1}:
     //   d/dtau T_n(tau) = n * U_{n-1}(tau)
     // Position polynomial P(tau) = ? c_k T_k(tau) => P'(tau) = ? k * c_k * U_{k-1}(tau)
     // We generate U_k iteratively with recurrence: U_0=1, U_1=2*tau, U_k = 2*tau*U_{k-1} - U_{k-2}.
     // Implementation accumulates k*c_k*U_{k-1}. (k index aligns with coeffs[k])
     int n = coeffs.Length - 1;
-    if (n <= 0) return 0d;
+    if (n <= 0)
+      return 0d;
     double sum = coeffs.Length > 1 ? coeffs[1] : 0d; // k=1 term where U_0 = 1
-    if (n == 1) return sum;
+    if (n == 1)
+      return sum;
     double Ukm2 = 1d;      // U_0
     double Ukm1 = 2 * tau; // U_1
-    if (n >= 2) sum += 2 * coeffs[2] * Ukm1; // k=2 term uses U_1
-    for (int k = 3; k <= n; k++)
-    {
+    if (n >= 2)
+      sum += 2 * coeffs[2] * Ukm1; // k=2 term uses U_1
+    for (int k = 3; k <= n; k++) {
       double Ukminus1 = 2 * tau * Ukm1 - Ukm2; // produces U_{k-1}
       sum += k * coeffs[k] * Ukminus1;
       Ukm2 = Ukm1;

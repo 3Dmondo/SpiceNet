@@ -14,10 +14,14 @@ var assemblies = AppDomain.CurrentDomain.GetAssemblies()
 // Ensure referenced assemblies are loaded by touching a known type from each project if needed
 void Touch<T>() { _ = typeof(T); }
 // Touch known root types (best-effort; ignore if not present)
-try { Touch<Spice.Core.Vector3d>(); } catch {};
-try { Touch<Spice.IO.FullDafReader>(); } catch {};
-try { Touch<Spice.Kernels.SpkKernel>(); } catch {};
-try { Touch<Spice.Ephemeris.EphemerisService>(); } catch {};
+try { Touch<Spice.Core.Vector3d>(); } catch { }
+;
+try { Touch<Spice.IO.FullDafReader>(); } catch { }
+;
+try { Touch<Spice.Kernels.SpkKernel>(); } catch { }
+;
+try { Touch<Spice.Ephemeris.EphemerisService>(); } catch { }
+;
 
 assemblies = AppDomain.CurrentDomain.GetAssemblies()
   .Where(a => a.GetName().Name is { } n && n.StartsWith("Spice") &&
@@ -26,21 +30,17 @@ assemblies = AppDomain.CurrentDomain.GetAssemblies()
   .ToList();
 
 var model = new List<AssemblyModel>();
-foreach (var asm in assemblies)
-{
+foreach (var asm in assemblies) {
   var asmModel = new AssemblyModel { Name = asm.GetName().Name! };
   var types = asm.GetTypes()
     .Where(t => (t.IsPublic || t.IsNestedPublic) && !t.IsDefined(typeof(System.Runtime.CompilerServices.CompilerGeneratedAttribute), false))
     .OrderBy(t => t.Namespace).ThenBy(t => t.Name, StringComparer.Ordinal);
 
-  foreach (var t in types)
-  {
-    var typeModel = new TypeModel
-    {
+  foreach (var t in types) {
+    var typeModel = new TypeModel {
       Namespace = t.Namespace ?? string.Empty,
       Name = t.Name,
-      Kind = t switch
-      {
+      Kind = t switch {
         { IsInterface: true } => "interface",
         { IsEnum: true } => "enum",
         { IsValueType: true } => "struct",
@@ -51,21 +51,18 @@ foreach (var asm in assemblies)
     // Public instance + static members (declared only)
     var flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-    foreach (var m in t.GetMethods(flags))
-    {
-      if (m.IsSpecialName) continue; // skip property/event accessors & operators for simplicity
+    foreach (var m in t.GetMethods(flags)) {
+      if (m.IsSpecialName)
+        continue; // skip property/event accessors & operators for simplicity
       typeModel.Members.Add($"method {Signature(m)}");
     }
-    foreach (var p in t.GetProperties(flags))
-    {
+    foreach (var p in t.GetProperties(flags)) {
       typeModel.Members.Add($"property {p.PropertyType.Name} {p.Name} {(p.CanRead ? "get;" : string.Empty)}{(p.CanWrite ? " set;" : string.Empty)}");
     }
-    foreach (var f in t.GetFields(flags))
-    {
+    foreach (var f in t.GetFields(flags)) {
       typeModel.Members.Add($"field {f.FieldType.Name} {f.Name}");
     }
-    foreach (var e in t.GetEvents(flags))
-    {
+    foreach (var e in t.GetEvents(flags)) {
       typeModel.Members.Add($"event {e.EventHandlerType?.Name} {e.Name}");
     }
 
@@ -77,8 +74,7 @@ foreach (var asm in assemblies)
   model.Add(asmModel);
 }
 
-var options = new JsonSerializerOptions
-{
+var options = new JsonSerializerOptions {
   WriteIndented = true,
   DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 };
@@ -89,8 +85,7 @@ var outputPath = Path.GetFullPath(Path.Combine(outputDir, "api-scan.json"));
 File.WriteAllText(outputPath, JsonSerializer.Serialize(model, options));
 Console.WriteLine($"Public API scan written to: {outputPath}");
 
-static string Signature(MethodInfo m)
-{
+static string Signature(MethodInfo m) {
   var ps = m.GetParameters();
   var paramSig = string.Join(", ", ps.Select(p => $"{p.ParameterType.Name} {p.Name}"));
   return $"{m.ReturnType.Name} {m.Name}({paramSig})";

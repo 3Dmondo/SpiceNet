@@ -15,8 +15,7 @@ internal static class DafAddress
   internal const int WordBytes = 8;
   internal const int WordsPerRecord = RecordBytes / WordBytes; // 128
   internal static long RecordToByte(int recordNumber) => (long)(recordNumber - 1) * RecordBytes;
-  internal static long WordToByte(long wordAddress)
-  {
+  internal static long WordToByte(long wordAddress) {
     long recordIndex = (wordAddress - 1L) / WordsPerRecord; // 0-based
     int wordInRecord = (int)((wordAddress - 1L) % WordsPerRecord);
     return recordIndex * RecordBytes + (long)wordInRecord * WordBytes;
@@ -32,16 +31,27 @@ internal sealed class FullDafReader : IDisposable
   readonly bool _leaveOpen;
   readonly bool _isLittleEndian;
 
-  internal string IdWord { get; }
-  internal int Nd { get; }
-  internal int Ni { get; }
-  internal string InternalFileName { get; }
-  internal int FirstSummaryRecord { get; }
-  internal int LastSummaryRecord { get; }
+  internal string IdWord {
+    get;
+  }
+  internal int Nd {
+    get;
+  }
+  internal int Ni {
+    get;
+  }
+  internal string InternalFileName {
+    get;
+  }
+  internal int FirstSummaryRecord {
+    get;
+  }
+  internal int LastSummaryRecord {
+    get;
+  }
   internal bool IsLittleEndian => _isLittleEndian;
 
-  FullDafReader(Stream stream, bool leaveOpen, string idWord, int nd, int ni, string ifname, int fward, int bward, bool little)
-  {
+  FullDafReader(Stream stream, bool leaveOpen, string idWord, int nd, int ni, string ifname, int fward, int bward, bool little) {
     _stream = stream;
     _leaveOpen = leaveOpen;
     _isLittleEndian = little;
@@ -53,8 +63,7 @@ internal sealed class FullDafReader : IDisposable
     LastSummaryRecord = bward;
   }
 
-  internal static FullDafReader Open(Stream stream, bool leaveOpen = false)
-  {
+  internal static FullDafReader Open(Stream stream, bool leaveOpen = false) {
     if (!stream.CanRead || !stream.CanSeek)
       throw new ArgumentException("Stream must be seekable & readable", nameof(stream));
     stream.Seek(0, SeekOrigin.Begin);
@@ -96,15 +105,13 @@ internal sealed class FullDafReader : IDisposable
       ? BinaryPrimitives.ReadInt64LittleEndian(buffer.Slice(offset, 8))
       : BinaryPrimitives.ReadInt64BigEndian(buffer.Slice(offset, 8)));
 
-  internal IEnumerable<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)> EnumerateSegments()
-  {
+  internal IEnumerable<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)> EnumerateSegments() {
     if (Nd <= 0 || Ni <= 0)
       yield break;
     int rec = FirstSummaryRecord;
     if (rec <= 0)
       yield break;
-    while (rec != 0)
-    {
+    while (rec != 0) {
       var (summaries, nextRec) = ReadSummaryRecord(rec);
       foreach (var s in summaries)
         yield return (s.Dc, s.Ic, s.Name, s.InitialAddress, s.FinalAddress);
@@ -112,23 +119,19 @@ internal sealed class FullDafReader : IDisposable
     }
   }
 
-  internal string[] ReadComments()
-  {
-    const int CommentSizePerRecord = 1000; 
+  internal string[] ReadComments() {
+    const int CommentSizePerRecord = 1000;
     if (FirstSummaryRecord <= 2)
       return Array.Empty<string>();
     var list = new List<string>();
     Span<byte> buf = stackalloc byte[DafAddress.RecordBytes];
     Span<byte> lineBuf = stackalloc byte[CommentSizePerRecord];
     int linePos = 0;
-    for (int rec = 2; rec < FirstSummaryRecord; rec++)
-    {
+    for (int rec = 2; rec < FirstSummaryRecord; rec++) {
       ReadRecord(rec, buf);
-      for (int i = 0; i < CommentSizePerRecord; i++)
-      {
+      for (int i = 0; i < CommentSizePerRecord; i++) {
         var b = buf[i];
-        switch (b)
-        {
+        switch (b) {
           case 4:
             i = CommentSizePerRecord;
             break;
@@ -143,8 +146,7 @@ internal sealed class FullDafReader : IDisposable
         }
       }
     }
-    if (linePos > 0)
-    {
+    if (linePos > 0) {
       string line = Encoding.ASCII.GetString(lineBuf[0..linePos]);
       list.Add(line);
     }
@@ -153,8 +155,7 @@ internal sealed class FullDafReader : IDisposable
 
   record SegmentRaw(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress);
 
-  (List<SegmentRaw> summaries, int next) ReadSummaryRecord(int recordNumber)
-  {
+  (List<SegmentRaw> summaries, int next) ReadSummaryRecord(int recordNumber) {
     byte[] summaryBuf = new byte[DafAddress.RecordBytes];
     byte[] nameBuf = new byte[DafAddress.RecordBytes];
     ReadRecord(recordNumber, summaryBuf);
@@ -178,11 +179,9 @@ internal sealed class FullDafReader : IDisposable
 
     var list = new List<SegmentRaw>(nsum);
     int wordIndex = 3; // skip control words
-    for (int i = 0; i < nsum; i++)
-    {
+    for (int i = 0; i < nsum; i++) {
       double[] dc = new double[Nd];
-      for (int d = 0; d < Nd; d++)
-      {
+      for (int d = 0; d < Nd; d++) {
         int offsetBytes = wordIndex * DafAddress.WordBytes;
         dc[d] = ReadDouble(summaryBuf, offsetBytes, _isLittleEndian);
         wordIndex++;
@@ -190,16 +189,16 @@ internal sealed class FullDafReader : IDisposable
       int[] ic = new int[Ni];
       int remaining = Ni;
       int icPos = 0;
-      while (remaining > 0)
-      {
+      while (remaining > 0) {
         int offsetBytes = wordIndex * DafAddress.WordBytes;
         var word = summaryBuf.AsSpan(offsetBytes, DafAddress.WordBytes);
         int a = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(word[..4]) : BinaryPrimitives.ReadInt32BigEndian(word[..4]);
-        ic[icPos++] = a; remaining--;
-        if (remaining > 0)
-        {
+        ic[icPos++] = a;
+        remaining--;
+        if (remaining > 0) {
           int b = _isLittleEndian ? BinaryPrimitives.ReadInt32LittleEndian(word.Slice(4, 4)) : BinaryPrimitives.ReadInt32BigEndian(word.Slice(4, 4));
-          ic[icPos++] = b; remaining--;
+          ic[icPos++] = b;
+          remaining--;
         }
         wordIndex++;
       }
@@ -215,8 +214,7 @@ internal sealed class FullDafReader : IDisposable
     return (list, next);
   }
 
-  int ReadControlWord(byte[] record, int controlWordIndex)
-  {
+  int ReadControlWord(byte[] record, int controlWordIndex) {
     // Control words SHOULD be stored as IEEE double precision integers (exact integer representable values).
     // Early synthetic test data wrote them as raw 32-bit ints occupying the low (or high, depending on endian) 4 bytes
     // with zero in the other 4 bytes. We support both encodings:
@@ -231,8 +229,7 @@ internal sealed class FullDafReader : IDisposable
       return low; // synthetic 32-bit encoding
 
     double dv = ReadDouble(record, byteOffset, _isLittleEndian);
-    if (!double.IsNaN(dv) && Math.Abs(dv) < int.MaxValue)
-    {
+    if (!double.IsNaN(dv) && Math.Abs(dv) < int.MaxValue) {
       long lv = (long)Math.Round(dv);
       if (Math.Abs(dv - lv) < ControlWordIntegralEpsilon)
         return (int)lv;
@@ -240,8 +237,7 @@ internal sealed class FullDafReader : IDisposable
     return low; // conservative fallback
   }
 
-  void ReadRecord(int recordNumber, Span<byte> destination)
-  {
+  void ReadRecord(int recordNumber, Span<byte> destination) {
     long offset = DafAddress.RecordToByte(recordNumber);
     if (recordNumber <= 0 || offset + DafAddress.RecordBytes > _stream.Length)
       throw new InvalidDataException($"Record {recordNumber} out of range");
@@ -250,8 +246,7 @@ internal sealed class FullDafReader : IDisposable
       throw new EndOfStreamException();
   }
 
-  public void Dispose()
-  {
+  public void Dispose() {
     if (!_leaveOpen)
       _stream.Dispose();
   }

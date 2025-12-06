@@ -1,6 +1,6 @@
-using System.Buffers.Binary;
 using Shouldly;
 using Spice.IO;
+using System.Buffers.Binary;
 
 namespace Spice.Tests;
 
@@ -10,9 +10,8 @@ public class FullDafReaderControlWordTests
   const int WordBytes = 8;
 
   [Fact]
-  public void ControlWords_SyntheticIntEncoding_ParsesSingleSegment()
-  {
-    using var ms = BuildMinimalDaf(syntheticControlWords:true);
+  public void ControlWords_SyntheticIntEncoding_ParsesSingleSegment() {
+    using var ms = BuildMinimalDaf(syntheticControlWords: true);
     var (segments, nd, ni) = Enumerate(ms);
     nd.ShouldBe(2);
     ni.ShouldBe(6);
@@ -22,18 +21,16 @@ public class FullDafReaderControlWordTests
   }
 
   [Fact]
-  public void ControlWords_DoubleEncoding_ParsesSingleSegment()
-  {
-    using var ms = BuildMinimalDaf(syntheticControlWords:false);
+  public void ControlWords_DoubleEncoding_ParsesSingleSegment() {
+    using var ms = BuildMinimalDaf(syntheticControlWords: false);
     var (segments, nd, ni) = Enumerate(ms);
     nd.ShouldBe(2);
     ni.ShouldBe(6);
     segments.Count.ShouldBe(1);
   }
 
-  static (List<(double[] Dc,int[] Ic,string Name,int InitialAddress,int FinalAddress)> Segs, int Nd, int Ni) Enumerate(Stream stream)
-  {
-    using var reader = FullDafReader.Open(stream, leaveOpen:true);
+  static (List<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)> Segs, int Nd, int Ni) Enumerate(Stream stream) {
+    using var reader = FullDafReader.Open(stream, leaveOpen: true);
     var list = new List<(double[] Dc, int[] Ic, string Name, int InitialAddress, int FinalAddress)>();
 
     foreach (var seg in reader.EnumerateSegments())
@@ -41,81 +38,77 @@ public class FullDafReaderControlWordTests
     return (list, reader.Nd, reader.Ni);
   }
 
-  static MemoryStream BuildMinimalDaf(bool syntheticControlWords)
-  {
-    int nd = 2; int ni = 6;
+  static MemoryStream BuildMinimalDaf(bool syntheticControlWords) {
+    int nd = 2;
+    int ni = 6;
     // Records we will create: 1=file, 2=summary, 3=name
     var fileRec = new byte[RecordBytes];
     WriteAscii(fileRec, 0, "DAF/SPK ");
-    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(8,4), nd);
-    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(12,4), ni);
+    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(8, 4), nd);
+    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(12, 4), ni);
     WriteAscii(fileRec, 16, "TEST-DAF".PadRight(60));
     // forward & backward summary record pointers (record 2)
-    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(76,4), 2);
-    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(80,4), 2);
+    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(76, 4), 2);
+    BinaryPrimitives.WriteInt32LittleEndian(fileRec.AsSpan(80, 4), 2);
 
     var summaryRec = new byte[RecordBytes];
     // Control words: NEXT=0 PREV=0 NSUM=1
-    if (syntheticControlWords)
-    {
+    if (syntheticControlWords) {
       // low 32 bits = value, high 32 bits = 0 (little-endian low first)
       WriteSyntheticInt(summaryRec, 0, 0);
       WriteSyntheticInt(summaryRec, 1, 0);
       WriteSyntheticInt(summaryRec, 2, 1);
     }
-    else
-    {
+    else {
       WriteDoubleAsInt(summaryRec, 0, 0);
       WriteDoubleAsInt(summaryRec, 1, 0);
       WriteDoubleAsInt(summaryRec, 2, 1);
     }
 
     int wordIndex = 3; // after control words
-    void WriteDouble(double v)
-    {
+    void WriteDouble(double v) {
       int offset = wordIndex * WordBytes;
-      BinaryPrimitives.WriteInt64LittleEndian(summaryRec.AsSpan(offset,8), BitConverter.DoubleToInt64Bits(v));
+      BinaryPrimitives.WriteInt64LittleEndian(summaryRec.AsSpan(offset, 8), BitConverter.DoubleToInt64Bits(v));
       wordIndex++;
     }
-    void WritePackedInts(int a, int b)
-    {
+    void WritePackedInts(int a, int b) {
       int offset = wordIndex * WordBytes;
-      BinaryPrimitives.WriteInt32LittleEndian(summaryRec.AsSpan(offset,4), a);
-      BinaryPrimitives.WriteInt32LittleEndian(summaryRec.AsSpan(offset+4,4), b);
+      BinaryPrimitives.WriteInt32LittleEndian(summaryRec.AsSpan(offset, 4), a);
+      BinaryPrimitives.WriteInt32LittleEndian(summaryRec.AsSpan(offset + 4, 4), b);
       wordIndex++;
     }
 
     // DC[0]=start, DC[1]=stop
-    WriteDouble(0); WriteDouble(100);
+    WriteDouble(0);
+    WriteDouble(100);
     // IC: target,center,frame,type,initial,final
-    WritePackedInts(499,0);
-    WritePackedInts(1,2); // frame=1, type=2
-    WritePackedInts(1,10); // initial, final addresses
+    WritePackedInts(499, 0);
+    WritePackedInts(1, 2); // frame=1, type=2
+    WritePackedInts(1, 10); // initial, final addresses
 
     var nameRec = new byte[RecordBytes];
     WriteAscii(nameRec, 0, "SEGMENT-1".PadRight(40));
 
     var ms = new MemoryStream();
-    ms.Write(fileRec); ms.Write(summaryRec); ms.Write(nameRec);
+    ms.Write(fileRec);
+    ms.Write(summaryRec);
+    ms.Write(nameRec);
     ms.Position = 0;
     return ms;
   }
 
-  static void WriteSyntheticInt(byte[] buf, int controlWordIndex, int value)
-  {
+  static void WriteSyntheticInt(byte[] buf, int controlWordIndex, int value) {
     int byteOffset = controlWordIndex * WordBytes;
-    BinaryPrimitives.WriteInt32LittleEndian(buf.AsSpan(byteOffset,4), value);
+    BinaryPrimitives.WriteInt32LittleEndian(buf.AsSpan(byteOffset, 4), value);
     // high 4 bytes already zero-initialized
   }
-  static void WriteDoubleAsInt(byte[] buf, int controlWordIndex, int value)
-  {
+  static void WriteDoubleAsInt(byte[] buf, int controlWordIndex, int value) {
     int byteOffset = controlWordIndex * WordBytes;
     long bits = BitConverter.DoubleToInt64Bits(value);
-    BinaryPrimitives.WriteInt64LittleEndian(buf.AsSpan(byteOffset,8), bits);
+    BinaryPrimitives.WriteInt64LittleEndian(buf.AsSpan(byteOffset, 8), bits);
   }
 
-  static void WriteAscii(byte[] dest, int offset, string text)
-  {
+  static void WriteAscii(byte[] dest, int offset, string text) {
     System.Text.Encoding.ASCII.GetBytes(text, dest.AsSpan(offset, text.Length));
   }
 }

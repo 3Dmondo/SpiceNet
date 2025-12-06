@@ -1,7 +1,7 @@
 // CSPICE Port Reference: SPK Required Reading (conceptual) — implementation is original managed design.
-using System.Buffers.Binary;
 using Spice.Core;
 using Spice.IO;
+using System.Buffers.Binary;
 
 namespace Spice.Kernels;
 
@@ -17,15 +17,14 @@ namespace Spice.Kernels;
 /// </summary>
 internal static class RealSpkKernelParser
 {
-  internal static SpkKernel Parse(Stream stream)
-  {
+  internal static SpkKernel Parse(Stream stream) {
     using var daf = FullDafReader.Open(stream, leaveOpen: true);
     bool little = daf.IsLittleEndian;
     var segments = new List<SpkSegment>();
 
-    foreach (var seg in daf.EnumerateSegments())
-    {
-      if (seg.Dc.Length < 2 || seg.Ic.Length < 6) continue;
+    foreach (var seg in daf.EnumerateSegments()) {
+      if (seg.Dc.Length < 2 || seg.Ic.Length < 6)
+        continue;
       double start = seg.Dc[0];
       double stop = seg.Dc[1];
       int target = seg.Ic[0];
@@ -34,10 +33,12 @@ internal static class RealSpkKernelParser
       int type = seg.Ic[3];
       int initial = seg.Ic[4];
       int final = seg.Ic[5];
-      if (type is not (2 or 3) || initial <= 0 || final < initial) continue;
+      if (type is not (2 or 3) || initial <= 0 || final < initial)
+        continue;
 
       int totalDoubles = final - initial + 1;
-      if (totalDoubles < 4) continue;
+      if (totalDoubles < 4)
+        continue;
 
       var all = ReadDoubleRange(stream, initial, final, little);
 
@@ -46,15 +47,18 @@ internal static class RealSpkKernelParser
       double rSizeTrailer = all[^2];
       double nTrailer = all[^1];
 
-      if (rSizeTrailer < 2 || nTrailer < 1) continue;
+      if (rSizeTrailer < 2 || nTrailer < 1)
+        continue;
       int rsize = (int)rSizeTrailer;
       int n = (int)nTrailer;
       long expectedPayload = (long)rsize * n;
-      if (expectedPayload + 4 != totalDoubles) continue;
+      if (expectedPayload + 4 != totalDoubles)
+        continue;
 
       int k = type == 2 ? 3 : 6;
       int degree = (rsize - 2) / k - 1;
-      if (degree < 0 || 2 + k * (degree + 1) != rsize) continue;
+      if (degree < 0 || 2 + k * (degree + 1) != rsize)
+        continue;
 
       int payloadCount = totalDoubles - 4;
       var payload = new double[payloadCount];
@@ -62,8 +66,7 @@ internal static class RealSpkKernelParser
 
       double[] recordMids = new double[n];
       double[] recordRadii = new double[n];
-      for (int r = 0; r < n; r++)
-      {
+      for (int r = 0; r < n; r++) {
         int offset = r * rsize;
         recordMids[r] = payload[offset];
         recordRadii[r] = payload[offset + 1];
@@ -90,17 +93,16 @@ internal static class RealSpkKernelParser
     return new SpkKernel(segments);
   }
 
-  internal static SpkKernel ParseLazy(string filePath, bool memoryMap = true)
-  {
+  internal static SpkKernel ParseLazy(string filePath, bool memoryMap = true) {
     using var fs = File.OpenRead(filePath);
     using var daf = FullDafReader.Open(fs, leaveOpen: true);
     bool little = daf.IsLittleEndian;
     IEphemerisDataSource dataSource = memoryMap ? EphemerisDataSource.MemoryMapped(filePath, little) : EphemerisDataSource.FromStream(File.OpenRead(filePath), little);
 
     var segments = new List<SpkSegment>();
-    foreach (var seg in daf.EnumerateSegments())
-    {
-      if (seg.Dc.Length < 2 || seg.Ic.Length < 6) continue;
+    foreach (var seg in daf.EnumerateSegments()) {
+      if (seg.Dc.Length < 2 || seg.Ic.Length < 6)
+        continue;
       double start = seg.Dc[0];
       double stop = seg.Dc[1];
       int target = seg.Ic[0];
@@ -109,29 +111,33 @@ internal static class RealSpkKernelParser
       int type = seg.Ic[3];
       int initial = seg.Ic[4];
       int final = seg.Ic[5];
-      if (type is not (2 or 3) || initial <= 0 || final < initial) continue;
+      if (type is not (2 or 3) || initial <= 0 || final < initial)
+        continue;
 
       int totalDoubles = final - initial + 1;
-      if (totalDoubles < 4) continue;
+      if (totalDoubles < 4)
+        continue;
 
       double init = dataSource.ReadDouble(final - 3);
       double intLen = dataSource.ReadDouble(final - 2);
       double rSizeTrailer = dataSource.ReadDouble(final - 1);
       double nTrailer = dataSource.ReadDouble(final);
-      if (rSizeTrailer < 2 || nTrailer < 1) continue;
+      if (rSizeTrailer < 2 || nTrailer < 1)
+        continue;
       int rsize = (int)rSizeTrailer;
       int n = (int)nTrailer;
       long expectedPayload = (long)rsize * n;
-      if (expectedPayload + 4 != totalDoubles) continue;
+      if (expectedPayload + 4 != totalDoubles)
+        continue;
 
       int k = type == 2 ? 3 : 6;
       int degree = (rsize - 2) / k - 1;
-      if (degree < 0 || 2 + k * (degree + 1) != rsize) continue;
+      if (degree < 0 || 2 + k * (degree + 1) != rsize)
+        continue;
 
       double[] recordMids = new double[n];
       double[] recordRadii = new double[n];
-      for (int r = 0; r < n; r++)
-      {
+      for (int r = 0; r < n; r++) {
         long recStart = initial + r * (long)rsize;
         recordMids[r] = dataSource.ReadDouble(recStart);
         recordRadii[r] = dataSource.ReadDouble(recStart + 1);
@@ -162,22 +168,23 @@ internal static class RealSpkKernelParser
     return new SpkKernel(segments);
   }
 
-  static double[] ReadDoubleRange(Stream stream, int initialAddress, int finalAddress, bool littleEndian)
-  {
-    if (!stream.CanSeek) throw new InvalidOperationException("Stream must be seekable");
+  static double[] ReadDoubleRange(Stream stream, int initialAddress, int finalAddress, bool littleEndian) {
+    if (!stream.CanSeek)
+      throw new InvalidOperationException("Stream must be seekable");
     int count = finalAddress - initialAddress + 1;
     var result = new double[count];
     byte[] buf = new byte[8];
-    for (int i = 0; i < count; i++)
-    {
+    for (int i = 0; i < count; i++) {
       int address = initialAddress + i;
       long recordIndex = (address - 1L) / 128L;
       int wordInRecord = (address - 1) % 128;
       long byteOffset = recordIndex * 1024L + wordInRecord * 8L;
       stream.Seek(byteOffset, SeekOrigin.Begin);
-      if (stream.Read(buf, 0, 8) != 8) throw new EndOfStreamException();
+      if (stream.Read(buf, 0, 8) != 8)
+        throw new EndOfStreamException();
       long raw = BinaryPrimitives.ReadInt64LittleEndian(buf);
-      if (!littleEndian) raw = BinaryPrimitives.ReverseEndianness(raw);
+      if (!littleEndian)
+        raw = BinaryPrimitives.ReverseEndianness(raw);
       result[i] = BitConverter.Int64BitsToDouble(raw);
     }
     return result;

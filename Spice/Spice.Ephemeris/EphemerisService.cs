@@ -19,49 +19,32 @@ public sealed class EphemerisService : IDisposable
   readonly List<IEphemerisDataSource> _dataSources = new();
   LskKernel? _lsk;
 
-  struct Key : IEquatable<Key>
-  {
-    public readonly int Target; public readonly int Center;
-    public Key(int t, int c)
-    {
-      Target = t;
-      Center = c;
-    }
-    public bool Equals(Key other) => Target == other.Target && Center == other.Center;
-    public override bool Equals(object? obj) => obj is Key k && Equals(k);
-    public override int GetHashCode() => HashCode.Combine(Target, Center);
-  }
+  readonly record struct Key(int Target, int Center);
 
   sealed class SegmentListIndex
   {
     public SpkSegment[] Segments = Array.Empty<SpkSegment>(); // sorted by StartTdbSec ascending
     public double[] Starts = Array.Empty<double>();
     public double[] Stops = Array.Empty<double>();
-    public void Build(IEnumerable<SpkSegment> segs)
-    {
+    public void Build(IEnumerable<SpkSegment> segs) {
       Segments = segs.OrderBy(s => s.StartTdbSec).ToArray();
       int len = Segments.Length;
       Starts = new double[len];
       Stops = new double[len];
-      for (int i = 0; i < len; i++)
-      {
+      for (int i = 0; i < len; i++) {
         var s = Segments[i];
         Starts[i] = s.StartTdbSec;
         Stops[i] = s.StopTdbSec;
       }
     }
-    public bool TryLocate(double et, out SpkSegment? seg)
-    {
+    public bool TryLocate(double et, out SpkSegment? seg) {
       // Binary search on starts
       int idx = Array.BinarySearch(Starts, et);
-      if (idx >= 0)
-      {
+      if (idx >= 0) {
         // Exact start match: walk forward among same-start segments to find first covering.
-        for (int j = idx; j < Segments.Length && Starts[j] == et; j++)
-        {
+        for (int j = idx; j < Segments.Length && Starts[j] == et; j++) {
           var cand = Segments[j];
-          if (et <= cand.StopTdbSec)
-          {
+          if (et <= cand.StopTdbSec) {
             seg = cand;
             return true;
           }
@@ -71,12 +54,10 @@ public sealed class EphemerisService : IDisposable
       else
         idx = ~idx - 1; // predecessor index
 
-      if (idx >= 0)
-      {
+      if (idx >= 0) {
         // Fast path boundary check: if et equals stop of predecessor segment.
         var pred = Segments[idx];
-        if (et <= pred.StopTdbSec && et >= pred.StartTdbSec)
-        {
+        if (et <= pred.StopTdbSec && et >= pred.StartTdbSec) {
           seg = pred;
           return true;
         }
@@ -84,22 +65,18 @@ public sealed class EphemerisService : IDisposable
 
       // If predecessor failed, optionally check successor whose start is just after et in case of zero-width start==stop.
       int succ = idx + 1;
-      if (succ >= 0 && succ < Segments.Length)
-      {
+      if (succ >= 0 && succ < Segments.Length) {
         var ssucc = Segments[succ];
-        if (et >= ssucc.StartTdbSec && et <= ssucc.StopTdbSec)
-        {
+        if (et >= ssucc.StartTdbSec && et <= ssucc.StopTdbSec) {
           seg = ssucc;
           return true;
         }
       }
 
       // Linear fallback (rare; ordering anomalies)
-      for (int i = 0; i < Segments.Length; i++)
-      {
+      for (int i = 0; i < Segments.Length; i++) {
         var c = Segments[i];
-        if (et >= c.StartTdbSec && et <= c.StopTdbSec)
-        {
+        if (et >= c.StartTdbSec && et <= c.StopTdbSec) {
           seg = c;
           return true;
         }
@@ -115,17 +92,14 @@ public sealed class EphemerisService : IDisposable
   // Cache for barycentric (relative to SSB=0) states at specific epochs; key tuple used sparingly per query path.
   readonly Dictionary<(int body, long etSeconds), StateVector> _baryCache = new();
 
-  public void Load(string spkPath, bool memoryMap = true)
-  {
+  public void Load(string spkPath, bool memoryMap = true) {
     {
       if (spkPath is null)
         throw new ArgumentNullException(nameof(spkPath));
       var ext = Path.GetExtension(spkPath).ToLowerInvariant();
-      switch (ext)
-      {
+      switch (ext) {
         case ".tls":
-          using (var s = File.OpenRead(spkPath))
-          {
+          using (var s = File.OpenRead(spkPath)) {
             var lsk = LskParser.Parse(s);
             _lsk = lsk;
             TimeConversionService.SetLeapSeconds(lsk);
@@ -133,12 +107,10 @@ public sealed class EphemerisService : IDisposable
           break;
         case ".bsp":
           SpkKernel kernel;
-          if (memoryMap)
-          {
+          if (memoryMap) {
             kernel = RealSpkKernelParser.ParseLazy(spkPath, memoryMap);
           }
-          else
-          {
+          else {
             using var stream = File.OpenRead(spkPath);
             kernel = RealSpkKernelParser.Parse(stream);
           }
@@ -152,13 +124,11 @@ public sealed class EphemerisService : IDisposable
     }
   }
 
-  void EnsureIndex()
-  {
+  void EnsureIndex() {
     if (!_indexDirty)
       return;
     _index.Clear();
-    foreach (var g in _segments.GroupBy(s => new Key(s.Target.Value, s.Center.Value)))
-    {
+    foreach (var g in _segments.GroupBy(s => new Key(s.Target.Value, s.Center.Value))) {
       var idx = new SegmentListIndex();
       idx.Build(g);
       _index[g.Key] = idx;
@@ -166,8 +136,7 @@ public sealed class EphemerisService : IDisposable
     _indexDirty = false;
   }
 
-  bool TryLocateSegment(int target, int center, long etSeconds, out SpkSegment? seg)
-  {
+  bool TryLocateSegment(int target, int center, long etSeconds, out SpkSegment? seg) {
     EnsureIndex();
     if (_index.TryGetValue(new Key(target, center), out var idx) && idx.TryLocate(etSeconds, out seg) && seg is not null)
       return true;
@@ -184,10 +153,8 @@ public sealed class EphemerisService : IDisposable
   /// <param name="center">Center (observer) body id.</param>
   /// <param name="t">Ephemeris time (TDB seconds past J2000).</param>
   /// <param name="state">Resolved state vector (km, km/s) if successful, otherwise default.</param>
-  public bool TryGetState(BodyId target, BodyId center, Instant t, out StateVector state)
-  {
-    if (TryLocateSegment(target.Value, center.Value, t.TdbSecondsFromJ2000, out var seg) && seg is not null)
-    {
+  public bool TryGetState(BodyId target, BodyId center, Instant t, out StateVector state) {
+    if (TryLocateSegment(target.Value, center.Value, t.TdbSecondsFromJ2000, out var seg) && seg is not null) {
       state = SpkSegmentEvaluator.EvaluateState(seg, t);
       return true;
     }
@@ -210,26 +177,21 @@ public sealed class EphemerisService : IDisposable
   /// <param name="center">Center body id.</param>
   /// <param name="t">Ephemeris time (TDB seconds past J2000).</param>
   /// <param name="state">Resulting composed state if successful.</param>
-  public bool TryGetRelativeState(BodyId target, BodyId center, Instant t, out StateVector state)
-  {
-    if (target.Value == center.Value)
-    {
+  public bool TryGetRelativeState(BodyId target, BodyId center, Instant t, out StateVector state) {
+    if (target.Value == center.Value) {
       state = StateVector.Zero;
       return true;
     }
-    if (target.Value == 0 || center.Value == 0)
-    {
+    if (target.Value == 0 || center.Value == 0) {
       // One is SSB: direct attempt already done; compute direct barycentric if available.
-      if (TryResolveBarycentric(target.Value, t, out var targB) && TryResolveBarycentric(center.Value, t, out var cenB))
-      {
+      if (TryResolveBarycentric(target.Value, t, out var targB) && TryResolveBarycentric(center.Value, t, out var cenB)) {
         state = targB.Subtract(cenB);
         return true;
       }
       state = default;
       return false;
     }
-    if (TryResolveBarycentric(target.Value, t, out var tB) && TryResolveBarycentric(center.Value, t, out var cB))
-    {
+    if (TryResolveBarycentric(target.Value, t, out var tB) && TryResolveBarycentric(center.Value, t, out var cB)) {
       state = tB.Subtract(cB);
       return true;
     }
@@ -237,17 +199,15 @@ public sealed class EphemerisService : IDisposable
     return false;
   }
 
-  bool TryResolveBarycentric(int body, Instant t, out StateVector state) => TryResolveBarycentric(body, t, new HashSet<int>(), out state);
+  bool TryResolveBarycentric(int body, Instant t, out StateVector state) =>
+    TryResolveBarycentric(body, t, new HashSet<int>(), out state);
 
-  bool TryResolveBarycentric(int body, Instant t, HashSet<int> visited, out StateVector state)
-  {
-    if (body == 0)
-    {
+  bool TryResolveBarycentric(int body, Instant t, HashSet<int> visited, out StateVector state) {
+    if (body == 0) {
       state = StateVector.Zero;
       return true;
     }
-    if (!visited.Add(body))
-    {
+    if (!visited.Add(body)) {
       state = default;
       return false;
     } // cycle guard
@@ -256,8 +216,7 @@ public sealed class EphemerisService : IDisposable
       return true;
 
     // Direct segment body->SSB?
-    if (TryLocateSegment(body, 0, t.TdbSecondsFromJ2000, out var seg) && seg is not null)
-    {
+    if (TryLocateSegment(body, 0, t.TdbSecondsFromJ2000, out var seg) && seg is not null) {
       state = SpkSegmentEvaluator.EvaluateState(seg, t);
       _baryCache[key] = state;
       return true;
@@ -268,8 +227,7 @@ public sealed class EphemerisService : IDisposable
     // Collect candidate segments (target->center) covering epoch without LINQ allocations.
     List<SpkSegment>? candidates = null;
     double etVal = t.TdbSecondsFromJ2000;
-    for (int i = 0; i < _segments.Count; i++)
-    {
+    for (int i = 0; i < _segments.Count; i++) {
       var s = _segments[i];
       if (s.Target.Value != body)
         continue;
@@ -279,16 +237,13 @@ public sealed class EphemerisService : IDisposable
     }
     if (candidates is not null && candidates.Count > 1)
       candidates.Sort(static (a, b) => a.Center.Value.CompareTo(b.Center.Value));
-    if (candidates is not null)
-    {
-      for (int i = 0; i < candidates.Count; i++)
-      {
+    if (candidates is not null) {
+      for (int i = 0; i < candidates.Count; i++) {
         var cand = candidates[i];
         if (cand.Center.Value == body)
           continue;
         var partial = SpkSegmentEvaluator.EvaluateState(cand, t);
-        if (TryResolveBarycentric(cand.Center.Value, t, visited, out var centerBary))
-        {
+        if (TryResolveBarycentric(cand.Center.Value, t, visited, out var centerBary)) {
           state = partial.Add(centerBary);
           _baryCache[key] = state;
           return true;
@@ -309,8 +264,7 @@ public sealed class EphemerisService : IDisposable
   /// <param name="t">Ephemeris time (TDB seconds past J2000).</param>
   /// <returns>Resolved state vector (km, km/s).</returns>
   /// <exception cref="InvalidOperationException">If no data covers the requested epoch & pair.</exception>
-  public StateVector GetState(BodyId target, BodyId center, Instant t)
-  {
+  public StateVector GetState(BodyId target, BodyId center, Instant t) {
     if (!TryGetState(target, center, t, out var state))
       throw new InvalidOperationException($"No SPK segment (direct or composable) covers epoch {t} for target {target.Value} center {center.Value}.");
     return state;
@@ -319,8 +273,7 @@ public sealed class EphemerisService : IDisposable
   /// <summary>
   /// Dispose underlying ephemeris data sources (e.g., memory-mapped SPK files). After disposal further calls are invalid.
   /// </summary>
-  public void Dispose()
-  {
+  public void Dispose() {
     foreach (var ds in _dataSources)
       ds.Dispose();
     _dataSources.Clear();

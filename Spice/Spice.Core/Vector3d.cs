@@ -66,8 +66,7 @@ public readonly record struct Vector3d(double X, double Y, double Z)
   public double Length() => Math.Sqrt(X * X + Y * Y + Z * Z);
 
   /// <summary>Return normalized direction vector (unitless). If the vector is zero length, returns the zero vector.</summary>
-  public Vector3d Normalize()
-  {
+  public Vector3d Normalize() {
     var len = Length();
     return len == 0d ? Zero : this / len;
   }

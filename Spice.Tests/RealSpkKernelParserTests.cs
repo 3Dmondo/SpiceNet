@@ -1,14 +1,13 @@
-using System.Buffers.Binary;
 using Shouldly;
 using Spice.Kernels;
+using System.Buffers.Binary;
 
 namespace Spice.Tests;
 
 public class RealSpkKernelParserTests
 {
   [Fact]
-  public void Parses_MultiRecord_Type2_Segment_And_Evaluates()
-  {
+  public void Parses_MultiRecord_Type2_Segment_And_Evaluates() {
     var ms = BuildMinimalSpkType2MultiRecord();
     ms.Position = 0;
 
@@ -43,8 +42,7 @@ public class RealSpkKernelParserTests
     state150.VelocityKmPerSec.Z.ShouldBe(0d, 1e-12);
   }
 
-  static MemoryStream BuildMinimalSpkType2MultiRecord()
-  {
+  static MemoryStream BuildMinimalSpkType2MultiRecord() {
     const int nd = 2; // start, stop
     const int ni = 6; // target, center, frame, type, initial, final
     const int type = 2;
@@ -54,8 +52,8 @@ public class RealSpkKernelParserTests
 
     // Two records, degree 2 -> per record doubles = 2 (MID,RADIUS) + 3*(2+1)=2+9=11
     // Total record payload doubles = 22. Trailer adds 4 -> 26.
-    double[] record1 = BuildRecord(mid:0, radius:100);
-    double[] record2 = BuildRecord(mid:100, radius:100);
+    double[] record1 = BuildRecord(mid: 0, radius: 100);
+    double[] record2 = BuildRecord(mid: 100, radius: 100);
     double[] coeffPayload = new double[record1.Length + record2.Length];
     record1.CopyTo(coeffPayload, 0);
     record2.CopyTo(coeffPayload, record1.Length);
@@ -92,12 +90,18 @@ public class RealSpkKernelParserTests
     WriteInt(file, summaryBase + 16, 1); // NSUM=1
 
     int wordIndex = 3;
-    double segStart = -100; double segStop = 200;
-    WriteDouble(file, summaryBase + wordIndex * 8, segStart); wordIndex++;
-    WriteDouble(file, summaryBase + wordIndex * 8, segStop); wordIndex++;
-    WritePackedInts(file, summaryBase + wordIndex * 8, target, center); wordIndex++;
-    WritePackedInts(file, summaryBase + wordIndex * 8, frame, type); wordIndex++;
-    WritePackedInts(file, summaryBase + wordIndex * 8, initialAddress, finalAddress); wordIndex++;
+    double segStart = -100;
+    double segStop = 200;
+    WriteDouble(file, summaryBase + wordIndex * 8, segStart);
+    wordIndex++;
+    WriteDouble(file, summaryBase + wordIndex * 8, segStop);
+    wordIndex++;
+    WritePackedInts(file, summaryBase + wordIndex * 8, target, center);
+    wordIndex++;
+    WritePackedInts(file, summaryBase + wordIndex * 8, frame, type);
+    wordIndex++;
+    WritePackedInts(file, summaryBase + wordIndex * 8, initialAddress, finalAddress);
+    wordIndex++;
 
     // Name record (record 3)
     int nameBase = 1024 * (3 - 1);
@@ -111,8 +115,7 @@ public class RealSpkKernelParserTests
     return new MemoryStream(file, writable: false);
   }
 
-  static double[] BuildRecord(double mid, double radius)
-  {
+  static double[] BuildRecord(double mid, double radius) {
     // Chebyshev degree 2 sets: X: [0,1,0] -> tau; Y: [0.5,0,0.5] -> tau^2; Z: [5,0,0] -> constant 5
     return new double[]
     {
@@ -126,18 +129,16 @@ public class RealSpkKernelParserTests
     };
   }
 
-  static void WriteAscii(byte[] buffer, int offset, string text)
-  {
+  static void WriteAscii(byte[] buffer, int offset, string text) {
     var bytes = System.Text.Encoding.ASCII.GetBytes(text);
     Array.Copy(bytes, 0, buffer, offset, bytes.Length);
   }
   static void WriteInt(byte[] buffer, int offset, int value)
-    => BinaryPrimitives.WriteInt32LittleEndian(buffer.AsSpan(offset,4), value);
+    => BinaryPrimitives.WriteInt32LittleEndian(buffer.AsSpan(offset, 4), value);
   static void WriteDouble(byte[] buffer, int offset, double value)
-    => BinaryPrimitives.WriteInt64LittleEndian(buffer.AsSpan(offset,8), BitConverter.DoubleToInt64Bits(value));
-  static void WritePackedInts(byte[] buffer, int offset, int a, int b)
-  {
+    => BinaryPrimitives.WriteInt64LittleEndian(buffer.AsSpan(offset, 8), BitConverter.DoubleToInt64Bits(value));
+  static void WritePackedInts(byte[] buffer, int offset, int a, int b) {
     WriteInt(buffer, offset, a);
-    WriteInt(buffer, offset+4, b);
+    WriteInt(buffer, offset + 4, b);
   }
 }

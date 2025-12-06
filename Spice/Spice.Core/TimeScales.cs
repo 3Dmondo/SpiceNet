@@ -19,10 +19,10 @@ internal enum TimeScale
 /// <param name="Entries">Ordered collection of leap second entries.</param>
 internal sealed record LskKernel(IReadOnlyList<LeapSecondEntry> Entries)
 {
-  public static LskKernel FromEntries(IEnumerable<LeapSecondEntry> entries)
-  {
+  public static LskKernel FromEntries(IEnumerable<LeapSecondEntry> entries) {
     var ordered = entries.OrderBy(e => e.EffectiveUtc).ToArray();
-    if (ordered.Length == 0) throw new ArgumentException("No leap second entries supplied", nameof(entries));
+    if (ordered.Length == 0)
+      throw new ArgumentException("No leap second entries supplied", nameof(entries));
     return new LskKernel(ordered);
   }
 }
@@ -41,7 +41,7 @@ internal readonly record struct LeapSecondEntry(DateTimeOffset EffectiveUtc, dou
 /// </summary>
 internal static partial class TimeConversionService
 {
-  static readonly DateTimeOffset J2000Utc = new DateTimeOffset(2000,1,1,11,58,55,0, TimeSpan.Zero).AddMilliseconds(816);
+  static readonly DateTimeOffset J2000Utc = new DateTimeOffset(2000, 1, 1, 11, 58, 55, 0, TimeSpan.Zero).AddMilliseconds(816);
 
   static LskKernel? _lsk;
   static double _taiMinusUtcAtJ2000; // cached from installed kernel
@@ -68,8 +68,7 @@ internal static partial class TimeConversionService
 
   sealed class BasicTdbOffsetModel : ITdbOffsetModel
   {
-    public double GetOffsetSeconds(double ttSecondsSinceJ2000)
-    {
+    public double GetOffsetSeconds(double ttSecondsSinceJ2000) {
       double jdTt = JD_J2000 + ttSecondsSinceJ2000 / SecondsPerDay;
       double daysFromJ2000 = jdTt - JD_J2000;
       double gDeg = G0 + G_RATE * daysFromJ2000;
@@ -83,8 +82,7 @@ internal static partial class TimeConversionService
     // Higher-order tiny periodic terms + optional quadratic drift placeholder (currently zero)
     const double TERM3 = 0.000000165;   // seconds * sin(3g)
     const double TERM4 = 0.000000001;   // seconds * sin(4g)
-    public double GetOffsetSeconds(double ttSecondsSinceJ2000)
-    {
+    public double GetOffsetSeconds(double ttSecondsSinceJ2000) {
       double jdTt = JD_J2000 + ttSecondsSinceJ2000 / SecondsPerDay;
       double daysFromJ2000 = jdTt - JD_J2000;
       double gDeg = G0 + G_RATE * daysFromJ2000;
@@ -96,11 +94,13 @@ internal static partial class TimeConversionService
     }
   }
 
-  internal enum TdbOffsetModel { Basic, Extended }
+  internal enum TdbOffsetModel
+  {
+    Basic, Extended
+  }
 
   /// <summary>Install leap second kernel for subsequent conversions.</summary>
-  public static void SetLeapSeconds(LskKernel kernel)
-  {
+  public static void SetLeapSeconds(LskKernel kernel) {
     _lsk = kernel ?? throw new ArgumentNullException(nameof(kernel));
     _taiMinusUtcAtJ2000 = GetTaiMinusUtc(J2000Utc);
   }
@@ -109,27 +109,26 @@ internal static partial class TimeConversionService
   static LskKernel RequireLsk() => _lsk ?? throw new InvalidOperationException("Leap second kernel not set. Call SetLeapSeconds().");
 
   /// <summary>Find TAI-UTC at given UTC using installed leap second table.</summary>
-  public static double GetTaiMinusUtc(DateTimeOffset utc)
-  {
+  public static double GetTaiMinusUtc(DateTimeOffset utc) {
     var entries = RequireLsk().Entries;
     // Binary search last entry whose EffectiveUtc <= utc
     int lo = 0, hi = entries.Count - 1, idx = -1;
-    while (lo <= hi)
-    {
+    while (lo <= hi) {
       int mid = (lo + hi) / 2;
-      if (entries[mid].EffectiveUtc <= utc)
-      {
-        idx = mid; lo = mid + 1;
+      if (entries[mid].EffectiveUtc <= utc) {
+        idx = mid;
+        lo = mid + 1;
       }
-      else hi = mid - 1;
+      else
+        hi = mid - 1;
     }
-    if (idx < 0) throw new ArgumentOutOfRangeException(nameof(utc), "UTC earlier than first leap second entry");
+    if (idx < 0)
+      throw new ArgumentOutOfRangeException(nameof(utc), "UTC earlier than first leap second entry");
     return entries[idx].TaiMinusUtcSeconds;
   }
 
   /// <summary>Convert UTC to TAI seconds past J2000 epoch.</summary>
-  public static double UtcToTaiSecondsSinceJ2000(DateTimeOffset utc)
-  {
+  public static double UtcToTaiSecondsSinceJ2000(DateTimeOffset utc) {
     var taiMinusUtc = GetTaiMinusUtc(utc);
     var utcSpan = utc - J2000Utc;
     double deltaLeap = taiMinusUtc - _taiMinusUtcAtJ2000;
@@ -140,8 +139,7 @@ internal static partial class TimeConversionService
   public static double UtcToTtSecondsSinceJ2000(DateTimeOffset utc) => UtcToTaiSecondsSinceJ2000(utc);
 
   /// <summary>Configure which analytic TT->TDB offset model to use (basic 2-term or extended multi-term). Defaults to Basic.</summary>
-  public static void ConfigureTdbOffsetModel(TdbOffsetModel model)
-  {
+  public static void ConfigureTdbOffsetModel(TdbOffsetModel model) {
     _offsetModel = model == TdbOffsetModel.Basic ? _basicModel : _extendedModel;
     // Force re-alignment computation so J2000 offset stays zero across model changes.
     _tdbOffsetInitialized = false;
@@ -153,10 +151,8 @@ internal static partial class TimeConversionService
   /// Approximate TT->TDB conversion adding periodic relativistic terms. Accuracy ~<2 ms, suitable for many ephemeris uses.
   /// Ensures TDB==TT at J2000 by subtracting the J2000 periodic value.
   /// </summary>
-  public static double TtToTdbSecondsSinceJ2000(double ttSecondsSinceJ2000)
-  {
-    if (!_tdbOffsetInitialized)
-    {
+  public static double TtToTdbSecondsSinceJ2000(double ttSecondsSinceJ2000) {
+    if (!_tdbOffsetInitialized) {
       _deltaTdbAtJ2000 = ComputePeriodicDelta(0);
       _tdbOffsetInitialized = true;
     }
@@ -165,15 +161,13 @@ internal static partial class TimeConversionService
   }
 
   /// <summary>Convert UTC to TDB seconds since J2000 (UTC -> TT -> TDB chain).</summary>
-  public static double UtcToTdbSecondsSinceJ2000(DateTimeOffset utc)
-  {
+  public static double UtcToTdbSecondsSinceJ2000(DateTimeOffset utc) {
     var tt = UtcToTtSecondsSinceJ2000(utc);
     return TtToTdbSecondsSinceJ2000(tt);
   }
 
   /// <summary>Convert UTC to Instant (whole-second rounding of TDB seconds past J2000).</summary>
-  public static Instant UtcToInstant(DateTimeOffset utc)
-  {
+  public static Instant UtcToInstant(DateTimeOffset utc) {
     var tdbSec = UtcToTdbSecondsSinceJ2000(utc);
     return new Instant(checked((long)Math.Round(tdbSec))); // bankers rounding
   }

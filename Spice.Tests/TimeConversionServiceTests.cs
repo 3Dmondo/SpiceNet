@@ -5,8 +5,7 @@ namespace Spice.Tests;
 
 public class TimeConversionServiceTests
 {
-  static TimeConversionServiceTests()
-  {
+  static TimeConversionServiceTests() {
     // Install minimal leap second kernel (ordered) for tests.
     var lsk = LskKernel.FromEntries(new[]
     {
@@ -17,8 +16,7 @@ public class TimeConversionServiceTests
   }
 
   [Fact]
-  public void Extended_Model_Applies_Small_Periodic_Adjustment()
-  {
+  public void Extended_Model_Applies_Small_Periodic_Adjustment() {
     // Sample several TT epochs over +/- 5 years from J2000 (~15.7e7 seconds span)
     double[] samples =
     [
@@ -39,8 +37,7 @@ public class TimeConversionServiceTests
     var extendedOffsets = samples.Select(t => Offset(t)).ToArray();
 
     int nonZeroDeltaCount = 0;
-    for (int i = 0; i < samples.Length; i++)
-    {
+    for (int i = 0; i < samples.Length; i++) {
       double delta = extendedOffsets[i] - basicOffsets[i];
       // Extended adds higher harmonics; difference should be tiny (< 5 microseconds), zero-aligned at J2000.
       delta.ShouldBeLessThan(5e-6, $"Delta at sample index {i} exceeded 5 microseconds");
@@ -57,8 +54,7 @@ public class TimeConversionServiceTests
     (extendedAtZeroAfterSwitch - basicAtZeroAfterSwitch).ShouldBe(0, 1e-12); // alignment preserved at J2000
   }
 
-  static double Offset(double ttSecondsSinceJ2000)
-  {
+  static double Offset(double ttSecondsSinceJ2000) {
     // Use internal pathway: TtToTdbSecondsSinceJ2000 - identity part
     // Compute TDB minus TT by subtracting raw input
     var tdb = TimeConversionService.TtToTdbSecondsSinceJ2000(ttSecondsSinceJ2000);

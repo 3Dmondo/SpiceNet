@@ -1,9 +1,9 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using AngleSharp;
 using System.Net; // DecompressionMethods
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 // Crawler for JPL SSD public FTP browser under https://ssd.jpl.nasa.gov/ftp/eph/
@@ -27,14 +27,22 @@ using System.Text.RegularExpressions;
 const string RootUrl = "https://ssd.jpl.nasa.gov/ftp/eph/";
 
 // ---------------- argument parsing ----------------
-bool force = false; bool hashOnly = false; bool includeTestPo = false;
+bool force = false;
+bool hashOnly = false;
+bool includeTestPo = false;
 foreach (var a in Environment.GetCommandLineArgs())
-  switch (a)
-  {
-    case "--force": force = true; break;
-    case "--hash-only": hashOnly = true; break;
-    case "--stable": break; // default
-    case "--include-testpo": includeTestPo = true; break;
+  switch (a) {
+    case "--force":
+      force = true;
+      break;
+    case "--hash-only":
+      hashOnly = true;
+      break;
+    case "--stable":
+      break; // default
+    case "--include-testpo":
+      includeTestPo = true;
+      break;
   }
 
 var http = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All });
@@ -49,62 +57,65 @@ queue.Enqueue(RootUrl);
 
 var bspEntries = new List<CatalogEntry>();
 
-while (queue.Count > 0)
-{
+while (queue.Count > 0) {
   var url = queue.Dequeue();
-  if (!visited.Add(url)) continue;
-  try
-  {
+  if (!visited.Add(url))
+    continue;
+  try {
     Console.WriteLine($"Fetching {url}");
     var html = await http.GetStringAsync(url);
     var doc = await context.OpenAsync(req => req.Content(html));
     var table = doc.QuerySelector("table.ftp-browser");
-    if (table is null) continue;
-    foreach (var row in table.QuerySelectorAll("tbody > tr"))
-    {
+    if (table is null)
+      continue;
+    foreach (var row in table.QuerySelectorAll("tbody > tr")) {
       var cells = row.QuerySelectorAll("td");
-      if (cells.Length < 4) continue;
+      if (cells.Length < 4)
+        continue;
       var link = cells[0].QuerySelector("a");
-      if (link == null) continue;
+      if (link == null)
+        continue;
       var name = link.TextContent.Trim();
-      if (name.Equals("Parent Directory", StringComparison.OrdinalIgnoreCase)) continue;
+      if (name.Equals("Parent Directory", StringComparison.OrdinalIgnoreCase))
+        continue;
       var href = link.GetAttribute("href") ?? string.Empty;
       string absolute = href.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? href : new Uri(new Uri(url), href).ToString();
       var isDirectoryType = cells[3].TextContent.Trim().Equals("Directory", StringComparison.OrdinalIgnoreCase) || name.EndsWith('/');
-      if (isDirectoryType && !absolute.EndsWith('/')) absolute += '/';
+      if (isDirectoryType && !absolute.EndsWith('/'))
+        absolute += '/';
 
       var lastModRaw = cells[1].TextContent.Trim();
       DateTime? lastMod = null;
-      if (DateTime.TryParse(lastModRaw, out var dt)) lastMod = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+      if (DateTime.TryParse(lastModRaw, out var dt))
+        lastMod = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
       var sizeDisplay = cells[2].TextContent.Trim();
 
-      if (isDirectoryType)
-      {
-        if (IsUnderRoot(absolute))
-        {
+      if (isDirectoryType) {
+        if (IsUnderRoot(absolute)) {
           var relDir = GetRelativePath(absolute);
-          if (ShouldTraverseDirectory(relDir)) queue.Enqueue(absolute);
+          if (ShouldTraverseDirectory(relDir))
+            queue.Enqueue(absolute);
         }
         continue;
       }
 
-      if (!name.EndsWith(".bsp", StringComparison.OrdinalIgnoreCase)) continue;
+      if (!name.EndsWith(".bsp", StringComparison.OrdinalIgnoreCase))
+        continue;
       var relativePath = GetRelativePath(absolute);
-      if (!ShouldIncludeFile(relativePath)) continue;
-      bspEntries.Add(new CatalogEntry
-      {
-        Name = name,
-        Url = absolute,
-        RelativePath = relativePath,
-        LastModified = lastMod,
-        SizeDisplay = sizeDisplay,
-        SizeBytes = ParseSize(sizeDisplay),
-        CollectedUtc = DateTime.UtcNow
-      });
+      if (!ShouldIncludeFile(relativePath))
+        continue;
+      bspEntries.Add(new CatalogEntry(
+        name,
+        absolute,
+        relativePath,
+        lastMod,
+        sizeDisplay,
+        ParseSize(sizeDisplay),
+        DateTime.UtcNow
+      ));
     }
   }
-  catch (Exception ex)
-  {
+  catch (Exception ex) {
     Console.Error.WriteLine($"WARN: Failed to process {url}: {ex.Message}");
   }
 }
@@ -112,8 +123,7 @@ while (queue.Count > 0)
 bspEntries.Sort((a, b) => string.CompareOrdinal(a.RelativePath, b.RelativePath));
 
 List<TestPoEntry> testPoEntries = new();
-if (includeTestPo)
-{
+if (includeTestPo) {
   // Derive ephemeris numbers from BSP names under planets/bsp/deXXX*.bsp
   var numberRegex = new Regex(@"^de(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
   var ephNumbers = bspEntries
@@ -125,44 +135,44 @@ if (includeTestPo)
     .OrderBy(s => s, StringComparer.Ordinal)
     .ToList();
 
-  foreach (var num in ephNumbers)
-  {
+  foreach (var num in ephNumbers) {
     var asciiDir = $"{RootUrl}planets/ascii/de{num}/";
-    try
-    {
+    try {
       Console.WriteLine($"Fetching {asciiDir}");
       var html = await http.GetStringAsync(asciiDir);
       var doc = await context.OpenAsync(req => req.Content(html));
       var table = doc.QuerySelector("table.ftp-browser");
-      if (table is null) continue;
-      foreach (var row in table.QuerySelectorAll("tbody > tr"))
-      {
+      if (table is null)
+        continue;
+      foreach (var row in table.QuerySelectorAll("tbody > tr")) {
         var cells = row.QuerySelectorAll("td");
-        if (cells.Length < 4) continue;
+        if (cells.Length < 4)
+          continue;
         var link = cells[0].QuerySelector("a");
-        if (link == null) continue;
+        if (link == null)
+          continue;
         var name = link.TextContent.Trim();
-        if (!name.Equals($"testpo.{num}", StringComparison.OrdinalIgnoreCase)) continue;
+        if (!name.Equals($"testpo.{num}", StringComparison.OrdinalIgnoreCase))
+          continue;
         var href = link.GetAttribute("href") ?? string.Empty;
         string absolute = href.StartsWith("http", StringComparison.OrdinalIgnoreCase) ? href : new Uri(new Uri(asciiDir), href).ToString();
         var lastModRaw = cells[1].TextContent.Trim();
         DateTime? lastMod = null;
-        if (DateTime.TryParse(lastModRaw, out var dt)) lastMod = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+        if (DateTime.TryParse(lastModRaw, out var dt))
+          lastMod = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
         var sizeDisplay = cells[2].TextContent.Trim();
-        testPoEntries.Add(new TestPoEntry
-        {
-          EphemerisNumber = num,
-          Name = name,
-          Url = absolute,
-          RelativePath = GetRelativePath(absolute),
-          LastModified = lastMod,
-          SizeDisplay = sizeDisplay,
-          SizeBytes = ParseSize(sizeDisplay)
-        });
+        testPoEntries.Add(new TestPoEntry(
+          num,
+          name,
+          absolute,
+          GetRelativePath(absolute),
+          lastMod,
+          sizeDisplay,
+          ParseSize(sizeDisplay)
+        ));
       }
     }
-    catch (Exception ex)
-    {
+    catch (Exception ex) {
       Console.Error.WriteLine($"WARN: Failed testpo fetch for {num}: {ex.Message}");
     }
   }
@@ -184,27 +194,24 @@ string mdFile = Path.Combine(outDir, "SSDCatalog.md");
 string? previousHash = File.Exists(hashFile) ? File.ReadAllText(hashFile).Trim() : null;
 bool changed = force || previousHash is null || !string.Equals(previousHash, catalogHash, StringComparison.OrdinalIgnoreCase);
 
-if (hashOnly)
-{
+if (hashOnly) {
   Console.WriteLine(changed ? $"SSDCATALOG:CHANGED {catalogHash}" : $"SSDCATALOG:NO_CHANGE {catalogHash}");
   return;
 }
 
-if (!changed)
-{
+if (!changed) {
   Console.WriteLine($"SSDCATALOG:NO_CHANGE {catalogHash}");
   return;
 }
 
 // Write BSP catalog JSON
-var bspCatalog = new CatalogRoot { Root = RootUrl, GeneratedUtc = DateTime.UtcNow, FileCount = bspEntries.Count, Files = bspEntries };
+var bspCatalog = new CatalogRoot(RootUrl, DateTime.UtcNow, bspEntries.Count, bspEntries);
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
 await File.WriteAllTextAsync(jsonFile, JsonSerializer.Serialize(bspCatalog, jsonOptions));
 
 // Write testpo catalog if enabled
-if (includeTestPo)
-{
-  var testpoCatalog = new TestPoCatalogRoot { Root = RootUrl, GeneratedUtc = DateTime.UtcNow, FileCount = testPoEntries.Count, Files = testPoEntries };
+if (includeTestPo) {
+  var testpoCatalog = new TestPoCatalogRoot(RootUrl, DateTime.UtcNow, testPoEntries.Count, testPoEntries);
   await File.WriteAllTextAsync(testpoFile, JsonSerializer.Serialize(testpoCatalog, jsonOptions));
 }
 
@@ -223,21 +230,18 @@ if (includeTestPo) md.AppendLine($"Total TestPo files: {testPoEntries.Count}");
 md.AppendLine();
 
 // Only top-level directories collapsible; nested shown via <div> lines with &nbsp; indentation.
-foreach (var top in rootNode.Directories.Values.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase))
-{
+foreach (var top in rootNode.Directories.Values.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase)) {
   md.AppendLine("<details>");
   md.Append("  <summary><strong><a href=\"").Append(GetDirectoryUrl(top)).Append("\">").Append(top.Name).Append("/</a></strong></summary>").AppendLine();
   WriteSub(top, 1, md); // depth starts at 1 for children
   md.AppendLine("</details>");
 }
 
-if (includeTestPo)
-{
+if (includeTestPo) {
   md.AppendLine();
   md.AppendLine("<details>");
   md.AppendLine("  <summary><strong>planet testpo reference files</strong></summary>");
-  foreach (var t in testPoEntries.OrderBy(t => int.Parse(t.EphemerisNumber)))
-  {
+  foreach (var t in testPoEntries.OrderBy(t => int.Parse(t.EphemerisNumber))) {
     var ts = t.LastModified?.ToString("yyyy-MM-dd HH:mm") ?? "?";
     md.Append("  <div>").Append(Indent(1)).Append("<a href=\"").Append(t.Url).Append("\">")
       .Append(t.Name).Append("</a> (").Append(t.SizeDisplay).Append(' ').Append(ts).AppendLine(")</div>");
@@ -254,37 +258,108 @@ Console.WriteLine($"SSDCATALOG:CHANGED {catalogHash}");
 Console.WriteLine($"Catalog written with {bspEntries.Count} BSP files to {outDir} (testpo included={includeTestPo}).");
 
 // ---------------- helper functions & types ----------------
-static string ComputeSha256(string[] lines)
-{ using var sha = SHA256.Create(); var joined = string.Join('\n', lines); return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(joined))); }
+static string ComputeSha256(string[] lines) {
+  using var sha = SHA256.Create();
+  var joined = string.Join('\n', lines);
+  return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(joined)));
+}
 static bool IsUnderRoot(string absolute) => absolute.StartsWith(RootUrl, StringComparison.OrdinalIgnoreCase);
 static string GetRelativePath(string absolute) => absolute.StartsWith(RootUrl, StringComparison.OrdinalIgnoreCase) ? absolute[RootUrl.Length..] : absolute;
-static bool ShouldTraverseDirectory(string relativeDir)
-{ if (string.IsNullOrEmpty(relativeDir)) return true; if (!relativeDir.EndsWith('/')) relativeDir += '/'; if (relativeDir.StartsWith("planets/", StringComparison.OrdinalIgnoreCase)) { if (relativeDir.Equals("planets/", StringComparison.OrdinalIgnoreCase)) return true; return relativeDir.StartsWith("planets/bsp/", StringComparison.OrdinalIgnoreCase); } if (relativeDir.StartsWith("satellites/", StringComparison.OrdinalIgnoreCase)) { if (relativeDir.Equals("satellites/", StringComparison.OrdinalIgnoreCase)) return true; return relativeDir.StartsWith("satellites/bsp/", StringComparison.OrdinalIgnoreCase); } return true; }
-static bool ShouldIncludeFile(string relativePath)
-{ if (relativePath.StartsWith("planets/", StringComparison.OrdinalIgnoreCase)) return relativePath.StartsWith("planets/bsp/", StringComparison.OrdinalIgnoreCase); if (relativePath.StartsWith("satellites/", StringComparison.OrdinalIgnoreCase)) return relativePath.StartsWith("satellites/bsp/", StringComparison.OrdinalIgnoreCase); return true; }
-static long? ParseSize(string sizeDisplay)
-{ if (string.IsNullOrWhiteSpace(sizeDisplay)) return null; sizeDisplay = sizeDisplay.Trim(); var unit = sizeDisplay[^1]; if (char.IsLetter(unit)) { if (!double.TryParse(sizeDisplay[..^1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value)) return null; return unit switch { 'K' or 'k' => (long)(value * 1024), 'M' or 'm' => (long)(value * 1024 * 1024), 'G' or 'g' => (long)(value * 1024 * 1024 * 1024), 'T' or 't' => (long)(value * 1024L * 1024L * 1024L * 1024L), _ => null }; } if (long.TryParse(sizeDisplay, out var bytes)) return bytes; return null; }
+static bool ShouldTraverseDirectory(string relativeDir) {
+  if (string.IsNullOrEmpty(relativeDir))
+    return true;
+  if (!relativeDir.EndsWith('/'))
+    relativeDir += '/';
+  if (relativeDir.StartsWith("planets/", StringComparison.OrdinalIgnoreCase)) {
+    if (relativeDir.Equals("planets/", StringComparison.OrdinalIgnoreCase))
+      return true;
+    return relativeDir.StartsWith("planets/bsp/", StringComparison.OrdinalIgnoreCase);
+  }
+  if (relativeDir.StartsWith("satellites/", StringComparison.OrdinalIgnoreCase)) {
+    if (relativeDir.Equals("satellites/", StringComparison.OrdinalIgnoreCase))
+      return true;
+    return relativeDir.StartsWith("satellites/bsp/", StringComparison.OrdinalIgnoreCase);
+  }
+  return true;
+}
+static bool ShouldIncludeFile(string relativePath) {
+  if (relativePath.StartsWith("planets/", StringComparison.OrdinalIgnoreCase))
+    return relativePath.StartsWith("planets/bsp/", StringComparison.OrdinalIgnoreCase);
+  if (relativePath.StartsWith("satellites/", StringComparison.OrdinalIgnoreCase))
+    return relativePath.StartsWith("satellites/bsp/", StringComparison.OrdinalIgnoreCase);
+  return true;
+}
+static long? ParseSize(string sizeDisplay) {
+  if (string.IsNullOrWhiteSpace(sizeDisplay))
+    return null;
+  sizeDisplay = sizeDisplay.Trim();
+  var unit = sizeDisplay[^1];
+  if (char.IsLetter(unit)) {
+    if (!double.TryParse(sizeDisplay[..^1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value))
+      return null;
+    return unit switch {
+      'K' or 'k' => (long)(value * 1024),
+      'M' or 'm' => (long)(value * 1024 * 1024),
+      'G' or 'g' => (long)(value * 1024 * 1024 * 1024),
+      'T' or 't' => (long)(value * 1024L * 1024L * 1024L * 1024L),
+      _ => null
+    };
+  }
+  if (long.TryParse(sizeDisplay, out var bytes))
+    return bytes;
+  return null;
+}
 static string Indent(int depth) => string.Concat(Enumerable.Repeat("&nbsp;&nbsp;&nbsp;&nbsp;", depth));
-static void WriteSub(DirNode dir, int depth, StringBuilder sb)
-{
-  foreach (var sub in dir.Directories.Values.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase))
-  {
+static void WriteSub(DirNode dir, int depth, StringBuilder sb) {
+  foreach (var sub in dir.Directories.Values.OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase)) {
     sb.Append("  <div>").Append(Indent(depth)).Append("<a href=\"").Append(GetDirectoryUrl(sub)).Append("\">")
       .Append(sub.Name).Append("/</a></div>").AppendLine();
     WriteSub(sub, depth + 1, sb);
   }
-  foreach (var file in dir.Files.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase))
-  {
+  foreach (var file in dir.Files.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase)) {
     var ts = file.LastModified?.ToString("yyyy-MM-dd HH:mm") ?? "?";
     sb.Append("  <div>").Append(Indent(depth)).Append("<a href=\"").Append(file.Url).Append("\">")
       .Append(file.Name).Append("</a> (").Append(file.SizeDisplay).Append(' ').Append(ts).AppendLine(")</div>");
   }
 }
-static string GetDirectoryUrl(DirNode node)
-{ if (node.Parent == null) return RootUrl; var stack = new Stack<string>(); var cur = node; while (cur.Parent != null) { stack.Push(cur.Name); cur = cur.Parent; } return RootUrl + string.Join('/', stack) + '/'; }
+static string GetDirectoryUrl(DirNode node) {
+  if (node.Parent == null)
+    return RootUrl;
+  var stack = new Stack<string>();
+  var cur = node;
+  while (cur.Parent != null) {
+    stack.Push(cur.Name);
+    cur = cur.Parent;
+  }
+  return RootUrl + string.Join('/', stack) + '/';
+}
 
-record CatalogRoot { public required string Root { get; init; } public DateTime GeneratedUtc { get; init; } public int FileCount { get; init; } public required List<CatalogEntry> Files { get; init; } }
-record CatalogEntry { public required string Name { get; init; } public required string Url { get; init; } public required string RelativePath { get; init; } public DateTime? LastModified { get; init; } public string? SizeDisplay { get; init; } public long? SizeBytes { get; init; } public DateTime CollectedUtc { get; init; } }
-record TestPoCatalogRoot { public required string Root { get; init; } public DateTime GeneratedUtc { get; init; } public int FileCount { get; init; } public required List<TestPoEntry> Files { get; init; } }
-record TestPoEntry { public required string EphemerisNumber { get; init; } public required string Name { get; init; } public required string Url { get; init; } public required string RelativePath { get; init; } public DateTime? LastModified { get; init; } public string? SizeDisplay { get; init; } public long? SizeBytes { get; init; } }
-sealed class DirNode { public string Name { get; } public DirNode? Parent { get; } public Dictionary<string, DirNode> Directories { get; } = new(StringComparer.OrdinalIgnoreCase); public List<CatalogEntry> Files { get; } = new(); public DirNode(string name, DirNode? parent) { Name = name; Parent = parent; } public void AddFile(string[] parts, int index, CatalogEntry entry) { if (index == parts.Length - 1) { Files.Add(entry); return; } var dirName = parts[index]; if (!Directories.TryGetValue(dirName, out var child)) { child = new DirNode(dirName, this); Directories.Add(dirName, child); } child.AddFile(parts, index + 1, entry); } }
+record CatalogRoot(string Root, DateTime GeneratedUtc, int FileCount, List<CatalogEntry> Files);
+record CatalogEntry(string Name, string Url, string RelativePath, DateTime? LastModified, string? SizeDisplay, long? SizeBytes, DateTime CollectedUtc);
+record TestPoCatalogRoot(string Root, DateTime GeneratedUtc, int FileCount, List<TestPoEntry> Files);
+record TestPoEntry(string EphemerisNumber, string Name, string Url, string RelativePath, DateTime? LastModified, string? SizeDisplay, long? SizeBytes);
+sealed class DirNode
+{
+  public string Name {
+    get;
+  }
+  public DirNode? Parent {
+    get;
+  }
+  public Dictionary<string, DirNode> Directories { get; } = new(StringComparer.OrdinalIgnoreCase); public List<CatalogEntry> Files { get; } = new(); public DirNode(string name, DirNode? parent) {
+    Name = name;
+    Parent = parent;
+  }
+  public void AddFile(string[] parts, int index, CatalogEntry entry) {
+    if (index == parts.Length - 1) {
+      Files.Add(entry);
+      return;
+    }
+    var dirName = parts[index];
+    if (!Directories.TryGetValue(dirName, out var child)) {
+      child = new DirNode(dirName, this);
+      Directories.Add(dirName, child);
+    }
+    child.AddFile(parts, index + 1, entry);
+  }
+}

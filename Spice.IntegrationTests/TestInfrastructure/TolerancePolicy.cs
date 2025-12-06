@@ -37,33 +37,35 @@ internal static class TolerancePolicy
       $"Pos: {PositionAu:E2} AU ({PositionKm:E2} km), Vel: {VelocityAuPerDay:E2} AU/day ({VelocityKmPerSec:E2} km/s), Strict={Strict}";
   }
 
-  internal static Tolerances Get(int ephemerisNumber, bool hasAuConstant)
-  {
+  internal static Tolerances Get(int ephemerisNumber, bool hasAuConstant) {
     bool isProblematic = ephemerisNumber == 421; // DE421
-    bool isLegacy = ephemerisNumber <= 414; 
+    bool isLegacy = ephemerisNumber <= 414;
 
     double posAu;
     double velAuDay;
     bool strict;
 
-    if (hasAuConstant)
-    {
-      if (isProblematic)
-      {
-        posAu = 2e-12; velAuDay = 5e-15; strict = false;
+    if (hasAuConstant) {
+      if (isProblematic) {
+        posAu = 2e-12;
+        velAuDay = 5e-15;
+        strict = false;
       }
-      else if (isLegacy)
-      {
-        posAu = 6e-14; velAuDay = 5e-14; strict = false;
+      else if (isLegacy) {
+        posAu = 6e-14;
+        velAuDay = 5e-14;
+        strict = false;
       }
-      else
-      {
-        posAu = 2e-14; velAuDay = 3e-17; strict = true;
+      else {
+        posAu = 2e-14;
+        velAuDay = 3e-17;
+        strict = true;
       }
     }
-    else
-    {
-      posAu = 5e-8; velAuDay = 1e-10; strict = false;
+    else {
+      posAu = 5e-8;
+      velAuDay = 1e-10;
+      strict = false;
     }
     double posKm = posAu * Constants.AstronomicalUnitKm;
     double velKmSec = velAuDay * Constants.AuPerDayToKmPerSec;

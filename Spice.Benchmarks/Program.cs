@@ -2,8 +2,7 @@
 
 // Benchmark harness placeholder. Diagnostic CLI moved to Spice.Console.Demo (Prompt 26 task H relocation).
 // To add benchmarks: define [MemoryDiagnoser] classes and call BenchmarkSwitcher.
-if (args.Contains("--list", StringComparer.OrdinalIgnoreCase))
-{
+if (args.Contains("--list", StringComparer.OrdinalIgnoreCase)) {
   Console.WriteLine("No benchmarks defined yet. Add benchmark classes under Spice.Benchmarks and run without --list.");
   return;
 }

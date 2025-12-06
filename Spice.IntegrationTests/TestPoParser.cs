@@ -40,20 +40,19 @@ internal sealed record TestPoComponent(
 
 internal static class TestPoParser
 {
-  private static readonly Lazy<Dictionary<int,int>> _codeMap = new(() => LoadMapping());
+  private static readonly Lazy<Dictionary<int, int>> _codeMap = new(() => LoadMapping());
 
-  private static Dictionary<int,int> LoadMapping()
-  {
-    try
-    {
+  private static Dictionary<int, int> LoadMapping() {
+    try {
       var path = Path.Combine(AppContext.BaseDirectory, "TestData", "BodyMapping.json");
-      if (!File.Exists(path)) return new();
+      if (!File.Exists(path))
+        return new();
       using var stream = File.OpenRead(path);
-      var items = JsonSerializer.Deserialize<List<BodyMapEntry>>(stream, new JsonSerializerOptions{PropertyNameCaseInsensitive=true}) ?? new();
-      var dict = new Dictionary<int,int>();
-      foreach (var e in items)
-      {
-        if (!dict.ContainsKey(e.Testpo)) dict[e.Testpo] = e.Naif;
+      var items = JsonSerializer.Deserialize<List<BodyMapEntry>>(stream, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+      var dict = new Dictionary<int, int>();
+      foreach (var e in items) {
+        if (!dict.ContainsKey(e.Testpo))
+          dict[e.Testpo] = e.Naif;
       }
       return dict;
     }
@@ -65,48 +64,57 @@ internal static class TestPoParser
   /// <summary>
   /// Legacy aggregation (requires all 6 components) – retained for reference but unused now.
   /// </summary>
-  public static IEnumerable<TestPoState> ParseStates(string path, int maxStates)
-  {
+  public static IEnumerable<TestPoState> ParseStates(string path, int maxStates) {
     using var reader = new StreamReader(path);
     string? line;
     bool afterHeader = false;
     var map = new Dictionary<(double jd, int t, int c), double[]>(capacity: 512);
     int emitted = 0;
 
-    while ((line = reader.ReadLine()) != null)
-    {
-      if (!afterHeader)
-      {
-        if (line.Trim() == "EOT") afterHeader = true; else continue;
+    while ((line = reader.ReadLine()) != null) {
+      if (!afterHeader) {
+        if (line.Trim() == "EOT")
+          afterHeader = true;
+        else
+          continue;
       }
-      if (string.IsNullOrWhiteSpace(line)) continue;
+      if (string.IsNullOrWhiteSpace(line))
+        continue;
       var parts = SplitColumns(line);
-      if (parts.Length < 7) continue;
-      if (!int.TryParse(parts[0], out _)) continue; // eph not used
-      if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var jd)) continue;
-      if (!int.TryParse(parts[3], out var tcodeRaw)) continue;
-      if (!int.TryParse(parts[4], out var ccodeRaw)) continue;
-      if (!int.TryParse(parts[5], out var compIndex)) continue;
-      if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) continue;
-      if (compIndex is < 1 or > 6) continue;
+      if (parts.Length < 7)
+        continue;
+      if (!int.TryParse(parts[0], out _))
+        continue; // eph not used
+      if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var jd))
+        continue;
+      if (!int.TryParse(parts[3], out var tcodeRaw))
+        continue;
+      if (!int.TryParse(parts[4], out var ccodeRaw))
+        continue;
+      if (!int.TryParse(parts[5], out var compIndex))
+        continue;
+      if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+        continue;
+      if (compIndex is < 1 or > 6)
+        continue;
 
       var tcode = Remap(tcodeRaw);
       var ccode = Remap(ccodeRaw);
 
       var key = (jd, tcode, ccode);
-      if (!map.TryGetValue(key, out var arr))
-      {
+      if (!map.TryGetValue(key, out var arr)) {
         arr = new double[6];
-        for (int i = 0; i < 6; i++) arr[i] = double.NaN;
+        for (int i = 0; i < 6; i++)
+          arr[i] = double.NaN;
         map[key] = arr;
       }
       arr[compIndex - 1] = value;
-      if (AllPresent(arr))
-      {
+      if (AllPresent(arr)) {
         yield return new TestPoState(tcode, ccode, jd, arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]);
         emitted++;
         map.Remove(key);
-        if (emitted >= maxStates) yield break;
+        if (emitted >= maxStates)
+          yield break;
       }
     }
   }
@@ -114,32 +122,42 @@ internal static class TestPoParser
   /// <summary>
   /// Parse individual component lines (most general). Returns at most <paramref name="maxComponents"/> records.
   /// </summary>
-  public static IEnumerable<TestPoComponent> ParseComponents(string path, int maxComponents)
-  {
+  public static IEnumerable<TestPoComponent> ParseComponents(string path, int maxComponents) {
     using var reader = new StreamReader(path);
     string? line;
     bool afterHeader = false;
     int count = 0;
-    while ((line = reader.ReadLine()) != null)
-    {
-      if (!afterHeader)
-      {
-        if (line.Trim() == "EOT") afterHeader = true; else continue;
+    while ((line = reader.ReadLine()) != null) {
+      if (!afterHeader) {
+        if (line.Trim() == "EOT")
+          afterHeader = true;
+        else
+          continue;
       }
-      if (string.IsNullOrWhiteSpace(line)) continue;
+      if (string.IsNullOrWhiteSpace(line))
+        continue;
       var parts = SplitColumns(line);
-      if (parts.Length < 7) continue;
-      if (!int.TryParse(parts[0], out _)) continue; // eph not needed
-      if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var jd)) continue;
-      if (!int.TryParse(parts[3], out var tcodeRaw)) continue;
-      if (!int.TryParse(parts[4], out var ccodeRaw)) continue;
-      if (!int.TryParse(parts[5], out var compIndex)) continue;
-      if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var value)) continue;
-      if (compIndex is < 1 or > 6) continue;
+      if (parts.Length < 7)
+        continue;
+      if (!int.TryParse(parts[0], out _))
+        continue; // eph not needed
+      if (!double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var jd))
+        continue;
+      if (!int.TryParse(parts[3], out var tcodeRaw))
+        continue;
+      if (!int.TryParse(parts[4], out var ccodeRaw))
+        continue;
+      if (!int.TryParse(parts[5], out var compIndex))
+        continue;
+      if (!double.TryParse(parts[6], NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+        continue;
+      if (compIndex is < 1 or > 6)
+        continue;
       var tcode = Remap(tcodeRaw);
       var ccode = Remap(ccodeRaw);
       yield return new TestPoComponent(tcode, ccode, jd, compIndex, value);
-      if (++count >= maxComponents) yield break;
+      if (++count >= maxComponents)
+        yield break;
     }
   }
 
@@ -149,9 +167,10 @@ internal static class TestPoParser
   static string[] SplitColumns(string line)
     => line.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-  static bool AllPresent(double[] arr)
-  {
-    for (int i = 0; i < arr.Length; i++) if (double.IsNaN(arr[i])) return false;
+  static bool AllPresent(double[] arr) {
+    for (int i = 0; i < arr.Length; i++)
+      if (double.IsNaN(arr[i]))
+        return false;
     return true;
   }
 }
