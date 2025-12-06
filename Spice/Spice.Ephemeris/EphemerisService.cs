@@ -2,8 +2,6 @@
 using Spice.Core;
 using Spice.IO;
 using Spice.Kernels;
-using System.IO;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Spice.Ephemeris;
 
