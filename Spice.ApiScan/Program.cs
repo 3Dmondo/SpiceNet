@@ -3,11 +3,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 // Simple public API inventory tool (Phase 0 Prompt 26)
-// Scans referenced runtime assemblies (Spice.*) excluding test/benchmark/scan utilities
+// Scans referenced runtime assemblies (Spice) excluding test/benchmark/scan utilities
 // and emits a deterministic JSON description of the public surface.
 
 var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-  .Where(a => a.GetName().Name is { } n && n.StartsWith("Spice.") &&
+  .Where(a => a.GetName().Name is { } n && n.StartsWith("Spice") &&
               !n.EndsWith("Tests") && !n.EndsWith("Benchmarks") && !n.EndsWith("ApiScan"))
   .ToList();
 
@@ -20,7 +20,7 @@ try { Touch<Spice.Kernels.SpkKernel>(); } catch {};
 try { Touch<Spice.Ephemeris.EphemerisService>(); } catch {};
 
 assemblies = AppDomain.CurrentDomain.GetAssemblies()
-  .Where(a => a.GetName().Name is { } n && n.StartsWith("Spice.") &&
+  .Where(a => a.GetName().Name is { } n && n.StartsWith("Spice") &&
               !n.EndsWith("Tests") && !n.EndsWith("Benchmarks") && !n.EndsWith("ApiScan"))
   .OrderBy(a => a.GetName().Name, StringComparer.Ordinal)
   .ToList();
