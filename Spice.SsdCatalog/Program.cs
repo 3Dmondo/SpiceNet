@@ -5,7 +5,6 @@ using System.Net; // DecompressionMethods
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Linq;
 
 // Crawler for JPL SSD public FTP browser under https://ssd.jpl.nasa.gov/ftp/eph/
 // Traverses directory listing pages and extracts metadata about *.bsp ephemeris files.

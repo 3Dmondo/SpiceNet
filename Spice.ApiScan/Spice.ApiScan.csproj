@@ -1,15 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <isPackable>false</isPackable>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Spice.Core\Spice.Core.csproj" />
-    <ProjectReference Include="..\Spice.IO\Spice.IO.csproj" />
-    <ProjectReference Include="..\Spice.Kernels\Spice.Kernels.csproj" />
-    <ProjectReference Include="..\Spice.Ephemeris\Spice.Ephemeris.csproj" />
+    <ProjectReference Include="..\Spice\Spice.csproj" />
   </ItemGroup>
 </Project>

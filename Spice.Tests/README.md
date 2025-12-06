@@ -1,2 +1,6 @@
 # Spice.Tests
-xUnit test suite for primitives, parsing, time conversions, segment evaluation, integration scenarios.
+
+xUnit unit tests for primitives, parsing, time conversions, and segment evaluation.
+
+Notes
+- This project is not published; it validates the `Spice` library.

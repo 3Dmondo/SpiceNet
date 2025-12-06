@@ -1,5 +1,15 @@
 # Spice.Kernels
-Parsers & models for SPK (Types 2 & 3) plus higher-level segment abstractions & interpolation helpers.
+
+Parsers & models for SPK (Types 2 & 3) and interpolation helpers.
+
+## Responsibilities
+- Real SPK segment parsing with trailer `[INIT, INTLEN, RSIZE, N]` validation.
+- Endianness-aware coefficient handling.
+- Lazy & eager parsing modes via `IEphemerisDataSource`.
+- Per-record scaling arrays (`MID`, `RADIUS`) for Chebyshev evaluation.
+
+## Notes
+- Internal implementation detail; not published.
 
 ## Supported Features
 - DAF-backed SPK segment enumeration via `FullDafReader` (real layout, multi-record, doubly-linked summary traversal).

@@ -1,0 +1,29 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Docs/">
+    <File Path="docs/Consolidation.md" />
+    <File Path="docs/SpkDafFormat.md" />
+    <File Path="docs/Tolerances.md" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".github/copilot-instructions.md" />
+    <File Path=".github/workflows/ci.yml" />
+    <File Path=".github/workflows/monthly-ssd-catalog.yml" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="Spice.ApiScan/Spice.ApiScan.csproj" />
+  <Project Path="Spice.Benchmarks/Spice.Benchmarks.csproj" />
+  <Project Path="Spice.Console.Demo/Spice.Console.Demo.csproj" />
+  <Project Path="Spice.IntegrationTests/Spice.IntegrationTests.csproj" />
+  <Project Path="Spice.SsdCatalog/Spice.SsdCatalog.csproj" />
+  <Project Path="Spice.Tests/Spice.Tests.csproj" />
+  <Project Path="Spice/Spice.csproj" />
+</Solution>

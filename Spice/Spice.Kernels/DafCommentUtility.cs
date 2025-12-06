@@ -10,7 +10,7 @@ namespace Spice.Kernels;
 /// heuristically parse simple KEY = value[ value2 ...] or KEY value1 value2 ... style assignments ("symbols").
 /// Parsing is intentionally lightweight; it does NOT build a full SPICE kernel pool.
 /// </summary>
-public static class DafCommentUtility
+internal static class DafCommentUtility
 {
   // Matches KEY = rhs (entire line after = captured)
   static readonly Regex AssignmentEquals = new("^([A-Z0-9_]+)\\s*=\\s*(.+)$", RegexOptions.Compiled);
