@@ -5,8 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" />
-    <ProjectReference Include="../Spice.Core/Spice.Core.csproj" />
-    <ProjectReference Include="../Spice.Kernels/Spice.Kernels.csproj" />
-    <ProjectReference Include="../Spice.Ephemeris/Spice.Ephemeris.csproj" />
+    <ProjectReference Include="..\Spice\Spice.csproj" />
   </ItemGroup>
 </Project>

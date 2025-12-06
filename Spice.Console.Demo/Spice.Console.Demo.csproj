@@ -4,6 +4,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Spice.Ephemeris/Spice.Ephemeris.csproj" />
+    <ProjectReference Include="..\Spice\Spice.csproj" />
   </ItemGroup>
 </Project>

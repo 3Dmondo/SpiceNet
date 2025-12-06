@@ -3,10 +3,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Spice.Core\Spice.Core.csproj" />
-    <ProjectReference Include="..\Spice.IO\Spice.IO.csproj" />
-    <ProjectReference Include="..\Spice.Kernels\Spice.Kernels.csproj" />
-    <ProjectReference Include="..\Spice.Ephemeris\Spice.Ephemeris.csproj" />
+    <ProjectReference Include="..\Spice\Spice.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
