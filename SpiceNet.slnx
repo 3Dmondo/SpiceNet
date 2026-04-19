@@ -8,6 +8,7 @@
     <File Path="docs/Consolidation.md" />
     <File Path="docs/SpkDafFormat.md" />
     <File Path="docs/Tolerances.md" />
+    <File Path="docs/WebDataGenerator.md" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
@@ -25,5 +26,6 @@
   <Project Path="Spice.IntegrationTests/Spice.IntegrationTests.csproj" />
   <Project Path="Spice.SsdCatalog/Spice.SsdCatalog.csproj" />
   <Project Path="Spice.Tests/Spice.Tests.csproj" />
+  <Project Path="Spice.WebDataGenerator/Spice.WebDataGenerator.csproj" />
   <Project Path="Spice/Spice.csproj" />
 </Solution>

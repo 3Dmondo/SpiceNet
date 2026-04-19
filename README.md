@@ -4,7 +4,7 @@ Unified .NET 10 library for loading a subset of NAIF SPICE kernels and querying 
 
 Projects in this repo:
 - `Spice` (library, published): unified codebase and only public API surface (facade in `Spice.Ephemeris`, primitives in `Spice.Core`).
-- Aux projects (not published): `Spice.Tests`, `Spice.IntegrationTests`, `Spice.Benchmarks`, `Spice.Console.Demo`, `Spice.ApiScan`, `Spice.SsdCatalog`.
+- Aux projects (not published): `Spice.Tests`, `Spice.IntegrationTests`, `Spice.Benchmarks`, `Spice.Console.Demo`, `Spice.ApiScan`, `Spice.SsdCatalog`, `Spice.WebDataGenerator`.
 
 Public API surface (facade):
 - `Spice.Core`: `BodyId`, `FrameId`, `Duration`, `Instant`, `StateVector`, `Vector3d`
@@ -28,3 +28,4 @@ Notes:
 Development
 - Tests and integration harnesses are in aux projects (not published).
 - Public API is enforced by analyzers (`PublicAPI.Shipped.txt`).
+- `Spice.WebDataGenerator` is the auxiliary CLI for emitting compact web-ready ephemeris and metadata assets. See `docs/WebDataGenerator.md`.

@@ -49,3 +49,6 @@ _ReSharper*/
 
 # Integration test download cache (ephemeris & testpo files)
 Spice.IntegrationTests/TestData/cache/
+
+# Generated web benchmark artifacts
+artifacts/web-data/
