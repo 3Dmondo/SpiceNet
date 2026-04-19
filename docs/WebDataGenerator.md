@@ -31,6 +31,7 @@ At this step the CLI:
 - can benchmark one configured mixed-cadence export and validate it body by body against live `SpiceNet` queries
 - can benchmark several shared chunk durations for one configured mixed-cadence profile and compare both total and per-chunk download sizes
 - can dump the SPK DAF comment area for inspection through the same generator CLI
+- has a repeatable local script for downloading a cached ephemeris kernel plus supporting kernels and regenerating the current baseline web dataset
 
 Current limitations:
 
@@ -232,6 +233,41 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Update-WebDataMetadataSnapsho
 ```
 
 The snapshot produced from the current real-data run includes the Sun, planets, and Moon, and the parser successfully extracted radii, GM, pole orientation coefficients, and prime-meridian coefficients from the official generic kernels for that body set.
+
+## Real Ephemeris Baseline Workflow
+
+The repository now also includes a repeatable local generation script for the current baseline ephemeris dataset:
+
+- Script: `scripts/Generate-WebDataBaselineDataset.ps1`
+- Download cache roots:
+  - `artifacts/kernel-cache/naif/spk/planets/`
+  - `artifacts/kernel-cache/naif/lsk/`
+  - `artifacts/kernel-cache/naif/pck/`
+- Ignored output root: `artifacts/web-data/baseline-de440s-ssb/`
+
+The baseline script currently:
+
+- downloads `de440s.bsp` from the official NAIF generic SPK directory
+- downloads `naif0012.tls` from the official NAIF generic LSK directory
+- refreshes the metadata cache and committed metadata snapshot via `scripts/Update-WebDataMetadataSnapshot.ps1`
+- generates the current shared `25` year, mixed-cadence, solar-system-barycenter dataset with metadata embedded in the manifest
+
+Typical local refresh command:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Generate-WebDataBaselineDataset.ps1
+```
+
+Current baseline note:
+
+- the scripted default uses `de440s.bsp` because it is the current small official generic kernel that matches the benchmark work completed in this repository
+- `de441` is available from the official NAIF generic directory only as two very large split files, so the `de441t` milestone target still needs a separately pinned source decision before it becomes the scripted default
+- if we later choose a different kernel source, the script can already be redirected through `-SpkUrl` and `-SpkFileName`
+
+CI note:
+
+- the intended CI flow is to run the same script in a fresh workspace, letting the job download kernels into its transient cache rather than checking any upstream binaries into git
+- only small derived artifacts such as the committed `body-metadata.json` snapshot are versioned
 
 ## de440s Mercury Benchmark Snapshot
 
