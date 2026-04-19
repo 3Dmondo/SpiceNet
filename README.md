@@ -28,4 +28,5 @@ Notes:
 Development
 - Tests and integration harnesses are in aux projects (not published).
 - Public API is enforced by analyzers (`PublicAPI.Shipped.txt`).
-- `Spice.WebDataGenerator` is the auxiliary CLI for emitting compact web-ready ephemeris and metadata assets. See `docs/WebDataGenerator.md`.
+- `Spice.WebDataGenerator` is the auxiliary CLI for emitting compact web-ready ephemeris and metadata assets, including first-pass text-kernel-derived body metadata. See `docs/WebDataGenerator.md`.
+- `scripts/Update-WebDataMetadataSnapshot.ps1` downloads the official NAIF generic metadata kernels into a local ignored cache and refreshes the committed metadata snapshot at `Spice.WebDataGenerator/ReferenceData/body-metadata.json`.

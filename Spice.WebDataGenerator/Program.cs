@@ -1,8 +1,10 @@
 using Spice.Core;
 using Spice.Ephemeris;
+using Spice.Kernels;
 using System.Globalization;
 using System.IO.Compression;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Spice.WebDataGenerator;
 
@@ -16,6 +18,8 @@ internal static class Program
   const string PositionUnits = "km";
   const string VelocityUnits = "km/s";
   const string InterpolationHint = "cubic_hermite_position_velocity";
+  const string MetadataReferenceEpoch = "J2000";
+  const double J2000MeanObliquityDegrees = 23.439291111;
 
   static readonly JsonSerializerOptions ReportJsonOptions = new()
   {
@@ -24,7 +28,14 @@ internal static class Program
 
   static readonly JsonSerializerOptions OutputJsonOptions = new()
   {
-    WriteIndented = false
+    WriteIndented = false,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+  };
+
+  static readonly JsonSerializerOptions SnapshotJsonOptions = new()
+  {
+    WriteIndented = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
   };
 
   static int Main(string[] args)
@@ -45,11 +56,17 @@ internal static class Program
     Console.WriteLine($"SPK: {options.SpkPath}");
     Console.WriteLine($"LSK: {options.LskPath}");
     Console.WriteLine($"Output: {options.OutputPath}");
+    if (options.MetadataOnly) {
+      Console.WriteLine("Mode: metadata-only");
+    }
     Console.WriteLine($"Coverage: {options.StartYear} through {options.EndYear}");
     Console.WriteLine($"Chunk years: {options.ChunkYears}");
     Console.WriteLine($"Default sample days: {options.SampleDays}");
     Console.WriteLine($"Center body: {options.CenterBodyId}");
     Console.WriteLine($"Bodies: {string.Join(", ", options.BodyIds)}");
+    if (options.MetadataKernelPaths.Count > 0) {
+      Console.WriteLine($"Metadata kernels: {string.Join(", ", options.MetadataKernelPaths)}");
+    }
     if (options.BodyCadenceOverrides.Count > 0) {
       Console.WriteLine($"Body cadence overrides: {FormatBodyCadenceOverrides(options.BodyCadenceOverrides)}");
     }
@@ -68,20 +85,37 @@ internal static class Program
       Console.WriteLine($"Configured chunk-year benchmark values: {string.Join(", ", options.BenchmarkChunkYears)}");
       Console.WriteLine($"Configured chunk-year benchmark truth hours: {options.BenchmarkTruthHours}");
     }
+    if (options.DumpDafComments) {
+      Console.WriteLine("DAF comment dump: enabled");
+    }
     Console.WriteLine();
 
     Directory.CreateDirectory(options.OutputPath);
+    var metadataKernelPool = LoadMetadataKernelPool(options.MetadataKernelPaths);
+
+    if (options.MetadataOnly) {
+      var snapshot = WriteMetadataSnapshot(options, metadataKernelPool);
+      Console.WriteLine($"Metadata snapshot: {snapshot.OutputPath}");
+      Console.WriteLine($"Bodies: {snapshot.BodyCount}");
+      return 0;
+    }
 
     using var service = new EphemerisService();
+    var spkPath = RequireSpkPath(options);
 
     if (!string.IsNullOrWhiteSpace(options.LskPath)) {
       service.Load(options.LskPath);
     }
 
-    service.Load(options.SpkPath);
+    service.Load(spkPath);
+
+    if (options.DumpDafComments) {
+      DumpDafComments(spkPath);
+      return 0;
+    }
 
     if (options.BenchmarkBodies) {
-      var benchmark = RunBodyBenchmark(service, options);
+      var benchmark = RunBodyBenchmark(service, options, metadataKernelPool);
       var benchmarkPath = Path.Combine(options.OutputPath, "body-benchmark.json");
       File.WriteAllText(benchmarkPath, JsonSerializer.Serialize(benchmark, ReportJsonOptions));
 
@@ -94,7 +128,7 @@ internal static class Program
     }
 
     if (options.BenchmarkMercury) {
-      var benchmark = RunMercuryBenchmark(service, options);
+      var benchmark = RunMercuryBenchmark(service, options, metadataKernelPool);
       var benchmarkPath = Path.Combine(options.OutputPath, "mercury-benchmark.json");
       File.WriteAllText(benchmarkPath, JsonSerializer.Serialize(benchmark, ReportJsonOptions));
 
@@ -107,7 +141,7 @@ internal static class Program
     }
 
     if (options.BenchmarkConfiguredCadence) {
-      var benchmark = RunConfiguredCadenceBenchmark(service, options);
+      var benchmark = RunConfiguredCadenceBenchmark(service, options, metadataKernelPool);
       var benchmarkPath = Path.Combine(options.OutputPath, "configured-cadence-benchmark.json");
       File.WriteAllText(benchmarkPath, JsonSerializer.Serialize(benchmark, ReportJsonOptions));
 
@@ -121,7 +155,7 @@ internal static class Program
     }
 
     if (options.BenchmarkConfiguredChunkYears) {
-      var benchmark = RunConfiguredChunkYearBenchmark(service, options);
+      var benchmark = RunConfiguredChunkYearBenchmark(service, options, metadataKernelPool);
       var benchmarkPath = Path.Combine(options.OutputPath, "configured-chunk-year-benchmark.json");
       File.WriteAllText(benchmarkPath, JsonSerializer.Serialize(benchmark, ReportJsonOptions));
 
@@ -133,7 +167,7 @@ internal static class Program
       return 0;
     }
 
-    var output = WriteGenerationOutput(service, options);
+    var output = WriteGenerationOutput(service, options, metadataKernelPool);
 
     Console.WriteLine($"Manifest: {output.ManifestPath}");
     foreach (var chunk in output.ChunkSummaries) {
@@ -144,8 +178,9 @@ internal static class Program
     return 0;
   }
 
-  static MercuryBenchmarkReport RunMercuryBenchmark(EphemerisService service, GeneratorOptions options)
+  static MercuryBenchmarkReport RunMercuryBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
+    var spkPath = RequireSpkPath(options);
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
     var mercuryBodyId = 199;
@@ -163,7 +198,7 @@ internal static class Program
         BenchmarkMercury = false
       };
 
-      var output = WriteGenerationOutput(service, cadenceOptions);
+      var output = WriteGenerationOutput(service, cadenceOptions, metadataKernelPool);
       var interpolation = BenchmarkMercuryInterpolation(
         service,
         options.CenterBodyId,
@@ -188,7 +223,7 @@ internal static class Program
 
     return new MercuryBenchmarkReport(
       GeneratedAtUtc: DateTimeOffset.UtcNow,
-      SpkPath: options.SpkPath,
+      SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
       EndYear: options.EndYear,
@@ -198,11 +233,12 @@ internal static class Program
       Results: results.ToArray());
   }
 
-  static ConfiguredCadenceBenchmarkReport RunConfiguredCadenceBenchmark(EphemerisService service, GeneratorOptions options)
+  static ConfiguredCadenceBenchmarkReport RunConfiguredCadenceBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
+    var spkPath = RequireSpkPath(options);
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
-    var output = WriteGenerationOutput(service, options);
+    var output = WriteGenerationOutput(service, options, metadataKernelPool);
     var bodyResults = options.BodyIds
       .Select((bodyId) => BenchmarkBodyInterpolation(
         service,
@@ -217,7 +253,7 @@ internal static class Program
 
     return new ConfiguredCadenceBenchmarkReport(
       GeneratedAtUtc: DateTimeOffset.UtcNow,
-      SpkPath: options.SpkPath,
+      SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
       EndYear: options.EndYear,
@@ -233,8 +269,9 @@ internal static class Program
       BodyResults: bodyResults);
   }
 
-  static ConfiguredChunkYearBenchmarkReport RunConfiguredChunkYearBenchmark(EphemerisService service, GeneratorOptions options)
+  static ConfiguredChunkYearBenchmarkReport RunConfiguredChunkYearBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
+    var spkPath = RequireSpkPath(options);
     var results = new List<ConfiguredChunkYearResult>();
 
     foreach (var chunkYears in options.BenchmarkChunkYears.Distinct().OrderByDescending(static value => value)) {
@@ -248,7 +285,7 @@ internal static class Program
         BenchmarkConfiguredChunkYears = false
       };
 
-      var configured = RunConfiguredCadenceBenchmark(service, chunkOptions);
+      var configured = RunConfiguredCadenceBenchmark(service, chunkOptions, metadataKernelPool);
       results.Add(new ConfiguredChunkYearResult(
         ChunkYears: chunkYears,
         TotalOutputBytes: configured.TotalOutputBytes,
@@ -260,7 +297,7 @@ internal static class Program
 
     return new ConfiguredChunkYearBenchmarkReport(
       GeneratedAtUtc: DateTimeOffset.UtcNow,
-      SpkPath: options.SpkPath,
+      SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
       EndYear: options.EndYear,
@@ -273,8 +310,23 @@ internal static class Program
       Results: results.ToArray());
   }
 
-  static BodyBenchmarkReport RunBodyBenchmark(EphemerisService service, GeneratorOptions options)
+  static void DumpDafComments(string spkPath)
   {
+    var (comments, symbols, _) = DafCommentUtility.Extract(spkPath);
+    Console.WriteLine($"DAF comments: {comments.Length}");
+    Console.WriteLine();
+
+    foreach (var comment in comments) {
+      Console.WriteLine(comment);
+    }
+
+    Console.WriteLine();
+    Console.WriteLine($"Parsed symbols from comments: {symbols.Count}");
+  }
+
+  static BodyBenchmarkReport RunBodyBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
+  {
+    var spkPath = RequireSpkPath(options);
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
     var results = new List<BodyCadenceBenchmarkResult>();
@@ -291,7 +343,7 @@ internal static class Program
         BenchmarkBodies = false
       };
 
-      var output = WriteGenerationOutput(service, cadenceOptions);
+      var output = WriteGenerationOutput(service, cadenceOptions, metadataKernelPool);
       var bodyResults = options.BodyIds
         .Select((bodyId) => BenchmarkBodyInterpolation(service, options.CenterBodyId, bodyId, startUtc, endUtc, sampleDays, options.BenchmarkTruthHours))
         .OrderBy(static (result) => result.RequestedBodyId)
@@ -307,7 +359,7 @@ internal static class Program
 
     return new BodyBenchmarkReport(
       GeneratedAtUtc: DateTimeOffset.UtcNow,
-      SpkPath: options.SpkPath,
+      SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
       EndYear: options.EndYear,
@@ -420,15 +472,16 @@ internal static class Program
          + h11 * durationSeconds * right.State.VelocityKmPerSec;
   }
 
-  static GenerationOutput WriteGenerationOutput(EphemerisService service, GeneratorOptions options)
+  static GenerationOutput WriteGenerationOutput(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
+    var spkPath = RequireSpkPath(options);
     var referenceUtc = CreateChunkBoundary(options.StartYear);
     var bodySettings = BuildBodyExportSettings(service, options, referenceUtc);
     var chunkSummaries = GenerateChunks(service, options, bodySettings);
     var manifest = new GeneratorManifest(
       SchemaVersion: OutputSchemaVersion,
       GeneratedAtUtc: DateTimeOffset.UtcNow,
-      SpkPath: options.SpkPath,
+      SpkPath: spkPath,
       LskPath: options.LskPath,
       UsesApproximateUtcConversion: true,
       ApproximationNote: "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this benchmark step.",
@@ -437,6 +490,7 @@ internal static class Program
       ChunkYears: options.ChunkYears,
       DefaultSampleDays: options.SampleDays,
       CenterBodyId: options.CenterBodyId,
+      MetadataKernelPaths: options.MetadataKernelPaths.ToArray(),
       RuntimeLayout: new ManifestRuntimeLayout(
         ChunkBoundaryTimeEncoding: ChunkBoundaryTimeEncoding,
         SampleTimeEncoding: SampleTimeEncoding,
@@ -445,12 +499,7 @@ internal static class Program
         PositionUnits: PositionUnits,
         VelocityUnits: VelocityUnits,
         InterpolationHint: InterpolationHint),
-      Bodies: bodySettings.Select(static (body) => new ManifestBody(
-        BodyId: body.BodyId,
-        BodyName: body.BodyName,
-        SourceBodyId: body.SourceBodyId,
-        SourceBodyName: body.SourceBodyName,
-        SampleDays: body.SampleDays)).ToArray(),
+      Bodies: bodySettings.Select((body) => BuildManifestBody(body, metadataKernelPool)).ToArray(),
       Chunks: chunkSummaries.Select(static (chunk) => new ManifestChunk(
         FileName: chunk.FileName,
         StartUtc: chunk.StartUtc,
@@ -635,6 +684,200 @@ internal static class Program
       .OrderBy(static (setting) => setting.BodyId)
       .ToArray();
 
+  static MetadataKernelPool? LoadMetadataKernelPool(IReadOnlyList<string> metadataKernelPaths)
+  {
+    if (metadataKernelPaths.Count == 0) {
+      return null;
+    }
+
+    var assignments = new Dictionary<string, TextKernelParser.TextKernelAssignment>(StringComparer.OrdinalIgnoreCase);
+    foreach (var path in metadataKernelPaths) {
+      var document = TextKernelParser.Parse(path);
+      foreach (var assignment in document.Assignments) {
+        assignments[assignment.Name] = assignment;
+      }
+    }
+
+    return new MetadataKernelPool(
+      SourcePaths: metadataKernelPaths.ToArray(),
+      Assignments: assignments);
+  }
+
+  static MetadataSnapshotOutput WriteMetadataSnapshot(GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
+  {
+    if (metadataKernelPool is null) {
+      throw new InvalidOperationException("Metadata-only mode requires at least one --metadata-kernel input.");
+    }
+
+    var snapshot = new MetadataSnapshot(
+      SchemaVersion: OutputSchemaVersion,
+      GeneratedAtUtc: DateTimeOffset.UtcNow,
+      KernelFiles: BuildMetadataKernelFiles(metadataKernelPool.Value.SourcePaths),
+      Bodies: options.BodyIds
+        .Select((bodyId) => new MetadataSnapshotBody(
+          BodyId: bodyId,
+          BodyName: ResolveBodyName(bodyId),
+          Metadata: BuildBodyMetadata(bodyId, metadataKernelPool)))
+        .OrderBy(static (body) => body.BodyId)
+        .ToArray());
+
+    var snapshotPath = Path.Combine(options.OutputPath, "body-metadata.json");
+    File.WriteAllText(snapshotPath, JsonSerializer.Serialize(snapshot, SnapshotJsonOptions));
+    return new MetadataSnapshotOutput(
+      OutputPath: snapshotPath,
+      BodyCount: snapshot.Bodies.Length);
+  }
+
+  static MetadataKernelFile[] BuildMetadataKernelFiles(IReadOnlyList<string> paths)
+    => paths
+      .Select((path) =>
+      {
+        var fileInfo = new FileInfo(path);
+        return new MetadataKernelFile(
+          FileName: fileInfo.Name,
+          ByteLength: fileInfo.Length,
+          Sha256: ComputeSha256(path));
+      })
+      .OrderBy(static (file) => file.FileName, StringComparer.OrdinalIgnoreCase)
+      .ToArray();
+
+  static string ComputeSha256(string path)
+  {
+    using var stream = File.OpenRead(path);
+    using var sha256 = System.Security.Cryptography.SHA256.Create();
+    var hash = sha256.ComputeHash(stream);
+    return Convert.ToHexString(hash);
+  }
+
+  static ManifestBody BuildManifestBody(BodyExportSetting body, MetadataKernelPool? metadataKernelPool)
+    => new(
+      BodyId: body.BodyId,
+      BodyName: body.BodyName,
+      SourceBodyId: body.SourceBodyId,
+      SourceBodyName: body.SourceBodyName,
+      SampleDays: body.SampleDays,
+      Metadata: BuildBodyMetadata(body.BodyId, metadataKernelPool));
+
+  static ManifestBodyMetadata? BuildBodyMetadata(int bodyId, MetadataKernelPool? metadataKernelPool)
+  {
+    if (metadataKernelPool is null) {
+      return null;
+    }
+
+    var kernelPool = metadataKernelPool.Value;
+    var radiiKm = TryGetNumericValues(kernelPool, $"BODY{bodyId}_RADII");
+    var gmKm3PerSec2 = TryGetFirstNumericValue(kernelPool, $"BODY{bodyId}_GM");
+    var poleRightAscensionCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_POLE_RA");
+    var poleDeclinationCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_POLE_DEC");
+    var nutationPrecessionRightAscensionCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_NUT_PREC_RA");
+    var nutationPrecessionDeclinationCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_NUT_PREC_DEC");
+    var primeMeridianCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_PM");
+    var nutationPrecessionPrimeMeridianCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_NUT_PREC_PM");
+
+    double? poleRightAscensionAtReferenceEpoch = poleRightAscensionCoefficients is { Length: > 0 } ? poleRightAscensionCoefficients[0] : null;
+    double? poleDeclinationAtReferenceEpoch = poleDeclinationCoefficients is { Length: > 0 } ? poleDeclinationCoefficients[0] : null;
+    Vector3d? northPoleUnitVector = poleRightAscensionAtReferenceEpoch is double rightAscensionDegrees &&
+                                    poleDeclinationAtReferenceEpoch is double declinationDegrees
+      ? BuildPoleUnitVector(rightAscensionDegrees, declinationDegrees)
+      : null;
+    double? axialTiltDegrees = northPoleUnitVector is Vector3d poleVector
+      ? ComputeAxialTiltRelativeToJ2000EclipticDegrees(poleVector)
+      : null;
+    double? primeMeridianRateDegreesPerDay = primeMeridianCoefficients is { Length: > 1 } ? primeMeridianCoefficients[1] : null;
+    double? siderealRotationPeriodHours = primeMeridianRateDegreesPerDay is double rateDegreesPerDay &&
+                                          Math.Abs(rateDegreesPerDay) > double.Epsilon
+      ? 24d * 360d / Math.Abs(rateDegreesPerDay)
+      : null;
+    bool? isRetrograde = primeMeridianRateDegreesPerDay is double primeMeridianRate
+      ? primeMeridianRate < 0
+      : null;
+
+    if (radiiKm is null &&
+        gmKm3PerSec2 is null &&
+        poleRightAscensionCoefficients is null &&
+        poleDeclinationCoefficients is null &&
+        nutationPrecessionRightAscensionCoefficients is null &&
+        nutationPrecessionDeclinationCoefficients is null &&
+        primeMeridianCoefficients is null &&
+        nutationPrecessionPrimeMeridianCoefficients is null) {
+      return null;
+    }
+
+    return new ManifestBodyMetadata(
+      RadiiKm: radiiKm,
+      MeanRadiusKm: radiiKm?.Average(),
+      GravitationalParameterKm3PerSec2: gmKm3PerSec2,
+      PoleOrientation: poleRightAscensionCoefficients is not null ||
+                       poleDeclinationCoefficients is not null ||
+                       nutationPrecessionRightAscensionCoefficients is not null ||
+                       nutationPrecessionDeclinationCoefficients is not null
+        ? new ManifestPoleOrientation(
+          ReferenceEpoch: MetadataReferenceEpoch,
+          PoleRightAscensionDegreesCoefficients: poleRightAscensionCoefficients,
+          PoleDeclinationDegreesCoefficients: poleDeclinationCoefficients,
+          NutationPrecessionRightAscensionDegreesCoefficients: nutationPrecessionRightAscensionCoefficients,
+          NutationPrecessionDeclinationDegreesCoefficients: nutationPrecessionDeclinationCoefficients,
+          PoleRightAscensionDegreesAtReferenceEpoch: poleRightAscensionAtReferenceEpoch,
+          PoleDeclinationDegreesAtReferenceEpoch: poleDeclinationAtReferenceEpoch,
+          NorthPoleUnitVectorJ2000: northPoleUnitVector is Vector3d vector ? [vector.X, vector.Y, vector.Z] : null,
+          AxialTiltDegreesRelativeToJ2000Ecliptic: axialTiltDegrees)
+        : null,
+      RotationModel: primeMeridianCoefficients is not null ||
+                     nutationPrecessionPrimeMeridianCoefficients is not null
+        ? new ManifestRotationModel(
+          PrimeMeridianDegreesCoefficients: primeMeridianCoefficients,
+          NutationPrecessionPrimeMeridianDegreesCoefficients: nutationPrecessionPrimeMeridianCoefficients,
+          PrimeMeridianRateDegreesPerDay: primeMeridianRateDegreesPerDay,
+          SiderealRotationPeriodHours: siderealRotationPeriodHours,
+          IsRetrograde: isRetrograde)
+        : null);
+  }
+
+  static double[]? TryGetNumericValues(MetadataKernelPool metadataKernelPool, string key)
+    => metadataKernelPool.Assignments.TryGetValue(key, out var assignment) && assignment.NumericValues.Count > 0
+      ? assignment.NumericValues.ToArray()
+      : null;
+
+  static double? TryGetFirstNumericValue(MetadataKernelPool metadataKernelPool, string key)
+    => metadataKernelPool.Assignments.TryGetValue(key, out var assignment)
+      ? assignment.FirstNumeric
+      : null;
+
+  static Vector3d BuildPoleUnitVector(double rightAscensionDegrees, double declinationDegrees)
+  {
+    var rightAscensionRadians = DegreesToRadians(rightAscensionDegrees);
+    var declinationRadians = DegreesToRadians(declinationDegrees);
+    return new Vector3d(
+      X: Math.Cos(declinationRadians) * Math.Cos(rightAscensionRadians),
+      Y: Math.Cos(declinationRadians) * Math.Sin(rightAscensionRadians),
+      Z: Math.Sin(declinationRadians)).Normalize();
+  }
+
+  static double ComputeAxialTiltRelativeToJ2000EclipticDegrees(Vector3d poleUnitVector)
+  {
+    var eclipticNorth = BuildJ2000EclipticNorthUnitVector();
+    var dot = Math.Clamp(Vector3d.Dot(poleUnitVector, eclipticNorth), -1d, 1d);
+    return RadiansToDegrees(Math.Acos(dot));
+  }
+
+  static Vector3d BuildJ2000EclipticNorthUnitVector()
+  {
+    var obliquityRadians = DegreesToRadians(J2000MeanObliquityDegrees);
+    return new Vector3d(
+      X: 0d,
+      Y: -Math.Sin(obliquityRadians),
+      Z: Math.Cos(obliquityRadians)).Normalize();
+  }
+
+  static double DegreesToRadians(double degrees)
+    => degrees * Math.PI / 180d;
+
+  static double RadiansToDegrees(double radians)
+    => radians * 180d / Math.PI;
+
+  static string RequireSpkPath(GeneratorOptions options)
+    => options.SpkPath ?? throw new InvalidOperationException("An SPK path is required for ephemeris generation modes.");
+
   static double[] FlattenStateSamples(IReadOnlyList<StateSample> stateSamples)
   {
     var values = new double[stateSamples.Count * 6];
@@ -674,6 +917,7 @@ internal static class Program
 
     var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     var bodyIds = new List<int>();
+    var metadataKernelPaths = new List<string>();
     var bodyCadenceOverrides = new Dictionary<int, int>();
 
     for (int index = 0; index < args.Length; index++) {
@@ -696,6 +940,17 @@ internal static class Program
         continue;
       }
 
+      if (string.Equals(current, "--metadata-kernel", StringComparison.OrdinalIgnoreCase)) {
+        if (!TryReadValue(args, ref index, out var metadataKernelPath)) {
+          error = "Missing value for --metadata-kernel.";
+          options = default;
+          return false;
+        }
+
+        metadataKernelPaths.Add(metadataKernelPath);
+        continue;
+      }
+
       if (string.Equals(current, "--benchmark-mercury", StringComparison.OrdinalIgnoreCase)) {
         values[current] = "true";
         continue;
@@ -712,6 +967,16 @@ internal static class Program
       }
 
       if (string.Equals(current, "--benchmark-configured-chunk-years", StringComparison.OrdinalIgnoreCase)) {
+        values[current] = "true";
+        continue;
+      }
+
+      if (string.Equals(current, "--metadata-only", StringComparison.OrdinalIgnoreCase)) {
+        values[current] = "true";
+        continue;
+      }
+
+      if (string.Equals(current, "--dump-daf-comments", StringComparison.OrdinalIgnoreCase)) {
         values[current] = "true";
         continue;
       }
@@ -747,14 +1012,16 @@ internal static class Program
       values[current] = value;
     }
 
-    if (!values.TryGetValue("--spk", out var spkPath) || string.IsNullOrWhiteSpace(spkPath)) {
-      error = "Missing required --spk <path> argument.";
+    if (!values.TryGetValue("--output", out var outputPath) || string.IsNullOrWhiteSpace(outputPath)) {
+      error = "Missing required --output <path> argument.";
       options = default;
       return false;
     }
 
-    if (!values.TryGetValue("--output", out var outputPath) || string.IsNullOrWhiteSpace(outputPath)) {
-      error = "Missing required --output <path> argument.";
+    var metadataOnly = values.ContainsKey("--metadata-only");
+    values.TryGetValue("--spk", out var spkPath);
+    if (!metadataOnly && string.IsNullOrWhiteSpace(spkPath)) {
+      error = "Missing required --spk <path> argument.";
       options = default;
       return false;
     }
@@ -787,7 +1054,7 @@ internal static class Program
       return false;
     }
 
-    if (!File.Exists(spkPath)) {
+    if (!string.IsNullOrWhiteSpace(spkPath) && !File.Exists(spkPath)) {
       error = $"SPK file not found: {spkPath}";
       options = default;
       return false;
@@ -800,17 +1067,33 @@ internal static class Program
       return false;
     }
 
+    foreach (var metadataKernelPath in metadataKernelPaths) {
+      if (!File.Exists(metadataKernelPath)) {
+        error = $"Metadata kernel file not found: {metadataKernelPath}";
+        options = default;
+        return false;
+      }
+    }
+
     var benchmarkMercury = values.ContainsKey("--benchmark-mercury");
     var benchmarkBodies = values.ContainsKey("--benchmark-bodies");
     var benchmarkConfiguredCadence = values.ContainsKey("--benchmark-configured-cadence");
     var benchmarkConfiguredChunkYears = values.ContainsKey("--benchmark-configured-chunk-years");
+    var dumpDafComments = values.ContainsKey("--dump-daf-comments");
+    if (metadataOnly && metadataKernelPaths.Count == 0) {
+      error = "--metadata-only requires at least one --metadata-kernel path.";
+      options = default;
+      return false;
+    }
     var benchmarkModesEnabled =
+      (metadataOnly ? 1 : 0) +
       (benchmarkMercury ? 1 : 0) +
       (benchmarkBodies ? 1 : 0) +
       (benchmarkConfiguredCadence ? 1 : 0) +
-      (benchmarkConfiguredChunkYears ? 1 : 0);
+      (benchmarkConfiguredChunkYears ? 1 : 0) +
+      (dumpDafComments ? 1 : 0);
     if (benchmarkModesEnabled > 1) {
-      error = "Choose only one benchmark mode: --benchmark-mercury, --benchmark-bodies, --benchmark-configured-cadence, or --benchmark-configured-chunk-years.";
+      error = "Choose only one special mode: --metadata-only, --benchmark-mercury, --benchmark-bodies, --benchmark-configured-cadence, --benchmark-configured-chunk-years, or --dump-daf-comments.";
       options = default;
       return false;
     }
@@ -846,11 +1129,14 @@ internal static class Program
       SampleDays: sampleDays,
       CenterBodyId: centerBodyId,
       BodyIds: selectedBodyIds,
+      MetadataKernelPaths: metadataKernelPaths.ToArray(),
       BodyCadenceOverrides: bodyCadenceOverrides,
+      MetadataOnly: metadataOnly,
       BenchmarkMercury: benchmarkMercury,
       BenchmarkBodies: benchmarkBodies,
       BenchmarkConfiguredCadence: benchmarkConfiguredCadence,
       BenchmarkConfiguredChunkYears: benchmarkConfiguredChunkYears,
+      DumpDafComments: dumpDafComments,
       BenchmarkCadences: benchmarkCadences,
       BenchmarkChunkYears: benchmarkChunkYears,
       BenchmarkTruthHours: benchmarkTruthHours);
@@ -994,13 +1280,13 @@ internal static class Program
       Spice.WebDataGenerator
 
       Usage:
-        dotnet run --project Spice.WebDataGenerator -- --spk <path> --output <dir> [options]
+        dotnet run --project Spice.WebDataGenerator -- --output <dir> [options]
 
       Required:
-        --spk <path>         Path to the planetary SPK kernel, such as de441t.bsp.
         --output <dir>       Output directory for generated manifest and chunk files.
 
       Optional:
+        --spk <path>         Path to the planetary SPK kernel, such as de441t.bsp. Required for ephemeris generation modes.
         --lsk <path>         Optional leap-second kernel path. Ignored by the current approximate benchmark time conversion.
         --start-year <year>  Coverage start year. Default: 1950.
         --end-year <year>    Coverage end year. Default: 2050.
@@ -1008,13 +1294,17 @@ internal static class Program
         --sample-days <n>    Sample spacing inside a chunk. Default: 365.
         --center <naif-id>   Center body id for generated states. Default: 10.
         --body <naif-id>     Body NAIF id to include. Repeat to override the default body set.
+        --metadata-kernel    Path to a text kernel with body metadata assignments. Repeat to merge multiple kernels with last-one-wins precedence.
         --body-cadence       Per-body cadence override in the form <naif-id>:<days>. Repeat as needed.
+        --metadata-only      Export only the merged body metadata snapshot. In this mode --spk is optional and no chunk files are generated.
         --benchmark-mercury  Generate multiple exports and compare Mercury Hermite interpolation error by cadence.
         --benchmark-bodies   Generate multiple exports and compare Hermite interpolation error for every selected body.
         --benchmark-configured-cadence
                             Generate one export using the configured default cadence plus per-body overrides, then validate it body by body.
         --benchmark-configured-chunk-years
                             Generate configured mixed-cadence exports across several shared chunk durations and compare size plus validation results.
+        --dump-daf-comments
+                            Print the SPK DAF comment area and the count of parsed comment symbols, then exit.
         --benchmark-cadences Comma-separated cadence list in days. Default: 90,30,14,7,3.
         --benchmark-chunk-years
                             Comma-separated chunk duration list in years. Default: current chunk years, 25, 10.
@@ -1023,7 +1313,8 @@ internal static class Program
 
       Notes:
         This benchmark step emits manifest and chunk JSON files using an approximate UTC-to-TDB conversion.
-        Leap seconds and kernel-derived metadata extraction will arrive in later steps.
+        Leap seconds still use the current approximate placeholder path.
+        Metadata extraction currently targets straightforward BODYnnn_* assignments from text kernels such as generic PCK/TPC inputs.
       """);
   }
 
@@ -1063,7 +1354,7 @@ internal static class Program
   };
 
   readonly record struct GeneratorOptions(
-    string SpkPath,
+    string? SpkPath,
     string? LskPath,
     string OutputPath,
     int StartYear,
@@ -1072,11 +1363,14 @@ internal static class Program
     int SampleDays,
     int CenterBodyId,
     IReadOnlyList<int> BodyIds,
+    IReadOnlyList<string> MetadataKernelPaths,
     IReadOnlyDictionary<int, int> BodyCadenceOverrides,
+    bool MetadataOnly,
     bool BenchmarkMercury,
     bool BenchmarkBodies,
     bool BenchmarkConfiguredCadence,
     bool BenchmarkConfiguredChunkYears,
+    bool DumpDafComments,
     IReadOnlyList<int> BenchmarkCadences,
     IReadOnlyList<int> BenchmarkChunkYears,
     int BenchmarkTruthHours);
@@ -1097,6 +1391,14 @@ internal static class Program
     int SourceBodyId,
     string SourceBodyName,
     int SampleDays);
+
+  readonly record struct MetadataKernelPool(
+    string[] SourcePaths,
+    IReadOnlyDictionary<string, TextKernelParser.TextKernelAssignment> Assignments);
+
+  readonly record struct MetadataSnapshotOutput(
+    string OutputPath,
+    int BodyCount);
 
   readonly record struct GenerationOutput(string ManifestPath, GeneratedChunkSummary[] ChunkSummaries, long TotalBytes, long TotalGzipBytes);
 
@@ -1127,9 +1429,26 @@ internal static class Program
     int ChunkYears,
     int DefaultSampleDays,
     int CenterBodyId,
+    string[] MetadataKernelPaths,
     ManifestRuntimeLayout RuntimeLayout,
     ManifestBody[] Bodies,
     ManifestChunk[] Chunks);
+
+  sealed record MetadataSnapshot(
+    int SchemaVersion,
+    DateTimeOffset GeneratedAtUtc,
+    MetadataKernelFile[] KernelFiles,
+    MetadataSnapshotBody[] Bodies);
+
+  sealed record MetadataKernelFile(
+    string FileName,
+    long ByteLength,
+    string Sha256);
+
+  sealed record MetadataSnapshotBody(
+    int BodyId,
+    string BodyName,
+    ManifestBodyMetadata? Metadata);
 
   sealed record MercuryBenchmarkReport(
     DateTimeOffset GeneratedAtUtc,
@@ -1221,7 +1540,38 @@ internal static class Program
     string VelocityUnits,
     string InterpolationHint);
 
-  sealed record ManifestBody(int BodyId, string BodyName, int SourceBodyId, string SourceBodyName, int SampleDays);
+  sealed record ManifestBody(
+    int BodyId,
+    string BodyName,
+    int SourceBodyId,
+    string SourceBodyName,
+    int SampleDays,
+    ManifestBodyMetadata? Metadata);
+
+  sealed record ManifestBodyMetadata(
+    double[]? RadiiKm,
+    double? MeanRadiusKm,
+    double? GravitationalParameterKm3PerSec2,
+    ManifestPoleOrientation? PoleOrientation,
+    ManifestRotationModel? RotationModel);
+
+  sealed record ManifestPoleOrientation(
+    string ReferenceEpoch,
+    double[]? PoleRightAscensionDegreesCoefficients,
+    double[]? PoleDeclinationDegreesCoefficients,
+    double[]? NutationPrecessionRightAscensionDegreesCoefficients,
+    double[]? NutationPrecessionDeclinationDegreesCoefficients,
+    double? PoleRightAscensionDegreesAtReferenceEpoch,
+    double? PoleDeclinationDegreesAtReferenceEpoch,
+    double[]? NorthPoleUnitVectorJ2000,
+    double? AxialTiltDegreesRelativeToJ2000Ecliptic);
+
+  sealed record ManifestRotationModel(
+    double[]? PrimeMeridianDegreesCoefficients,
+    double[]? NutationPrecessionPrimeMeridianDegreesCoefficients,
+    double? PrimeMeridianRateDegreesPerDay,
+    double? SiderealRotationPeriodHours,
+    bool? IsRetrograde);
 
   sealed record ManifestChunk(
     string FileName,

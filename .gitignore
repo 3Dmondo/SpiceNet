@@ -52,3 +52,6 @@ Spice.IntegrationTests/TestData/cache/
 
 # Generated web benchmark artifacts
 artifacts/web-data/
+
+# Downloaded NAIF cache for web-data metadata updates
+artifacts/kernel-cache/

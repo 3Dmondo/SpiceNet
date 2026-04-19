@@ -1,0 +1,672 @@
+{
+  "SchemaVersion": 1,
+  "GeneratedAtUtc": "2026-04-19T19:29:13.8713405+00:00",
+  "KernelFiles": [
+    {
+      "FileName": "gm_de440.tpc",
+      "ByteLength": 12406,
+      "Sha256": "924DDF4FB9EAD9FE8A1AA55780BCABDE40B09D00065D58226E24B68D8092F140"
+    },
+    {
+      "FileName": "pck00011.tpc",
+      "ByteLength": 131226,
+      "Sha256": "3DFF7B1DBECEAA01F25467767D3FA25816051C85D162D1EDF04ACB310EE28BB1"
+    }
+  ],
+  "Bodies": [
+    {
+      "BodyId": 10,
+      "BodyName": "Sun",
+      "Metadata": {
+        "RadiiKm": [
+          695700,
+          695700,
+          695700
+        ],
+        "MeanRadiusKm": 695700,
+        "GravitationalParameterKm3PerSec2": 132712440041.27942,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            286.13,
+            0,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            63.87,
+            0,
+            0
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 286.13,
+          "PoleDeclinationDegreesAtReferenceEpoch": 63.87,
+          "NorthPoleUnitVectorJ2000": [
+            0.12235349347232782,
+            -0.42307208364764326,
+            0.8977971010607901
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 7.251726805707719
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            84.176,
+            14.1844,
+            0
+          ],
+          "PrimeMeridianRateDegreesPerDay": 14.1844,
+          "SiderealRotationPeriodHours": 609.1198781760244,
+          "IsRetrograde": false
+        }
+      }
+    },
+    {
+      "BodyId": 199,
+      "BodyName": "Mercury",
+      "Metadata": {
+        "RadiiKm": [
+          2440.53,
+          2440.53,
+          2438.26
+        ],
+        "MeanRadiusKm": 2439.7733333333335,
+        "GravitationalParameterKm3PerSec2": 22031.868551400003,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            281.0103,
+            -0.0328,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            61.4155,
+            -0.0049,
+            0
+          ],
+          "NutationPrecessionRightAscensionDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "NutationPrecessionDeclinationDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 281.0103,
+          "PoleDeclinationDegreesAtReferenceEpoch": 61.4155,
+          "NorthPoleUnitVectorJ2000": [
+            0.09137781820826626,
+            -0.46964735036425964,
+            0.8781124419089662
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 7.036926878734162
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            329.5988,
+            6.1385108,
+            0
+          ],
+          "NutationPrecessionPrimeMeridianDegreesCoefficients": [
+            0.01067257,
+            -0.00112309,
+            -0.0001104,
+            -2.539E-05,
+            -5.71E-06
+          ],
+          "PrimeMeridianRateDegreesPerDay": 6.1385108,
+          "SiderealRotationPeriodHours": 1407.5075016565909,
+          "IsRetrograde": false
+        }
+      }
+    },
+    {
+      "BodyId": 299,
+      "BodyName": "Venus",
+      "Metadata": {
+        "RadiiKm": [
+          6051.8,
+          6051.8,
+          6051.8
+        ],
+        "MeanRadiusKm": 6051.8,
+        "GravitationalParameterKm3PerSec2": 324858.592,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            272.76,
+            0,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            67.16,
+            0,
+            0
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 272.76,
+          "PoleDeclinationDegreesAtReferenceEpoch": 67.16,
+          "NorthPoleUnitVectorJ2000": [
+            0.018690814168902073,
+            -0.3877088083617989,
+            0.9215923900425705
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 1.2390087143423558
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            160.2,
+            -1.4813688,
+            0
+          ],
+          "PrimeMeridianRateDegreesPerDay": -1.4813688,
+          "SiderealRotationPeriodHours": 5832.443615661407,
+          "IsRetrograde": true
+        }
+      }
+    },
+    {
+      "BodyId": 301,
+      "BodyName": "Moon",
+      "Metadata": {
+        "RadiiKm": [
+          1737.4,
+          1737.4,
+          1737.4
+        ],
+        "MeanRadiusKm": 1737.4000000000003,
+        "GravitationalParameterKm3PerSec2": 4902.80011845755,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            269.9949,
+            0.0031,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            66.5392,
+            0.013,
+            0
+          ],
+          "NutationPrecessionRightAscensionDegreesCoefficients": [
+            -3.8787,
+            -0.1204,
+            0.07,
+            -0.0172,
+            0,
+            0.0072,
+            0,
+            0,
+            0,
+            -0.0052,
+            0,
+            0,
+            0.0043
+          ],
+          "NutationPrecessionDeclinationDegreesCoefficients": [
+            1.5419,
+            0.0239,
+            -0.0278,
+            0.0068,
+            0,
+            -0.0029,
+            0.0009,
+            0,
+            0,
+            0.0008,
+            0,
+            0,
+            -0.0009
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 269.9949,
+          "PoleDeclinationDegreesAtReferenceEpoch": 66.5392,
+          "NorthPoleUnitVectorJ2000": [
+            -3.5437512628789284E-05,
+            -0.3981215499370551,
+            0.9173326715101233
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 0.02160442882264236
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            38.3213,
+            13.17635815,
+            -1.4E-12
+          ],
+          "NutationPrecessionPrimeMeridianDegreesCoefficients": [
+            3.561,
+            0.1208,
+            -0.0642,
+            0.0158,
+            0.0252,
+            -0.0066,
+            -0.0047,
+            -0.0046,
+            0.0028,
+            0.0052,
+            0.004,
+            0.0019,
+            -0.0044
+          ],
+          "PrimeMeridianRateDegreesPerDay": 13.17635815,
+          "SiderealRotationPeriodHours": 655.7198811418161,
+          "IsRetrograde": false
+        }
+      }
+    },
+    {
+      "BodyId": 399,
+      "BodyName": "Earth",
+      "Metadata": {
+        "RadiiKm": [
+          6378.1366,
+          6378.1366,
+          6356.7519
+        ],
+        "MeanRadiusKm": 6371.008366666666,
+        "GravitationalParameterKm3PerSec2": 398600.43550702266,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            0,
+            -0.641,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            90,
+            -0.557,
+            0
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 0,
+          "PoleDeclinationDegreesAtReferenceEpoch": 90,
+          "NorthPoleUnitVectorJ2000": [
+            6.123233995736766E-17,
+            0,
+            1
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 23.439291111000003
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            190.147,
+            360.9856235,
+            0
+          ],
+          "PrimeMeridianRateDegreesPerDay": 360.9856235,
+          "SiderealRotationPeriodHours": 23.93447117430703,
+          "IsRetrograde": false
+        }
+      }
+    },
+    {
+      "BodyId": 499,
+      "BodyName": "Mars",
+      "Metadata": {
+        "RadiiKm": [
+          3396.19,
+          3396.19,
+          3376.2
+        ],
+        "MeanRadiusKm": 3389.5266666666666,
+        "GravitationalParameterKm3PerSec2": 42828.37362069909,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            317.269202,
+            -0.10927547,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            54.432516,
+            -0.05827105,
+            0
+          ],
+          "NutationPrecessionRightAscensionDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            6.8E-05,
+            0.000238,
+            5.2E-05,
+            9E-06,
+            0.419057
+          ],
+          "NutationPrecessionDeclinationDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5.1E-05,
+            0.000141,
+            3.1E-05,
+            5E-06,
+            1.591274
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 317.269202,
+          "PoleDeclinationDegreesAtReferenceEpoch": 54.432516,
+          "NorthPoleUnitVectorJ2000": [
+            0.42725938216877546,
+            -0.39468904535932214,
+            0.8134309914320349
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 25.40382851608353
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            176.049863,
+            350.891982443297,
+            0
+          ],
+          "NutationPrecessionPrimeMeridianDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.000145,
+            0.000157,
+            4E-05,
+            1E-06,
+            1E-06,
+            0.584542
+          ],
+          "PrimeMeridianRateDegreesPerDay": 350.891982443297,
+          "SiderealRotationPeriodHours": 24.622962143046955,
+          "IsRetrograde": false
+        }
+      }
+    },
+    {
+      "BodyId": 599,
+      "BodyName": "Jupiter",
+      "Metadata": {
+        "RadiiKm": [
+          71492,
+          71492,
+          66854
+        ],
+        "MeanRadiusKm": 69946,
+        "GravitationalParameterKm3PerSec2": 126686531.9003704,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            268.056595,
+            -0.006499,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            64.495303,
+            0.002413,
+            0
+          ],
+          "NutationPrecessionRightAscensionDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.000117,
+            0.000938,
+            0.001432,
+            3E-05,
+            0.00215
+          ],
+          "NutationPrecessionDeclinationDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            5E-05,
+            0.000404,
+            0.000617,
+            -1.3E-05,
+            0.000926
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 268.056595,
+          "PoleDeclinationDegreesAtReferenceEpoch": 64.495303,
+          "NorthPoleUnitVectorJ2000": [
+            -0.014602136035502304,
+            -0.43033742027421007,
+            0.9025499888288396
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 2.2165001199952594
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            284.95,
+            870.536,
+            0
+          ],
+          "NutationPrecessionPrimeMeridianDegreesCoefficients": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "PrimeMeridianRateDegreesPerDay": 870.536,
+          "SiderealRotationPeriodHours": 9.924919819513496,
+          "IsRetrograde": false
+        }
+      }
+    },
+    {
+      "BodyId": 699,
+      "BodyName": "Saturn",
+      "Metadata": {
+        "RadiiKm": [
+          60268,
+          60268,
+          54364
+        ],
+        "MeanRadiusKm": 58300,
+        "GravitationalParameterKm3PerSec2": 37931206.23436167,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            40.589,
+            -0.036,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            83.537,
+            -0.004,
+            0
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 40.589,
+          "PoleDeclinationDegreesAtReferenceEpoch": 83.537,
+          "NorthPoleUnitVectorJ2000": [
+            0.08547883186107152,
+            0.07323575787752876,
+            0.9936447519469777
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 28.052173725165137
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            38.9,
+            810.7939024,
+            0
+          ],
+          "PrimeMeridianRateDegreesPerDay": 810.7939024,
+          "SiderealRotationPeriodHours": 10.656222221732387,
+          "IsRetrograde": false
+        }
+      }
+    },
+    {
+      "BodyId": 799,
+      "BodyName": "Uranus",
+      "Metadata": {
+        "RadiiKm": [
+          25559,
+          25559,
+          24973
+        ],
+        "MeanRadiusKm": 25363.666666666668,
+        "GravitationalParameterKm3PerSec2": 5793951.256527211,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            257.311,
+            0,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            -15.175,
+            0,
+            0
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 257.311,
+          "PoleDeclinationDegreesAtReferenceEpoch": -15.175,
+          "NorthPoleUnitVectorJ2000": [
+            -0.21199958153779855,
+            -0.9415591572895124,
+            -0.2617680858165514
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 82.27820151442738
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            203.81,
+            -501.1600928,
+            0
+          ],
+          "PrimeMeridianRateDegreesPerDay": -501.1600928,
+          "SiderealRotationPeriodHours": 17.240000000255407,
+          "IsRetrograde": true
+        }
+      }
+    },
+    {
+      "BodyId": 899,
+      "BodyName": "Neptune",
+      "Metadata": {
+        "RadiiKm": [
+          24764,
+          24764,
+          24341
+        ],
+        "MeanRadiusKm": 24623,
+        "GravitationalParameterKm3PerSec2": 6835103.145462294,
+        "PoleOrientation": {
+          "ReferenceEpoch": "J2000",
+          "PoleRightAscensionDegreesCoefficients": [
+            299.36,
+            0,
+            0
+          ],
+          "PoleDeclinationDegreesCoefficients": [
+            43.46,
+            0,
+            0
+          ],
+          "NutationPrecessionRightAscensionDegreesCoefficients": [
+            0.7,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "NutationPrecessionDeclinationDegreesCoefficients": [
+            -0.51,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "PoleRightAscensionDegreesAtReferenceEpoch": 299.36,
+          "PoleDeclinationDegreesAtReferenceEpoch": 43.46,
+          "NorthPoleUnitVectorJ2000": [
+            0.3558832568586489,
+            -0.6326232961330794,
+            0.6878480011437113
+          ],
+          "AxialTiltDegreesRelativeToJ2000Ecliptic": 28.02638587729433
+        },
+        "RotationModel": {
+          "PrimeMeridianDegreesCoefficients": [
+            249.978,
+            541.1397757,
+            0
+          ],
+          "NutationPrecessionPrimeMeridianDegreesCoefficients": [
+            -0.48,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "PrimeMeridianRateDegreesPerDay": 541.1397757,
+          "SiderealRotationPeriodHours": 15.966299998597572,
+          "IsRetrograde": false
+        }
+      }
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Web Data Generator
 
-Status: Compact web-data format benchmarked
+Status: Compact web-data format benchmarked with real generic PCK metadata snapshot flow
 
 ## Goal
 
@@ -22,16 +22,21 @@ At this step the CLI:
 - emits minified web assets rather than inspection-oriented pretty JSON
 - stores body names, source ids, and cadence metadata in the manifest instead of repeating them in every chunk
 - stores chunk sample data as flattened numeric state arrays instead of per-sample objects
+- accepts repeated `--metadata-kernel` inputs and merges straightforward `BODYnnn_*` assignments from text kernels
+- emits first-pass body metadata in the manifest when radii, GM, pole, and prime-meridian assignments are available
+- supports a metadata-only export mode so parsed body metadata can be versioned without checking NAIF source kernels into git
 - falls back to planetary barycenter query ids when a requested display body is not directly available in the kernel
 - can benchmark Mercury interpolation error across multiple sample cadences while also generating real output files for size inspection
 - can benchmark all selected bodies across multiple sample cadences and record both raw and gzip-compressed output sizes
 - can benchmark one configured mixed-cadence export and validate it body by body against live `SpiceNet` queries
 - can benchmark several shared chunk durations for one configured mixed-cadence profile and compare both total and per-chunk download sizes
+- can dump the SPK DAF comment area for inspection through the same generator CLI
 
 Current limitations:
 
 - UTC to TDB conversion is currently approximate and ignores leap seconds
-- kernel-derived metadata extraction is not implemented yet
+- text-kernel metadata extraction currently handles direct `BODYnnn_*` assignments rather than the full NAIF kernel-pool grammar
+- derived axial tilt currently uses the constant `POLE_RA` and `POLE_DEC` terms at `J2000` and ignores periodic nutation or precession terms
 - numeric precision is still emitted using default JSON double formatting without extra size tuning
 
 ## Initial CLI Shape
@@ -56,6 +61,27 @@ dotnet run --project Spice.WebDataGenerator -- `
   --output .\artifacts\web-data `
   --sample-days 180 `
   --body 10 --body 399 --body 301
+```
+
+Optional repeated metadata-kernel input:
+
+```powershell
+dotnet run --project Spice.WebDataGenerator -- `
+  --spk .\kernels\de440s.bsp `
+  --metadata-kernel .\kernels\pck00011.tpc `
+  --metadata-kernel .\kernels\gm_de440.tpc `
+  --output .\artifacts\web-data\with-metadata `
+  --center 0
+```
+
+Metadata-only export mode:
+
+```powershell
+dotnet run --project Spice.WebDataGenerator -- `
+  --metadata-only `
+  --metadata-kernel .\kernels\pck00011.tpc `
+  --metadata-kernel .\kernels\gm_de440.tpc `
+  --output .\Spice.WebDataGenerator\ReferenceData
 ```
 
 Per-body cadence override:
@@ -131,15 +157,34 @@ dotnet run --project Spice.WebDataGenerator -- `
   --benchmark-truth-hours 12
 ```
 
+DAF comment inspection mode:
+
+```powershell
+dotnet run --project Spice.WebDataGenerator -- `
+  --spk .\kernels\de440s.bsp `
+  --output .\artifacts\web-data\comment-dump `
+  --dump-daf-comments
+```
+
 ## Current Output Shape
 
 - `manifest.json` is minified and captures:
   - schema version
   - source SPK path and optional LSK path
+  - optional metadata-kernel input paths
   - coverage years, shared chunk duration, default cadence, and center body id
   - one explicit runtime-layout section describing chunk boundary time encoding, sample timestamp reconstruction, sample value layout, units, and interpolation intent
-  - one body table with display ids, display names, resolved source ids, source names, and actual sample cadence
+  - one body table with display ids, display names, resolved source ids, source names, actual sample cadence, and optional metadata
   - one chunk table with file names plus UTC and approximate TDB coverage boundaries
+- manifest body metadata currently includes:
+  - `RadiiKm` and `MeanRadiusKm`
+  - `GravitationalParameterKm3PerSec2`
+  - pole-orientation coefficients plus a derived north-pole unit vector and axial tilt relative to the `J2000` ecliptic
+  - prime-meridian coefficients plus a derived sidereal rotation period and retrograde flag
+- `body-metadata.json` from metadata-only mode is indented and captures:
+  - schema version and generation timestamp
+  - source metadata-kernel file names, byte lengths, and SHA-256 hashes
+  - one body table with names plus the same metadata block used in normal manifests
 - `chunk-<start>-<end>.json` is minified and stores:
   - schema version
   - center body id
@@ -162,7 +207,31 @@ Historical note:
 Runtime-contract note:
 
 - the compact schema is now explicit enough to be a reasonable Milestone 5 runtime contract candidate
+- the manifest now carries a first-pass body metadata block that is plausible for browser consumption, but it should still be treated as provisional until it is exercised against real generic `PCK/TPC` kernels
 - provenance and benchmark-report fields are still primarily generator-side diagnostics and should not be treated as the browser-facing hot-path contract
+
+## Real Metadata Snapshot Workflow
+
+The repository now keeps the upstream NAIF text kernels out of git and versions only the parsed metadata snapshot.
+
+- Download cache: `artifacts/kernel-cache/naif/pck/`
+- Versioned snapshot: `Spice.WebDataGenerator/ReferenceData/body-metadata.json`
+- Update script: `scripts/Update-WebDataMetadataSnapshot.ps1`
+
+The update script currently downloads these official NAIF generic kernels:
+
+- `https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc`
+- `https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/gm_de440.tpc`
+
+It then runs the generator in `--metadata-only` mode for the current web body set and overwrites the committed snapshot.
+
+Typical refresh command:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Update-WebDataMetadataSnapshot.ps1
+```
+
+The snapshot produced from the current real-data run includes the Sun, planets, and Moon, and the parser successfully extracted radii, GM, pole orientation coefficients, and prime-meridian coefficients from the official generic kernels for that body set.
 
 ## de440s Mercury Benchmark Snapshot
 
@@ -318,8 +387,8 @@ Current reading:
 
 ## Planned Next Steps
 
-1. Add kernel-derived physical metadata extraction with radii, axial tilt, and rotation period prioritized first.
-2. Add local cache and CI kernel-acquisition documentation once the first generation workflow is implemented.
+1. Decide whether the web app should consume the committed metadata snapshot directly or continue to ingest metadata only through full ephemeris manifests.
+2. Add local cache and CI kernel-acquisition documentation for the ephemeris kernels, mirroring the new metadata update flow.
 3. Record stronger source provenance and determinism details in the manifest output.
 4. Evaluate whether numeric rounding or alternate packing is worth the added complexity after the metadata step.
 5. Defer proper LSK-backed time conversion to a later milestone after the web data shape is settled.
