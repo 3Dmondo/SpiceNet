@@ -1,6 +1,6 @@
 # Web Data Generator
 
-Status: Compact web-data format benchmarked with real generic PCK metadata snapshot flow
+Status: SpiceNet-side Milestone 5 handoff complete and ready for web integration
 
 ## Goal
 
@@ -9,6 +9,13 @@ Provide a dedicated `SpiceNet` CLI that turns SPICE kernel inputs into web-ready
 ## Current Step
 
 The repository now includes a dedicated auxiliary project named `Spice.WebDataGenerator`.
+
+The accepted Milestone 5 `SpiceNet` baseline is now:
+
+- `de440s.bsp` for ephemeris data
+- `naif0012.tls` as the downloaded companion LSK
+- `pck00011.tpc` plus `gm_de440.tpc` for committed metadata extraction
+- approximate UTC-to-TDB conversion with proper leap-second-aware handling explicitly deferred to a later milestone
 
 At this step the CLI:
 
@@ -39,7 +46,7 @@ At this step the CLI:
 
 Current limitations:
 
-- UTC to TDB conversion is currently approximate and ignores leap seconds
+- UTC to TDB conversion remains approximate; proper leap-second-aware conversion is deferred to a later milestone
 - text-kernel metadata extraction currently handles direct `BODYnnn_*` assignments rather than the full NAIF kernel-pool grammar
 - derived axial tilt currently uses the constant `POLE_RA` and `POLE_DEC` terms at `J2000` and ignores periodic nutation or precession terms
 - numeric precision is still emitted using default JSON double formatting without extra size tuning
@@ -48,7 +55,7 @@ Current limitations:
 
 ```powershell
 dotnet run --project Spice.WebDataGenerator -- `
-  --spk .\kernels\de441t.bsp `
+  --spk .\kernels\de440s.bsp `
   --output .\artifacts\web-data `
   --start-year 1950 `
   --end-year 2050 `
@@ -61,7 +68,7 @@ Optional repeated body override and optional LSK path:
 
 ```powershell
 dotnet run --project Spice.WebDataGenerator -- `
-  --spk .\kernels\de441t.bsp `
+  --spk .\kernels\de440s.bsp `
   --lsk .\kernels\naif0012.tls `
   --output .\artifacts\web-data `
   --sample-days 180 `
@@ -179,6 +186,7 @@ dotnet run --project Spice.WebDataGenerator -- `
   - one generator block naming the tool, schema version, and optional profile name
   - generation timestamp plus a `GeneratedAtUtcSource` field indicating whether it came from live UTC or `SOURCE_DATE_EPOCH`
   - one source-file table covering the SPK, optional LSK, and metadata kernels by file name, size, SHA-256, and optional canonical source URL
+  - one body-set block describing whether the run used the built-in default body set or an explicit list, plus the requested ids and emitted body ordering
   - coverage years, shared chunk duration, default cadence, and center body id
   - one explicit runtime-layout section describing chunk boundary time encoding, sample timestamp reconstruction, sample value layout, units, and interpolation intent
   - one body table with display ids, display names, resolved source ids, source names, actual sample cadence, and optional metadata
@@ -218,7 +226,7 @@ Historical note:
 Runtime-contract note:
 
 - the compact schema is now explicit enough to be a reasonable Milestone 5 runtime contract candidate
-- the manifest now carries a first-pass body metadata block that is plausible for browser consumption, but it should still be treated as provisional until it is exercised against real generic `PCK/TPC` kernels
+- the manifest now carries the accepted Milestone 5 body metadata block for browser-side integration, based on real generic `PCK/TPC` inputs
 - provenance and benchmark-report fields are still primarily generator-side diagnostics and should not be treated as the browser-facing hot-path contract
 
 Determinism note:
@@ -290,8 +298,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\Generate-WebDataBaselineDatas
 
 Current baseline note:
 
-- the scripted default uses `de440s.bsp` because it is the current small official generic kernel that matches the benchmark work completed in this repository
-- `de441` is available from the official NAIF generic directory only as two very large split files, so the `de441t` milestone target still needs a separately pinned source decision before it becomes the scripted default
+- the scripted default uses `de440s.bsp`, and that is now the accepted Milestone 5 baseline for `SpiceNet`
+- proper leap-second-aware conversion remains deferred even though the workflow downloads `naif0012.tls`
 - if we later choose a different kernel source, the script can already be redirected through `-SpkUrl` and `-SpkFileName`
 
 CI note:
@@ -453,10 +461,8 @@ Current reading:
 - `20` and `10` years keep shrinking individual downloads, but the added request count starts to look less attractive for the first implementation
 - a shared `25` year chunk plan is now the leading baseline for the web delivery format
 
-## Planned Next Steps
+## Handoff And Deferred Work
 
-1. Decide whether the web app should consume the committed metadata snapshot directly or continue to ingest metadata only through full ephemeris manifests.
-2. Add local cache and CI kernel-acquisition documentation for the ephemeris kernels, mirroring the new metadata update flow.
-3. Record stronger source provenance and determinism details in the manifest output.
-4. Evaluate whether numeric rounding or alternate packing is worth the added complexity after the metadata step.
-5. Defer proper LSK-backed time conversion to a later milestone after the web data shape is settled.
+1. The `SpiceNet` side is now ready for Milestone 5 web-app integration against the `de440s` baseline manifest, chunk, and metadata contracts documented above.
+2. Proper LSK-backed leap-second-aware UTC-to-TDB conversion is explicitly deferred to a later milestone.
+3. Broader NAIF kernel-pool parsing, alternate kernel sources, and tighter numeric packing remain optional future improvements rather than Milestone 5 blockers.

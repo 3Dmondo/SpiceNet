@@ -23,6 +23,7 @@ internal static class Program
   const double J2000MeanObliquityDegrees = 23.439291111;
   const double UniversalGravitationalConstantKm3PerKgSec2 = 6.67430e-20;
   const string SourceDateEpochEnvironmentVariable = "SOURCE_DATE_EPOCH";
+  const string ApproximateUtcToTdbNote = "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this milestone. Proper LSK-backed conversion is deferred.";
 
   static readonly JsonSerializerOptions ReportJsonOptions = new()
   {
@@ -236,7 +237,7 @@ internal static class Program
       EndYear: options.EndYear,
       CenterBodyId: options.CenterBodyId,
       BenchmarkTruthHours: options.BenchmarkTruthHours,
-      ApproximationNote: "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this benchmark step.",
+      ApproximationNote: ApproximateUtcToTdbNote,
       Results: results.ToArray());
   }
 
@@ -270,7 +271,7 @@ internal static class Program
       DefaultSampleDays: options.SampleDays,
       BodyCadences: BuildBodyCadenceSettings(options),
       BenchmarkTruthHours: options.BenchmarkTruthHours,
-      ApproximationNote: "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this benchmark step.",
+      ApproximationNote: ApproximateUtcToTdbNote,
       TotalOutputBytes: output.TotalBytes,
       TotalGzipBytes: output.TotalGzipBytes,
       ChunkSummaries: output.ChunkSummaries,
@@ -315,7 +316,7 @@ internal static class Program
       BodyCadences: BuildBodyCadenceSettings(options),
       BenchmarkChunkYears: options.BenchmarkChunkYears.ToArray(),
       BenchmarkTruthHours: options.BenchmarkTruthHours,
-      ApproximationNote: "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this benchmark step.",
+      ApproximationNote: ApproximateUtcToTdbNote,
       Results: results.ToArray());
   }
 
@@ -375,7 +376,7 @@ internal static class Program
       EndYear: options.EndYear,
       CenterBodyId: options.CenterBodyId,
       BenchmarkTruthHours: options.BenchmarkTruthHours,
-      ApproximationNote: "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this benchmark step.",
+      ApproximationNote: ApproximateUtcToTdbNote,
       Results: results.ToArray());
   }
 
@@ -489,19 +490,21 @@ internal static class Program
     var referenceUtc = CreateChunkBoundary(options.StartYear);
     var bodySettings = BuildBodyExportSettings(service, options, referenceUtc);
     var chunkSummaries = GenerateChunks(service, options, bodySettings);
+    var manifestBodies = bodySettings.Select((body) => BuildManifestBody(body, metadataKernelPool)).ToArray();
     var manifest = new GeneratorManifest(
       SchemaVersion: OutputSchemaVersion,
       Generator: BuildGeneratorDescriptor(options),
       GeneratedAtUtc: generatedAt.Value,
       GeneratedAtUtcSource: generatedAt.Source,
       UsesApproximateUtcConversion: true,
-      ApproximationNote: "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this benchmark step.",
+      ApproximationNote: ApproximateUtcToTdbNote,
       StartYear: options.StartYear,
       EndYear: options.EndYear,
       ChunkYears: options.ChunkYears,
       DefaultSampleDays: options.SampleDays,
       CenterBodyId: options.CenterBodyId,
       SourceFiles: BuildGenerationSourceFiles(options),
+      BodySet: BuildManifestBodySet(options, manifestBodies),
       RuntimeLayout: new ManifestRuntimeLayout(
         ChunkBoundaryTimeEncoding: ChunkBoundaryTimeEncoding,
         SampleTimeEncoding: SampleTimeEncoding,
@@ -510,7 +513,7 @@ internal static class Program
         PositionUnits: PositionUnits,
         VelocityUnits: VelocityUnits,
         InterpolationHint: InterpolationHint),
-      Bodies: bodySettings.Select((body) => BuildManifestBody(body, metadataKernelPool)).ToArray(),
+      Bodies: manifestBodies,
       Chunks: chunkSummaries.Select(static (chunk) => new ManifestChunk(
         FileName: chunk.FileName,
         StartUtc: chunk.StartUtc,
@@ -772,6 +775,17 @@ internal static class Program
 
     return files.ToArray();
   }
+
+  static MetadataBodySet BuildManifestBodySet(
+    GeneratorOptions options,
+    IReadOnlyList<ManifestBody> manifestBodies)
+    => new(
+      SelectionMode: options.UsesDefaultBodySet
+        ? "default_body_set"
+        : "explicit_body_list",
+      RequestedBodyIds: options.BodyIds.ToArray(),
+      OutputBodyIds: manifestBodies.Select(static (body) => body.BodyId).ToArray(),
+      OutputOrdering: "requested_body_order");
 
   static ManifestSourceFile BuildManifestSourceFile(string role, string path, string? sourceUrl)
   {
@@ -1496,7 +1510,7 @@ internal static class Program
         --output <dir>       Output directory for generated manifest and chunk files.
 
       Optional:
-        --spk <path>         Path to the planetary SPK kernel, such as de441t.bsp. Required for ephemeris generation modes.
+        --spk <path>         Path to the planetary SPK kernel, such as de440s.bsp. Required for ephemeris generation modes.
         --lsk <path>         Optional leap-second kernel path. Ignored by the current approximate benchmark time conversion.
         --start-year <year>  Coverage start year. Default: 1950.
         --end-year <year>    Coverage end year. Default: 2050.
@@ -1527,8 +1541,8 @@ internal static class Program
                             Truth sampling step in hours for benchmark validation. Default: 12.
 
       Notes:
-        This benchmark step emits manifest and chunk JSON files using an approximate UTC-to-TDB conversion.
-        Leap seconds still use the current approximate placeholder path.
+        This milestone step emits manifest and chunk JSON files using an approximate UTC-to-TDB conversion.
+        Proper leap-second-aware conversion is deferred to a later milestone.
         Metadata extraction currently targets straightforward BODYnnn_* assignments from text kernels such as generic PCK/TPC inputs.
       """);
   }
@@ -1654,6 +1668,7 @@ internal static class Program
     int DefaultSampleDays,
     int CenterBodyId,
     ManifestSourceFile[] SourceFiles,
+    MetadataBodySet BodySet,
     ManifestRuntimeLayout RuntimeLayout,
     ManifestBody[] Bodies,
     ManifestChunk[] Chunks);
