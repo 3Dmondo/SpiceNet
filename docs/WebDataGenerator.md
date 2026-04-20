@@ -184,6 +184,8 @@ dotnet run --project Spice.WebDataGenerator -- `
   - one chunk table with file names plus UTC and approximate TDB coverage boundaries
 - manifest body metadata currently includes:
   - `RadiiKm` and `MeanRadiusKm`
+  - one derived shape block with equatorial radius, polar radius, volume-equivalent radius, volume, flattening, and simple spherical/tri-axial flags
+  - one derived physical-properties block with approximate mass, bulk density, surface gravity, and escape velocity based on the emitted GM plus reference radius and volume
   - `GravitationalParameterKm3PerSec2`
   - pole-orientation coefficients plus a derived north-pole unit vector and axial tilt relative to the `J2000` ecliptic
   - prime-meridian coefficients plus a derived sidereal rotation period and retrograde flag

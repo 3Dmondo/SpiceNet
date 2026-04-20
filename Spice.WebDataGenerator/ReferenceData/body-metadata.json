@@ -5,8 +5,8 @@
     "OutputSchemaVersion": 1,
     "ProfileName": "current-web-body-metadata"
   },
-  "GeneratedAtUtc": "2024-01-01T00:00:00+00:00",
-  "GeneratedAtUtcSource": "source_date_epoch",
+  "GeneratedAtUtc": "2026-04-20T06:55:06.9795557+00:00",
+  "GeneratedAtUtcSource": "current_utc",
   "KernelFiles": [
     {
       "FileName": "gm_de440.tpc",
@@ -30,7 +30,23 @@
           695700
         ],
         "MeanRadiusKm": 695700,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 695700,
+          "PolarRadiusKm": 695700,
+          "VolumeEquivalentRadiusKm": 695700,
+          "ApproxVolumeKm3": 1.410440010853996E+18,
+          "Flattening": 0,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": true
+        },
         "GravitationalParameterKm3PerSec2": 132712440041.27942,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 695700,
+          "ApproximateMassKg": 1.988409871316534E+30,
+          "ApproximateSurfaceGravityMps2": 274.2001117426615,
+          "ApproximateEscapeVelocityKmPerSec": 617.6747003712708,
+          "ApproximateBulkDensityKgPerM3": 1409.7798247460291
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -74,7 +90,23 @@
           2438.26
         ],
         "MeanRadiusKm": 2439.7733333333335,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 2440.53,
+          "PolarRadiusKm": 2438.26,
+          "VolumeEquivalentRadiusKm": 2439.7730986136285,
+          "ApproxVolumeKm3": 60832676444.890045,
+          "Flattening": 0.0009301258333230822,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": false
+        },
         "GravitationalParameterKm3PerSec2": 22031.868551400003,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 2439.7730986136285,
+          "ApproximateMassKg": 3.3010006369806576E+23,
+          "ApproximateSurfaceGravityMps2": 3.701284384985007,
+          "ApproximateEscapeVelocityKmPerSec": 4.2497750700019665,
+          "ApproximateBulkDensityKgPerM3": 5426.361011702523
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -139,7 +171,23 @@
           6051.8
         ],
         "MeanRadiusKm": 6051.8,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 6051.8,
+          "PolarRadiusKm": 6051.8,
+          "VolumeEquivalentRadiusKm": 6051.8,
+          "ApproxVolumeKm3": 928415345892.8655,
+          "Flattening": 0,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": true
+        },
         "GravitationalParameterKm3PerSec2": 324858.592,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 6051.8,
+          "ApproximateMassKg": 4.867305814842006E+24,
+          "ApproximateSurfaceGravityMps2": 8.870032755895648,
+          "ApproximateEscapeVelocityKmPerSec": 10.361434672103018,
+          "ApproximateBulkDensityKgPerM3": 5242.595177227574
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -183,7 +231,23 @@
           1737.4
         ],
         "MeanRadiusKm": 1737.4000000000003,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 1737.4,
+          "PolarRadiusKm": 1737.4,
+          "VolumeEquivalentRadiusKm": 1737.4,
+          "ApproxVolumeKm3": 21967875613.287872,
+          "Flattening": 0,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": true
+        },
         "GravitationalParameterKm3PerSec2": 4902.80011845755,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 1737.4,
+          "ApproximateMassKg": 7.345789248996224E+22,
+          "ApproximateSurfaceGravityMps2": 1.6242188767123915,
+          "ApproximateEscapeVelocityKmPerSec": 2.375675851794646,
+          "ApproximateBulkDensityKgPerM3": 3343.8778415847014
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -272,7 +336,23 @@
           6356.7519
         ],
         "MeanRadiusKm": 6371.008366666666,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 6378.1366,
+          "PolarRadiusKm": 6356.7519,
+          "VolumeEquivalentRadiusKm": 6371.000385249621,
+          "ApproxVolumeKm3": 1083207113347.9102,
+          "Flattening": 0.0033528131084554717,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": false
+        },
         "GravitationalParameterKm3PerSec2": 398600.43550702266,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 6371.000385249621,
+          "ApproximateMassKg": 5.972168399787583E+24,
+          "ApproximateSurfaceGravityMps2": 9.8202491443786,
+          "ApproximateEscapeVelocityKmPerSec": 11.18613526487887,
+          "ApproximateBulkDensityKgPerM3": 5513.413202512279
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -316,7 +396,23 @@
           3376.2
         ],
         "MeanRadiusKm": 3389.5266666666666,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 3396.19,
+          "PolarRadiusKm": 3376.2,
+          "VolumeEquivalentRadiusKm": 3389.513550271081,
+          "ApproxVolumeKm3": 163117566078.03336,
+          "Flattening": 0.005886007555525526,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": false
+        },
         "GravitationalParameterKm3PerSec2": 42828.37362069909,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 3389.513550271081,
+          "ApproximateMassKg": 6.416908682663213E+23,
+          "ApproximateSurfaceGravityMps2": 3.7278363070460956,
+          "ApproximateEscapeVelocityKmPerSec": 5.027037233982904,
+          "ApproximateBulkDensityKgPerM3": 3933.9163996558445
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -427,7 +523,23 @@
           66854
         ],
         "MeanRadiusKm": 69946,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 71492,
+          "PolarRadiusKm": 66854,
+          "VolumeEquivalentRadiusKm": 69911.30840807082,
+          "ApproxVolumeKm3": 1431300752857594,
+          "Flattening": 0.0648743915403122,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": false
+        },
         "GravitationalParameterKm3PerSec2": 126686531.9003704,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 69911.30840807082,
+          "ApproximateMassKg": 1.8981246258090047E+27,
+          "ApproximateSurfaceGravityMps2": 25.920035202883568,
+          "ApproximateEscapeVelocityKmPerSec": 60.20138827330888,
+          "ApproximateBulkDensityKgPerM3": 1326.1535858340017
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -522,7 +634,23 @@
           54364
         ],
         "MeanRadiusKm": 58300,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 60268,
+          "PolarRadiusKm": 54364,
+          "VolumeEquivalentRadiusKm": 58231.993022318304,
+          "ApproxVolumeKm3": 827129617817030.8,
+          "Flattening": 0.09796243445941462,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": false
+        },
         "GravitationalParameterKm3PerSec2": 37931206.23436167,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 58231.993022318304,
+          "ApproximateMassKg": 5.683173701266301E+26,
+          "ApproximateSurfaceGravityMps2": 11.185962139799777,
+          "ApproximateEscapeVelocityKmPerSec": 36.093790858615485,
+          "ApproximateBulkDensityKgPerM3": 687.0959011557817
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -566,7 +694,23 @@
           24973
         ],
         "MeanRadiusKm": 25363.666666666668,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 25559,
+          "PolarRadiusKm": 24973,
+          "VolumeEquivalentRadiusKm": 25362.154531444983,
+          "ApproxVolumeKm3": 68335604793179.07,
+          "Flattening": 0.022927344575296372,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": false
+        },
         "GravitationalParameterKm3PerSec2": 5793951.256527211,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 25362.154531444983,
+          "ApproximateMassKg": 8.680987154498914E+25,
+          "ApproximateSurfaceGravityMps2": 9.007464278615535,
+          "ApproximateEscapeVelocityKmPerSec": 21.375158524358024,
+          "ApproximateBulkDensityKgPerM3": 1270.3461366548713
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [
@@ -610,7 +754,23 @@
           24341
         ],
         "MeanRadiusKm": 24623,
+        "ShapeModel": {
+          "EquatorialRadiusKm": 24764,
+          "PolarRadiusKm": 24341,
+          "VolumeEquivalentRadiusKm": 24622.189475123607,
+          "ApproxVolumeKm3": 62527147471702.33,
+          "Flattening": 0.01708124697141011,
+          "IsTriAxial": false,
+          "IsApproximatelySpherical": false
+        },
         "GravitationalParameterKm3PerSec2": 6835103.145462294,
+        "DerivedPhysicalProperties": {
+          "ReferenceRadiusKm": 24622.189475123607,
+          "ApproximateMassKg": 1.0240928854654861E+26,
+          "ApproximateSurfaceGravityMps2": 11.274355757278832,
+          "ApproximateEscapeVelocityKmPerSec": 23.56265365639745,
+          "ApproximateBulkDensityKgPerM3": 1637.8372065173064
+        },
         "PoleOrientation": {
           "ReferenceEpoch": "J2000",
           "PoleRightAscensionDegreesCoefficients": [

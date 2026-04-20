@@ -21,6 +21,7 @@ internal static class Program
   const string InterpolationHint = "cubic_hermite_position_velocity";
   const string MetadataReferenceEpoch = "J2000";
   const double J2000MeanObliquityDegrees = 23.439291111;
+  const double UniversalGravitationalConstantKm3PerKgSec2 = 6.67430e-20;
   const string SourceDateEpochEnvironmentVariable = "SOURCE_DATE_EPOCH";
 
   static readonly JsonSerializerOptions ReportJsonOptions = new()
@@ -833,7 +834,12 @@ internal static class Program
 
     var kernelPool = metadataKernelPool.Value;
     var radiiKm = TryGetNumericValues(kernelPool, $"BODY{bodyId}_RADII");
+    var shapeModel = BuildShapeModel(radiiKm);
     var gmKm3PerSec2 = TryGetFirstNumericValue(kernelPool, $"BODY{bodyId}_GM");
+    var derivedPhysicalProperties = BuildDerivedPhysicalProperties(
+      meanRadiusKm: radiiKm?.Average(),
+      shapeModel: shapeModel,
+      gravitationalParameterKm3PerSec2: gmKm3PerSec2);
     var poleRightAscensionCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_POLE_RA");
     var poleDeclinationCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_POLE_DEC");
     var nutationPrecessionRightAscensionCoefficients = TryGetNumericValues(kernelPool, $"BODY{bodyId}_NUT_PREC_RA");
@@ -873,7 +879,9 @@ internal static class Program
     return new ManifestBodyMetadata(
       RadiiKm: radiiKm,
       MeanRadiusKm: radiiKm?.Average(),
+      ShapeModel: shapeModel,
       GravitationalParameterKm3PerSec2: gmKm3PerSec2,
+      DerivedPhysicalProperties: derivedPhysicalProperties,
       PoleOrientation: poleRightAscensionCoefficients is not null ||
                        poleDeclinationCoefficients is not null ||
                        nutationPrecessionRightAscensionCoefficients is not null ||
@@ -898,6 +906,68 @@ internal static class Program
           SiderealRotationPeriodHours: siderealRotationPeriodHours,
           IsRetrograde: isRetrograde)
         : null);
+  }
+
+  static ManifestShapeModel? BuildShapeModel(double[]? radiiKm)
+  {
+    if (radiiKm is not { Length: >= 3 }) {
+      return null;
+    }
+
+    var equatorialRadiusKm = (radiiKm[0] + radiiKm[1]) / 2d;
+    var polarRadiusKm = radiiKm[2];
+    double? flattening = Math.Abs(equatorialRadiusKm) > double.Epsilon
+      ? (equatorialRadiusKm - polarRadiusKm) / equatorialRadiusKm
+      : null;
+
+    return new ManifestShapeModel(
+      EquatorialRadiusKm: equatorialRadiusKm,
+      PolarRadiusKm: polarRadiusKm,
+      VolumeEquivalentRadiusKm: Math.Cbrt(radiiKm[0] * radiiKm[1] * radiiKm[2]),
+      ApproxVolumeKm3: 4d / 3d * Math.PI * radiiKm[0] * radiiKm[1] * radiiKm[2],
+      Flattening: flattening,
+      IsTriAxial: Math.Abs(radiiKm[0] - radiiKm[1]) > 1e-9,
+      IsApproximatelySpherical: Math.Abs(radiiKm[0] - radiiKm[1]) <= 1e-9 &&
+                                 Math.Abs(radiiKm[0] - radiiKm[2]) <= 1e-9);
+  }
+
+  static ManifestDerivedPhysicalProperties? BuildDerivedPhysicalProperties(
+    double? meanRadiusKm,
+    ManifestShapeModel? shapeModel,
+    double? gravitationalParameterKm3PerSec2)
+  {
+    if (gravitationalParameterKm3PerSec2 is null &&
+        meanRadiusKm is null &&
+        shapeModel is null) {
+      return null;
+    }
+
+    var referenceRadiusKm = shapeModel?.VolumeEquivalentRadiusKm ?? meanRadiusKm;
+    double? approximateMassKg = gravitationalParameterKm3PerSec2 is double gm
+      ? gm / UniversalGravitationalConstantKm3PerKgSec2
+      : null;
+    double? approximateSurfaceGravityMps2 = gravitationalParameterKm3PerSec2 is double gmForGravity &&
+                                            referenceRadiusKm is double radiusForGravity &&
+                                            Math.Abs(radiusForGravity) > double.Epsilon
+      ? (gmForGravity / (radiusForGravity * radiusForGravity)) * 1000d
+      : null;
+    double? approximateEscapeVelocityKmPerSec = gravitationalParameterKm3PerSec2 is double gmForEscape &&
+                                                referenceRadiusKm is double radiusForEscape &&
+                                                Math.Abs(radiusForEscape) > double.Epsilon
+      ? Math.Sqrt(2d * gmForEscape / radiusForEscape)
+      : null;
+    double? approximateBulkDensityKgPerM3 = approximateMassKg is double massKg &&
+                                            shapeModel?.ApproxVolumeKm3 is double volumeKm3 &&
+                                            Math.Abs(volumeKm3) > double.Epsilon
+      ? massKg / (volumeKm3 * 1_000_000_000d)
+      : null;
+
+    return new ManifestDerivedPhysicalProperties(
+      ReferenceRadiusKm: referenceRadiusKm,
+      ApproximateMassKg: approximateMassKg,
+      ApproximateSurfaceGravityMps2: approximateSurfaceGravityMps2,
+      ApproximateEscapeVelocityKmPerSec: approximateEscapeVelocityKmPerSec,
+      ApproximateBulkDensityKgPerM3: approximateBulkDensityKgPerM3);
   }
 
   static double[]? TryGetNumericValues(MetadataKernelPool metadataKernelPool, string key)
@@ -1640,9 +1710,27 @@ internal static class Program
   sealed record ManifestBodyMetadata(
     double[]? RadiiKm,
     double? MeanRadiusKm,
+    ManifestShapeModel? ShapeModel,
     double? GravitationalParameterKm3PerSec2,
+    ManifestDerivedPhysicalProperties? DerivedPhysicalProperties,
     ManifestPoleOrientation? PoleOrientation,
     ManifestRotationModel? RotationModel);
+
+  sealed record ManifestShapeModel(
+    double EquatorialRadiusKm,
+    double PolarRadiusKm,
+    double VolumeEquivalentRadiusKm,
+    double ApproxVolumeKm3,
+    double? Flattening,
+    bool IsTriAxial,
+    bool IsApproximatelySpherical);
+
+  sealed record ManifestDerivedPhysicalProperties(
+    double? ReferenceRadiusKm,
+    double? ApproximateMassKg,
+    double? ApproximateSurfaceGravityMps2,
+    double? ApproximateEscapeVelocityKmPerSec,
+    double? ApproximateBulkDensityKgPerM3);
 
   sealed record ManifestPoleOrientation(
     string ReferenceEpoch,
