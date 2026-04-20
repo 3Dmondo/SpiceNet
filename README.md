@@ -32,3 +32,4 @@ Development
 - `scripts/Update-WebDataMetadataSnapshot.ps1` downloads the official NAIF generic metadata kernels into a local ignored cache and refreshes the committed metadata snapshot at `Spice.WebDataGenerator/ReferenceData/body-metadata.json`.
 - `scripts/Generate-WebDataBaselineDataset.ps1` downloads the current baseline ephemeris/support kernels into the local ignored cache and regenerates the local benchmark web dataset under `artifacts/web-data/`.
 - `Spice.WebDataGenerator` now records source-file hashes in manifests and honors `SOURCE_DATE_EPOCH` for reproducible generated timestamps when exact diffability matters.
+- Generated outputs can also carry a stable profile label so metadata snapshots and baseline ephemeris datasets are self-identifying.

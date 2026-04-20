@@ -27,6 +27,7 @@ At this step the CLI:
 - supports a metadata-only export mode so parsed body metadata can be versioned without checking NAIF source kernels into git
 - records stable source-file provenance in the manifest using file names, byte lengths, and SHA-256 hashes instead of machine-specific local paths
 - honors `SOURCE_DATE_EPOCH` for reproducible `GeneratedAtUtc` values in generated outputs
+- accepts an optional `--profile-name` so generated artifacts can carry a stable dataset/profile label
 - falls back to planetary barycenter query ids when a requested display body is not directly available in the kernel
 - can benchmark Mercury interpolation error across multiple sample cadences while also generating real output files for size inspection
 - can benchmark all selected bodies across multiple sample cadences and record both raw and gzip-compressed output sizes
@@ -82,6 +83,7 @@ Metadata-only export mode:
 ```powershell
 dotnet run --project Spice.WebDataGenerator -- `
   --metadata-only `
+  --profile-name current-web-body-metadata `
   --metadata-kernel .\kernels\pck00011.tpc `
   --metadata-kernel .\kernels\gm_de440.tpc `
   --output .\Spice.WebDataGenerator\ReferenceData
@@ -173,6 +175,7 @@ dotnet run --project Spice.WebDataGenerator -- `
 
 - `manifest.json` is minified and captures:
   - schema version
+  - one generator block naming the tool, schema version, and optional profile name
   - generation timestamp plus a `GeneratedAtUtcSource` field indicating whether it came from live UTC or `SOURCE_DATE_EPOCH`
   - one source-file table covering the SPK, optional LSK, and metadata kernels by file name, size, and SHA-256
   - coverage years, shared chunk duration, default cadence, and center body id
@@ -185,7 +188,7 @@ dotnet run --project Spice.WebDataGenerator -- `
   - pole-orientation coefficients plus a derived north-pole unit vector and axial tilt relative to the `J2000` ecliptic
   - prime-meridian coefficients plus a derived sidereal rotation period and retrograde flag
 - `body-metadata.json` from metadata-only mode is indented and captures:
-  - schema version, generation timestamp, and `GeneratedAtUtcSource`
+  - schema version, one generator block, generation timestamp, and `GeneratedAtUtcSource`
   - source metadata-kernel file names, byte lengths, and SHA-256 hashes
   - one body table with names plus the same metadata block used in normal manifests
 - `chunk-<start>-<end>.json` is minified and stores:
@@ -290,6 +293,7 @@ CI note:
 
 - the intended CI flow is to run the same script in a fresh workspace, letting the job download kernels into its transient cache rather than checking any upstream binaries into git
 - only small derived artifacts such as the committed `body-metadata.json` snapshot are versioned
+- the refresh scripts now pass stable profile names so downstream tooling can distinguish metadata snapshots from the baseline mixed-cadence ephemeris dataset without inferring it from file paths
 
 ## de440s Mercury Benchmark Snapshot
 

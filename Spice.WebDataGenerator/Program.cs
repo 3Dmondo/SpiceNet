@@ -10,6 +10,7 @@ namespace Spice.WebDataGenerator;
 
 internal static class Program
 {
+  const string GeneratorName = "Spice.WebDataGenerator";
   const int OutputSchemaVersion = 1;
   const string ChunkBoundaryTimeEncoding = "approximate_tdb_seconds_from_j2000";
   const string SampleTimeEncoding = "chunk_start_plus_body_cadence_days_with_terminal_chunk_end_sample";
@@ -53,7 +54,7 @@ internal static class Program
       return 1;
     }
 
-    Console.WriteLine("Spice.WebDataGenerator");
+    Console.WriteLine(GeneratorName);
     Console.WriteLine($"SPK: {options.SpkPath}");
     Console.WriteLine($"LSK: {options.LskPath}");
     Console.WriteLine($"Output: {options.OutputPath}");
@@ -65,6 +66,9 @@ internal static class Program
     Console.WriteLine($"Default sample days: {options.SampleDays}");
     Console.WriteLine($"Center body: {options.CenterBodyId}");
     Console.WriteLine($"Bodies: {string.Join(", ", options.BodyIds)}");
+    if (!string.IsNullOrWhiteSpace(options.ProfileName)) {
+      Console.WriteLine($"Profile: {options.ProfileName}");
+    }
     if (options.MetadataKernelPaths.Count > 0) {
       Console.WriteLine($"Metadata kernels: {string.Join(", ", options.MetadataKernelPaths)}");
     }
@@ -486,6 +490,7 @@ internal static class Program
     var chunkSummaries = GenerateChunks(service, options, bodySettings);
     var manifest = new GeneratorManifest(
       SchemaVersion: OutputSchemaVersion,
+      Generator: BuildGeneratorDescriptor(options),
       GeneratedAtUtc: generatedAt.Value,
       GeneratedAtUtcSource: generatedAt.Source,
       UsesApproximateUtcConversion: true,
@@ -717,6 +722,7 @@ internal static class Program
     var generatedAt = ResolveGeneratedAtUtc();
     var snapshot = new MetadataSnapshot(
       SchemaVersion: OutputSchemaVersion,
+      Generator: BuildGeneratorDescriptor(options),
       GeneratedAtUtc: generatedAt.Value,
       GeneratedAtUtcSource: generatedAt.Source,
       KernelFiles: BuildMetadataKernelFiles(metadataKernelPool.Value.SourcePaths),
@@ -763,6 +769,12 @@ internal static class Program
       ByteLength: fileInfo.Length,
       Sha256: ComputeSha256(path));
   }
+
+  static GeneratorDescriptor BuildGeneratorDescriptor(GeneratorOptions options)
+    => new(
+      Name: GeneratorName,
+      OutputSchemaVersion: OutputSchemaVersion,
+      ProfileName: options.ProfileName);
 
   static MetadataKernelFile[] BuildMetadataKernelFiles(IReadOnlyList<string> paths)
     => paths
@@ -1091,6 +1103,8 @@ internal static class Program
       return false;
     }
 
+    values.TryGetValue("--profile-name", out var profileName);
+
     if (endYear <= startYear) {
       error = "--end-year must be greater than --start-year.";
       options = default;
@@ -1184,6 +1198,7 @@ internal static class Program
       SampleDays: sampleDays,
       CenterBodyId: centerBodyId,
       BodyIds: selectedBodyIds,
+      ProfileName: profileName,
       MetadataKernelPaths: metadataKernelPaths.ToArray(),
       BodyCadenceOverrides: bodyCadenceOverrides,
       MetadataOnly: metadataOnly,
@@ -1349,6 +1364,7 @@ internal static class Program
         --sample-days <n>    Sample spacing inside a chunk. Default: 365.
         --center <naif-id>   Center body id for generated states. Default: 10.
         --body <naif-id>     Body NAIF id to include. Repeat to override the default body set.
+        --profile-name       Optional stable label describing the generation profile or dataset flavor.
         --metadata-kernel    Path to a text kernel with body metadata assignments. Repeat to merge multiple kernels with last-one-wins precedence.
         --body-cadence       Per-body cadence override in the form <naif-id>:<days>. Repeat as needed.
         --metadata-only      Export only the merged body metadata snapshot. In this mode --spk is optional and no chunk files are generated.
@@ -1418,6 +1434,7 @@ internal static class Program
     int SampleDays,
     int CenterBodyId,
     IReadOnlyList<int> BodyIds,
+    string? ProfileName,
     IReadOnlyList<string> MetadataKernelPaths,
     IReadOnlyDictionary<int, int> BodyCadenceOverrides,
     bool MetadataOnly,
@@ -1478,6 +1495,7 @@ internal static class Program
 
   sealed record GeneratorManifest(
     int SchemaVersion,
+    GeneratorDescriptor Generator,
     DateTimeOffset GeneratedAtUtc,
     string GeneratedAtUtcSource,
     bool UsesApproximateUtcConversion,
@@ -1494,10 +1512,16 @@ internal static class Program
 
   sealed record MetadataSnapshot(
     int SchemaVersion,
+    GeneratorDescriptor Generator,
     DateTimeOffset GeneratedAtUtc,
     string GeneratedAtUtcSource,
     MetadataKernelFile[] KernelFiles,
     MetadataSnapshotBody[] Bodies);
+
+  sealed record GeneratorDescriptor(
+    string Name,
+    int OutputSchemaVersion,
+    string? ProfileName);
 
   sealed record ManifestSourceFile(
     string Role,

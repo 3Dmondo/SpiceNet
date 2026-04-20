@@ -60,6 +60,7 @@ $generatorArgs = @(
   "--project", $generatorProject,
   "--",
   "--metadata-only",
+  "--profile-name", "current-web-body-metadata",
   "--output", $outputRoot
 )
 

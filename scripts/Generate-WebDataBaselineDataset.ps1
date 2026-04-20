@@ -75,6 +75,7 @@ $generatorArgs = @(
   "--",
   "--spk", $spkPath,
   "--lsk", $lskPath,
+  "--profile-name", "baseline-de440s-ssb-25y-mixed-cadence",
   "--metadata-kernel", $pckPath,
   "--metadata-kernel", $gmPath,
   "--output", $outputRoot,
