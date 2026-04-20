@@ -5,8 +5,23 @@
     "OutputSchemaVersion": 1,
     "ProfileName": "current-web-body-metadata"
   },
-  "GeneratedAtUtc": "2026-04-20T07:00:42.9274775+00:00",
+  "GeneratedAtUtc": "2026-04-20T07:05:52.3856591+00:00",
   "GeneratedAtUtcSource": "current_utc",
+  "MetadataLayout": {
+    "ReferenceEpoch": "J2000",
+    "PoleVectorFrame": "J2000",
+    "AxialTiltReferencePlane": "J2000 ecliptic",
+    "RadiiUnit": "km",
+    "MeanRadiusUnit": "km",
+    "ShapeRadiusUnit": "km",
+    "ShapeVolumeUnit": "km3",
+    "GravitationalParameterUnit": "km3/s2",
+    "RotationPeriodUnit": "hours",
+    "SurfaceGravityUnit": "m/s2",
+    "EscapeVelocityUnit": "km/s",
+    "BulkDensityUnit": "kg/m3",
+    "DerivedPhysicalPropertiesNote": "Approximate mass is derived from GM. Surface gravity and escape velocity use the emitted reference radius. Bulk density uses approximate mass and the emitted shape volume."
+  },
   "KernelFiles": [
     {
       "FileName": "gm_de440.tpc",

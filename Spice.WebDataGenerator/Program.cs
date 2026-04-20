@@ -726,6 +726,7 @@ internal static class Program
       Generator: BuildGeneratorDescriptor(options),
       GeneratedAtUtc: generatedAt.Value,
       GeneratedAtUtcSource: generatedAt.Source,
+      MetadataLayout: BuildMetadataLayout(),
       KernelFiles: BuildMetadataKernelFiles(
         options.MetadataKernelPaths,
         options.MetadataKernelSourceUrls),
@@ -804,6 +805,22 @@ internal static class Program
       })
       .OrderBy(static (file) => file.FileName, StringComparer.OrdinalIgnoreCase)
       .ToArray();
+
+  static MetadataLayout BuildMetadataLayout()
+    => new(
+      ReferenceEpoch: "J2000",
+      PoleVectorFrame: "J2000",
+      AxialTiltReferencePlane: "J2000 ecliptic",
+      RadiiUnit: "km",
+      MeanRadiusUnit: "km",
+      ShapeRadiusUnit: "km",
+      ShapeVolumeUnit: "km3",
+      GravitationalParameterUnit: "km3/s2",
+      RotationPeriodUnit: "hours",
+      SurfaceGravityUnit: "m/s2",
+      EscapeVelocityUnit: "km/s",
+      BulkDensityUnit: "kg/m3",
+      DerivedPhysicalPropertiesNote: "Approximate mass is derived from GM. Surface gravity and escape velocity use the emitted reference radius. Bulk density uses approximate mass and the emitted shape volume.");
 
   static string ComputeSha256(string path)
   {
@@ -1631,6 +1648,7 @@ internal static class Program
     GeneratorDescriptor Generator,
     DateTimeOffset GeneratedAtUtc,
     string GeneratedAtUtcSource,
+    MetadataLayout MetadataLayout,
     MetadataKernelFile[] KernelFiles,
     MetadataSnapshotBody[] Bodies);
 
@@ -1651,6 +1669,21 @@ internal static class Program
     long ByteLength,
     string Sha256,
     string? SourceUrl);
+
+  sealed record MetadataLayout(
+    string ReferenceEpoch,
+    string PoleVectorFrame,
+    string AxialTiltReferencePlane,
+    string RadiiUnit,
+    string MeanRadiusUnit,
+    string ShapeRadiusUnit,
+    string ShapeVolumeUnit,
+    string GravitationalParameterUnit,
+    string RotationPeriodUnit,
+    string SurfaceGravityUnit,
+    string EscapeVelocityUnit,
+    string BulkDensityUnit,
+    string DerivedPhysicalPropertiesNote);
 
   sealed record MetadataSnapshotBody(
     int BodyId,
