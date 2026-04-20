@@ -726,7 +726,9 @@ internal static class Program
       Generator: BuildGeneratorDescriptor(options),
       GeneratedAtUtc: generatedAt.Value,
       GeneratedAtUtcSource: generatedAt.Source,
-      KernelFiles: BuildMetadataKernelFiles(metadataKernelPool.Value.SourcePaths),
+      KernelFiles: BuildMetadataKernelFiles(
+        options.MetadataKernelPaths,
+        options.MetadataKernelSourceUrls),
       Bodies: options.BodyIds
         .Select((bodyId) => new MetadataSnapshotBody(
           BodyId: bodyId,
@@ -746,29 +748,37 @@ internal static class Program
   {
     var files = new List<ManifestSourceFile>
     {
-      BuildManifestSourceFile("spk", RequireSpkPath(options))
+      BuildManifestSourceFile("spk", RequireSpkPath(options), options.SpkSourceUrl)
     };
 
     if (!string.IsNullOrWhiteSpace(options.LskPath)) {
-      files.Add(BuildManifestSourceFile("lsk", options.LskPath));
+      files.Add(BuildManifestSourceFile("lsk", options.LskPath, options.LskSourceUrl));
     }
 
     files.AddRange(
       options.MetadataKernelPaths
-        .OrderBy(static (path) => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
-        .Select((path) => BuildManifestSourceFile("metadata", path)));
+        .Select((path, index) => new
+        {
+          Path = path,
+          SourceUrl = index < options.MetadataKernelSourceUrls.Count
+            ? options.MetadataKernelSourceUrls[index]
+            : null
+        })
+        .OrderBy(static (entry) => Path.GetFileName(entry.Path), StringComparer.OrdinalIgnoreCase)
+        .Select((entry) => BuildManifestSourceFile("metadata", entry.Path, entry.SourceUrl)));
 
     return files.ToArray();
   }
 
-  static ManifestSourceFile BuildManifestSourceFile(string role, string path)
+  static ManifestSourceFile BuildManifestSourceFile(string role, string path, string? sourceUrl)
   {
     var fileInfo = new FileInfo(path);
     return new ManifestSourceFile(
       Role: role,
       FileName: fileInfo.Name,
       ByteLength: fileInfo.Length,
-      Sha256: ComputeSha256(path));
+      Sha256: ComputeSha256(path),
+      SourceUrl: sourceUrl);
   }
 
   static GeneratorDescriptor BuildGeneratorDescriptor(GeneratorOptions options)
@@ -777,15 +787,20 @@ internal static class Program
       OutputSchemaVersion: OutputSchemaVersion,
       ProfileName: options.ProfileName);
 
-  static MetadataKernelFile[] BuildMetadataKernelFiles(IReadOnlyList<string> paths)
+  static MetadataKernelFile[] BuildMetadataKernelFiles(
+    IReadOnlyList<string> paths,
+    IReadOnlyList<string> sourceUrls)
     => paths
-      .Select((path) =>
+      .Select((path, index) =>
       {
         var fileInfo = new FileInfo(path);
         return new MetadataKernelFile(
           FileName: fileInfo.Name,
           ByteLength: fileInfo.Length,
-          Sha256: ComputeSha256(path));
+          Sha256: ComputeSha256(path),
+          SourceUrl: index < sourceUrls.Count
+            ? sourceUrls[index]
+            : null);
       })
       .OrderBy(static (file) => file.FileName, StringComparer.OrdinalIgnoreCase)
       .ToArray();
@@ -1055,6 +1070,7 @@ internal static class Program
     var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     var bodyIds = new List<int>();
     var metadataKernelPaths = new List<string>();
+    var metadataKernelSourceUrls = new List<string>();
     var bodyCadenceOverrides = new Dictionary<int, int>();
 
     for (int index = 0; index < args.Length; index++) {
@@ -1085,6 +1101,17 @@ internal static class Program
         }
 
         metadataKernelPaths.Add(metadataKernelPath);
+        continue;
+      }
+
+      if (string.Equals(current, "--metadata-kernel-source-url", StringComparison.OrdinalIgnoreCase)) {
+        if (!TryReadValue(args, ref index, out var metadataKernelSourceUrl)) {
+          error = "Missing value for --metadata-kernel-source-url.";
+          options = default;
+          return false;
+        }
+
+        metadataKernelSourceUrls.Add(metadataKernelSourceUrl);
         continue;
       }
 
@@ -1174,6 +1201,8 @@ internal static class Program
     }
 
     values.TryGetValue("--profile-name", out var profileName);
+    values.TryGetValue("--spk-source-url", out var spkSourceUrl);
+    values.TryGetValue("--lsk-source-url", out var lskSourceUrl);
 
     if (endYear <= startYear) {
       error = "--end-year must be greater than --start-year.";
@@ -1212,6 +1241,13 @@ internal static class Program
         options = default;
         return false;
       }
+    }
+
+    if (metadataKernelSourceUrls.Count > 0 &&
+        metadataKernelSourceUrls.Count != metadataKernelPaths.Count) {
+      error = "--metadata-kernel-source-url must be provided once per --metadata-kernel, in the same order.";
+      options = default;
+      return false;
     }
 
     var benchmarkMercury = values.ContainsKey("--benchmark-mercury");
@@ -1269,7 +1305,10 @@ internal static class Program
       CenterBodyId: centerBodyId,
       BodyIds: selectedBodyIds,
       ProfileName: profileName,
+      SpkSourceUrl: spkSourceUrl,
+      LskSourceUrl: lskSourceUrl,
       MetadataKernelPaths: metadataKernelPaths.ToArray(),
+      MetadataKernelSourceUrls: metadataKernelSourceUrls.ToArray(),
       BodyCadenceOverrides: bodyCadenceOverrides,
       MetadataOnly: metadataOnly,
       BenchmarkMercury: benchmarkMercury,
@@ -1435,7 +1474,11 @@ internal static class Program
         --center <naif-id>   Center body id for generated states. Default: 10.
         --body <naif-id>     Body NAIF id to include. Repeat to override the default body set.
         --profile-name       Optional stable label describing the generation profile or dataset flavor.
+        --spk-source-url     Optional canonical source URL for the SPK file used in provenance output.
+        --lsk-source-url     Optional canonical source URL for the LSK file used in provenance output.
         --metadata-kernel    Path to a text kernel with body metadata assignments. Repeat to merge multiple kernels with last-one-wins precedence.
+        --metadata-kernel-source-url
+                            Optional canonical source URL matching one --metadata-kernel entry. Repeat in the same order as --metadata-kernel.
         --body-cadence       Per-body cadence override in the form <naif-id>:<days>. Repeat as needed.
         --metadata-only      Export only the merged body metadata snapshot. In this mode --spk is optional and no chunk files are generated.
         --benchmark-mercury  Generate multiple exports and compare Mercury Hermite interpolation error by cadence.
@@ -1505,7 +1548,10 @@ internal static class Program
     int CenterBodyId,
     IReadOnlyList<int> BodyIds,
     string? ProfileName,
+    string? SpkSourceUrl,
+    string? LskSourceUrl,
     IReadOnlyList<string> MetadataKernelPaths,
+    IReadOnlyList<string> MetadataKernelSourceUrls,
     IReadOnlyDictionary<int, int> BodyCadenceOverrides,
     bool MetadataOnly,
     bool BenchmarkMercury,
@@ -1597,12 +1643,14 @@ internal static class Program
     string Role,
     string FileName,
     long ByteLength,
-    string Sha256);
+    string Sha256,
+    string? SourceUrl);
 
   sealed record MetadataKernelFile(
     string FileName,
     long ByteLength,
-    string Sha256);
+    string Sha256,
+    string? SourceUrl);
 
   sealed record MetadataSnapshotBody(
     int BodyId,

@@ -68,6 +68,10 @@ foreach ($kernelPath in $downloadedKernelPaths) {
   $generatorArgs += @("--metadata-kernel", $kernelPath)
 }
 
+foreach ($kernel in $kernelSpecs) {
+  $generatorArgs += @("--metadata-kernel-source-url", $kernel.Url)
+}
+
 foreach ($bodyId in $bodyIds) {
   $generatorArgs += @("--body", "$bodyId")
 }

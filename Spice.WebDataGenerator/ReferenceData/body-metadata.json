@@ -5,18 +5,20 @@
     "OutputSchemaVersion": 1,
     "ProfileName": "current-web-body-metadata"
   },
-  "GeneratedAtUtc": "2026-04-20T06:55:06.9795557+00:00",
+  "GeneratedAtUtc": "2026-04-20T07:00:42.9274775+00:00",
   "GeneratedAtUtcSource": "current_utc",
   "KernelFiles": [
     {
       "FileName": "gm_de440.tpc",
       "ByteLength": 12406,
-      "Sha256": "924DDF4FB9EAD9FE8A1AA55780BCABDE40B09D00065D58226E24B68D8092F140"
+      "Sha256": "924DDF4FB9EAD9FE8A1AA55780BCABDE40B09D00065D58226E24B68D8092F140",
+      "SourceUrl": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/gm_de440.tpc"
     },
     {
       "FileName": "pck00011.tpc",
       "ByteLength": 131226,
-      "Sha256": "3DFF7B1DBECEAA01F25467767D3FA25816051C85D162D1EDF04ACB310EE28BB1"
+      "Sha256": "3DFF7B1DBECEAA01F25467767D3FA25816051C85D162D1EDF04ACB310EE28BB1",
+      "SourceUrl": "https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00011.tpc"
     }
   ],
   "Bodies": [
