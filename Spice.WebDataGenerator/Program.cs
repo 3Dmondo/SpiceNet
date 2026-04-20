@@ -721,22 +721,24 @@ internal static class Program
     }
 
     var generatedAt = ResolveGeneratedAtUtc();
+    var outputBodies = options.BodyIds
+      .Select((bodyId) => new MetadataSnapshotBody(
+        BodyId: bodyId,
+        BodyName: ResolveBodyName(bodyId),
+        Metadata: BuildBodyMetadata(bodyId, metadataKernelPool)))
+      .OrderBy(static (body) => body.BodyId)
+      .ToArray();
     var snapshot = new MetadataSnapshot(
       SchemaVersion: OutputSchemaVersion,
       Generator: BuildGeneratorDescriptor(options),
       GeneratedAtUtc: generatedAt.Value,
       GeneratedAtUtcSource: generatedAt.Source,
       MetadataLayout: BuildMetadataLayout(),
+      BodySet: BuildMetadataBodySet(options, outputBodies),
       KernelFiles: BuildMetadataKernelFiles(
         options.MetadataKernelPaths,
         options.MetadataKernelSourceUrls),
-      Bodies: options.BodyIds
-        .Select((bodyId) => new MetadataSnapshotBody(
-          BodyId: bodyId,
-          BodyName: ResolveBodyName(bodyId),
-          Metadata: BuildBodyMetadata(bodyId, metadataKernelPool)))
-        .OrderBy(static (body) => body.BodyId)
-        .ToArray());
+      Bodies: outputBodies);
 
     var snapshotPath = Path.Combine(options.OutputPath, "body-metadata.json");
     File.WriteAllText(snapshotPath, JsonSerializer.Serialize(snapshot, SnapshotJsonOptions));
@@ -821,6 +823,17 @@ internal static class Program
       EscapeVelocityUnit: "km/s",
       BulkDensityUnit: "kg/m3",
       DerivedPhysicalPropertiesNote: "Approximate mass is derived from GM. Surface gravity and escape velocity use the emitted reference radius. Bulk density uses approximate mass and the emitted shape volume.");
+
+  static MetadataBodySet BuildMetadataBodySet(
+    GeneratorOptions options,
+    IReadOnlyList<MetadataSnapshotBody> outputBodies)
+    => new(
+      SelectionMode: options.UsesDefaultBodySet
+        ? "default_body_set"
+        : "explicit_body_list",
+      RequestedBodyIds: options.BodyIds.ToArray(),
+      OutputBodyIds: outputBodies.Select(static (body) => body.BodyId).ToArray(),
+      OutputOrdering: "body_id_ascending");
 
   static string ComputeSha256(string path)
   {
@@ -1321,6 +1334,7 @@ internal static class Program
       SampleDays: sampleDays,
       CenterBodyId: centerBodyId,
       BodyIds: selectedBodyIds,
+      UsesDefaultBodySet: bodyIds.Count == 0,
       ProfileName: profileName,
       SpkSourceUrl: spkSourceUrl,
       LskSourceUrl: lskSourceUrl,
@@ -1564,6 +1578,7 @@ internal static class Program
     int SampleDays,
     int CenterBodyId,
     IReadOnlyList<int> BodyIds,
+    bool UsesDefaultBodySet,
     string? ProfileName,
     string? SpkSourceUrl,
     string? LskSourceUrl,
@@ -1649,6 +1664,7 @@ internal static class Program
     DateTimeOffset GeneratedAtUtc,
     string GeneratedAtUtcSource,
     MetadataLayout MetadataLayout,
+    MetadataBodySet BodySet,
     MetadataKernelFile[] KernelFiles,
     MetadataSnapshotBody[] Bodies);
 
@@ -1669,6 +1685,12 @@ internal static class Program
     long ByteLength,
     string Sha256,
     string? SourceUrl);
+
+  sealed record MetadataBodySet(
+    string SelectionMode,
+    int[] RequestedBodyIds,
+    int[] OutputBodyIds,
+    string OutputOrdering);
 
   sealed record MetadataLayout(
     string ReferenceEpoch,

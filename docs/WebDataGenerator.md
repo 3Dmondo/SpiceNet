@@ -193,6 +193,7 @@ dotnet run --project Spice.WebDataGenerator -- `
 - `body-metadata.json` from metadata-only mode is indented and captures:
   - schema version, one generator block, generation timestamp, and `GeneratedAtUtcSource`
   - one explicit metadata-layout block describing reference conventions and units for radii, GM, rotation period, tilt, density, and other derived fields
+  - one body-set block describing whether the run used the built-in default body set or an explicit list, plus the requested ids and final output ordering
   - source metadata-kernel file names, byte lengths, SHA-256 hashes, and optional canonical source URLs
   - one body table with names plus the same metadata block used in normal manifests
 - `chunk-<start>-<end>.json` is minified and stores:

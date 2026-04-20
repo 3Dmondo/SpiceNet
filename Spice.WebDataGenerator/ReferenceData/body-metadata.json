@@ -5,7 +5,7 @@
     "OutputSchemaVersion": 1,
     "ProfileName": "current-web-body-metadata"
   },
-  "GeneratedAtUtc": "2026-04-20T07:05:52.3856591+00:00",
+  "GeneratedAtUtc": "2026-04-20T07:16:19.2107705+00:00",
   "GeneratedAtUtcSource": "current_utc",
   "MetadataLayout": {
     "ReferenceEpoch": "J2000",
@@ -21,6 +21,34 @@
     "EscapeVelocityUnit": "km/s",
     "BulkDensityUnit": "kg/m3",
     "DerivedPhysicalPropertiesNote": "Approximate mass is derived from GM. Surface gravity and escape velocity use the emitted reference radius. Bulk density uses approximate mass and the emitted shape volume."
+  },
+  "BodySet": {
+    "SelectionMode": "explicit_body_list",
+    "RequestedBodyIds": [
+      10,
+      199,
+      299,
+      399,
+      301,
+      499,
+      599,
+      699,
+      799,
+      899
+    ],
+    "OutputBodyIds": [
+      10,
+      199,
+      299,
+      301,
+      399,
+      499,
+      599,
+      699,
+      799,
+      899
+    ],
+    "OutputOrdering": "body_id_ascending"
   },
   "KernelFiles": [
     {
