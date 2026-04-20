@@ -20,6 +20,7 @@ internal static class Program
   const string InterpolationHint = "cubic_hermite_position_velocity";
   const string MetadataReferenceEpoch = "J2000";
   const double J2000MeanObliquityDegrees = 23.439291111;
+  const string SourceDateEpochEnvironmentVariable = "SOURCE_DATE_EPOCH";
 
   static readonly JsonSerializerOptions ReportJsonOptions = new()
   {
@@ -181,6 +182,7 @@ internal static class Program
   static MercuryBenchmarkReport RunMercuryBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
     var spkPath = RequireSpkPath(options);
+    var generatedAt = ResolveGeneratedAtUtc();
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
     var mercuryBodyId = 199;
@@ -222,7 +224,7 @@ internal static class Program
     }
 
     return new MercuryBenchmarkReport(
-      GeneratedAtUtc: DateTimeOffset.UtcNow,
+      GeneratedAtUtc: generatedAt.Value,
       SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
@@ -236,6 +238,7 @@ internal static class Program
   static ConfiguredCadenceBenchmarkReport RunConfiguredCadenceBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
     var spkPath = RequireSpkPath(options);
+    var generatedAt = ResolveGeneratedAtUtc();
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
     var output = WriteGenerationOutput(service, options, metadataKernelPool);
@@ -252,7 +255,7 @@ internal static class Program
       .ToArray();
 
     return new ConfiguredCadenceBenchmarkReport(
-      GeneratedAtUtc: DateTimeOffset.UtcNow,
+      GeneratedAtUtc: generatedAt.Value,
       SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
@@ -272,6 +275,7 @@ internal static class Program
   static ConfiguredChunkYearBenchmarkReport RunConfiguredChunkYearBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
     var spkPath = RequireSpkPath(options);
+    var generatedAt = ResolveGeneratedAtUtc();
     var results = new List<ConfiguredChunkYearResult>();
 
     foreach (var chunkYears in options.BenchmarkChunkYears.Distinct().OrderByDescending(static value => value)) {
@@ -296,7 +300,7 @@ internal static class Program
     }
 
     return new ConfiguredChunkYearBenchmarkReport(
-      GeneratedAtUtc: DateTimeOffset.UtcNow,
+      GeneratedAtUtc: generatedAt.Value,
       SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
@@ -327,6 +331,7 @@ internal static class Program
   static BodyBenchmarkReport RunBodyBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
     var spkPath = RequireSpkPath(options);
+    var generatedAt = ResolveGeneratedAtUtc();
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
     var results = new List<BodyCadenceBenchmarkResult>();
@@ -358,7 +363,7 @@ internal static class Program
     }
 
     return new BodyBenchmarkReport(
-      GeneratedAtUtc: DateTimeOffset.UtcNow,
+      GeneratedAtUtc: generatedAt.Value,
       SpkPath: spkPath,
       LskPath: options.LskPath,
       StartYear: options.StartYear,
@@ -475,14 +480,14 @@ internal static class Program
   static GenerationOutput WriteGenerationOutput(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
     var spkPath = RequireSpkPath(options);
+    var generatedAt = ResolveGeneratedAtUtc();
     var referenceUtc = CreateChunkBoundary(options.StartYear);
     var bodySettings = BuildBodyExportSettings(service, options, referenceUtc);
     var chunkSummaries = GenerateChunks(service, options, bodySettings);
     var manifest = new GeneratorManifest(
       SchemaVersion: OutputSchemaVersion,
-      GeneratedAtUtc: DateTimeOffset.UtcNow,
-      SpkPath: spkPath,
-      LskPath: options.LskPath,
+      GeneratedAtUtc: generatedAt.Value,
+      GeneratedAtUtcSource: generatedAt.Source,
       UsesApproximateUtcConversion: true,
       ApproximationNote: "UTC is mapped to TDB seconds past J2000 using a fixed J2000 UTC anchor and ignores leap seconds for this benchmark step.",
       StartYear: options.StartYear,
@@ -490,7 +495,7 @@ internal static class Program
       ChunkYears: options.ChunkYears,
       DefaultSampleDays: options.SampleDays,
       CenterBodyId: options.CenterBodyId,
-      MetadataKernelPaths: options.MetadataKernelPaths.ToArray(),
+      SourceFiles: BuildGenerationSourceFiles(options),
       RuntimeLayout: new ManifestRuntimeLayout(
         ChunkBoundaryTimeEncoding: ChunkBoundaryTimeEncoding,
         SampleTimeEncoding: SampleTimeEncoding,
@@ -709,9 +714,11 @@ internal static class Program
       throw new InvalidOperationException("Metadata-only mode requires at least one --metadata-kernel input.");
     }
 
+    var generatedAt = ResolveGeneratedAtUtc();
     var snapshot = new MetadataSnapshot(
       SchemaVersion: OutputSchemaVersion,
-      GeneratedAtUtc: DateTimeOffset.UtcNow,
+      GeneratedAtUtc: generatedAt.Value,
+      GeneratedAtUtcSource: generatedAt.Source,
       KernelFiles: BuildMetadataKernelFiles(metadataKernelPool.Value.SourcePaths),
       Bodies: options.BodyIds
         .Select((bodyId) => new MetadataSnapshotBody(
@@ -726,6 +733,35 @@ internal static class Program
     return new MetadataSnapshotOutput(
       OutputPath: snapshotPath,
       BodyCount: snapshot.Bodies.Length);
+  }
+
+  static ManifestSourceFile[] BuildGenerationSourceFiles(GeneratorOptions options)
+  {
+    var files = new List<ManifestSourceFile>
+    {
+      BuildManifestSourceFile("spk", RequireSpkPath(options))
+    };
+
+    if (!string.IsNullOrWhiteSpace(options.LskPath)) {
+      files.Add(BuildManifestSourceFile("lsk", options.LskPath));
+    }
+
+    files.AddRange(
+      options.MetadataKernelPaths
+        .OrderBy(static (path) => Path.GetFileName(path), StringComparer.OrdinalIgnoreCase)
+        .Select((path) => BuildManifestSourceFile("metadata", path)));
+
+    return files.ToArray();
+  }
+
+  static ManifestSourceFile BuildManifestSourceFile(string role, string path)
+  {
+    var fileInfo = new FileInfo(path);
+    return new ManifestSourceFile(
+      Role: role,
+      FileName: fileInfo.Name,
+      ByteLength: fileInfo.Length,
+      Sha256: ComputeSha256(path));
   }
 
   static MetadataKernelFile[] BuildMetadataKernelFiles(IReadOnlyList<string> paths)
@@ -747,6 +783,25 @@ internal static class Program
     using var sha256 = System.Security.Cryptography.SHA256.Create();
     var hash = sha256.ComputeHash(stream);
     return Convert.ToHexString(hash);
+  }
+
+  static GeneratedAtStamp ResolveGeneratedAtUtc()
+  {
+    var sourceDateEpoch = Environment.GetEnvironmentVariable(SourceDateEpochEnvironmentVariable);
+    if (!string.IsNullOrWhiteSpace(sourceDateEpoch)) {
+      if (!long.TryParse(sourceDateEpoch, NumberStyles.Integer, CultureInfo.InvariantCulture, out var epochSeconds)) {
+        throw new InvalidOperationException(
+          $"Environment variable {SourceDateEpochEnvironmentVariable} must be a Unix timestamp in seconds when set.");
+      }
+
+      return new GeneratedAtStamp(
+        Value: DateTimeOffset.FromUnixTimeSeconds(epochSeconds),
+        Source: "source_date_epoch");
+    }
+
+    return new GeneratedAtStamp(
+      Value: DateTimeOffset.UtcNow,
+      Source: "current_utc");
   }
 
   static ManifestBody BuildManifestBody(BodyExportSetting body, MetadataKernelPool? metadataKernelPool)
@@ -1396,6 +1451,10 @@ internal static class Program
     string[] SourcePaths,
     IReadOnlyDictionary<string, TextKernelParser.TextKernelAssignment> Assignments);
 
+  readonly record struct GeneratedAtStamp(
+    DateTimeOffset Value,
+    string Source);
+
   readonly record struct MetadataSnapshotOutput(
     string OutputPath,
     int BodyCount);
@@ -1420,8 +1479,7 @@ internal static class Program
   sealed record GeneratorManifest(
     int SchemaVersion,
     DateTimeOffset GeneratedAtUtc,
-    string SpkPath,
-    string? LskPath,
+    string GeneratedAtUtcSource,
     bool UsesApproximateUtcConversion,
     string ApproximationNote,
     int StartYear,
@@ -1429,7 +1487,7 @@ internal static class Program
     int ChunkYears,
     int DefaultSampleDays,
     int CenterBodyId,
-    string[] MetadataKernelPaths,
+    ManifestSourceFile[] SourceFiles,
     ManifestRuntimeLayout RuntimeLayout,
     ManifestBody[] Bodies,
     ManifestChunk[] Chunks);
@@ -1437,8 +1495,15 @@ internal static class Program
   sealed record MetadataSnapshot(
     int SchemaVersion,
     DateTimeOffset GeneratedAtUtc,
+    string GeneratedAtUtcSource,
     MetadataKernelFile[] KernelFiles,
     MetadataSnapshotBody[] Bodies);
+
+  sealed record ManifestSourceFile(
+    string Role,
+    string FileName,
+    long ByteLength,
+    string Sha256);
 
   sealed record MetadataKernelFile(
     string FileName,

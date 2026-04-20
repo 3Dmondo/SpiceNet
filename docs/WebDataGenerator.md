@@ -25,6 +25,8 @@ At this step the CLI:
 - accepts repeated `--metadata-kernel` inputs and merges straightforward `BODYnnn_*` assignments from text kernels
 - emits first-pass body metadata in the manifest when radii, GM, pole, and prime-meridian assignments are available
 - supports a metadata-only export mode so parsed body metadata can be versioned without checking NAIF source kernels into git
+- records stable source-file provenance in the manifest using file names, byte lengths, and SHA-256 hashes instead of machine-specific local paths
+- honors `SOURCE_DATE_EPOCH` for reproducible `GeneratedAtUtc` values in generated outputs
 - falls back to planetary barycenter query ids when a requested display body is not directly available in the kernel
 - can benchmark Mercury interpolation error across multiple sample cadences while also generating real output files for size inspection
 - can benchmark all selected bodies across multiple sample cadences and record both raw and gzip-compressed output sizes
@@ -171,8 +173,8 @@ dotnet run --project Spice.WebDataGenerator -- `
 
 - `manifest.json` is minified and captures:
   - schema version
-  - source SPK path and optional LSK path
-  - optional metadata-kernel input paths
+  - generation timestamp plus a `GeneratedAtUtcSource` field indicating whether it came from live UTC or `SOURCE_DATE_EPOCH`
+  - one source-file table covering the SPK, optional LSK, and metadata kernels by file name, size, and SHA-256
   - coverage years, shared chunk duration, default cadence, and center body id
   - one explicit runtime-layout section describing chunk boundary time encoding, sample timestamp reconstruction, sample value layout, units, and interpolation intent
   - one body table with display ids, display names, resolved source ids, source names, actual sample cadence, and optional metadata
@@ -183,7 +185,7 @@ dotnet run --project Spice.WebDataGenerator -- `
   - pole-orientation coefficients plus a derived north-pole unit vector and axial tilt relative to the `J2000` ecliptic
   - prime-meridian coefficients plus a derived sidereal rotation period and retrograde flag
 - `body-metadata.json` from metadata-only mode is indented and captures:
-  - schema version and generation timestamp
+  - schema version, generation timestamp, and `GeneratedAtUtcSource`
   - source metadata-kernel file names, byte lengths, and SHA-256 hashes
   - one body table with names plus the same metadata block used in normal manifests
 - `chunk-<start>-<end>.json` is minified and stores:
@@ -211,6 +213,12 @@ Runtime-contract note:
 - the manifest now carries a first-pass body metadata block that is plausible for browser consumption, but it should still be treated as provisional until it is exercised against real generic `PCK/TPC` kernels
 - provenance and benchmark-report fields are still primarily generator-side diagnostics and should not be treated as the browser-facing hot-path contract
 
+Determinism note:
+
+- if `SOURCE_DATE_EPOCH` is set in the environment, generated manifests and metadata snapshots will use that Unix timestamp for `GeneratedAtUtc`
+- this avoids per-run timestamp churn when diffing or reproducing outputs in CI
+- the manifest now avoids embedding machine-specific absolute kernel paths, which was another source of otherwise meaningless output differences
+
 ## Real Metadata Snapshot Workflow
 
 The repository now keeps the upstream NAIF text kernels out of git and versions only the parsed metadata snapshot.
@@ -229,6 +237,13 @@ It then runs the generator in `--metadata-only` mode for the current web body se
 Typical refresh command:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Update-WebDataMetadataSnapshot.ps1
+```
+
+Reproducible refresh example:
+
+```powershell
+$env:SOURCE_DATE_EPOCH = "1704067200"
 powershell -ExecutionPolicy Bypass -File .\scripts\Update-WebDataMetadataSnapshot.ps1
 ```
 
@@ -255,6 +270,13 @@ The baseline script currently:
 Typical local refresh command:
 
 ```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\Generate-WebDataBaselineDataset.ps1
+```
+
+Reproducible local refresh example:
+
+```powershell
+$env:SOURCE_DATE_EPOCH = "1704067200"
 powershell -ExecutionPolicy Bypass -File .\scripts\Generate-WebDataBaselineDataset.ps1
 ```
 
