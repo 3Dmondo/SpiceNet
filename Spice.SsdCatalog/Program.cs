@@ -27,10 +27,23 @@ using System.Text.RegularExpressions;
 const string RootUrl = "https://ssd.jpl.nasa.gov/ftp/eph/";
 
 // ---------------- argument parsing ----------------
+var commandLineArgs = Environment.GetCommandLineArgs();
 bool force = false;
 bool hashOnly = false;
 bool includeTestPo = false;
-foreach (var a in Environment.GetCommandLineArgs())
+bool inspectKernels = false;
+bool includeSmallBodies = false;
+bool forceDownload = false;
+bool inspectFallbackKernels = false;
+string? catalogPath = null;
+string? candidateSet = null;
+var extraCandidateNames = new List<string>();
+string kernelCacheRoot = Path.Combine("artifacts", "kernel-cache", "ssd");
+double smallBodyMaxSizeMb = 75;
+double maxExplicitDownloadSizeMb = 500;
+
+for (var i = 1; i < commandLineArgs.Length; i++) {
+  var a = commandLineArgs[i];
   switch (a) {
     case "--force":
       force = true;
@@ -43,13 +56,66 @@ foreach (var a in Environment.GetCommandLineArgs())
     case "--include-testpo":
       includeTestPo = true;
       break;
+    case "--catalog":
+      catalogPath = ReadRequiredArgument(commandLineArgs, ref i, a);
+      break;
+    case "--inspect-kernels":
+      inspectKernels = true;
+      break;
+    case "--candidate-set":
+      candidateSet = ReadRequiredArgument(commandLineArgs, ref i, a);
+      break;
+    case "--include-small-bodies":
+      includeSmallBodies = true;
+      break;
+    case "--small-body-max-size-mb":
+      smallBodyMaxSizeMb = ReadPositiveDoubleArgument(commandLineArgs, ref i, a);
+      break;
+    case "--kernel-cache-root":
+      kernelCacheRoot = ReadRequiredArgument(commandLineArgs, ref i, a);
+      break;
+    case "--max-explicit-download-size-mb":
+      maxExplicitDownloadSizeMb = ReadPositiveDoubleArgument(commandLineArgs, ref i, a);
+      break;
+    case "--force-download":
+      forceDownload = true;
+      break;
+    case "--inspect-fallback-kernels":
+      inspectFallbackKernels = true;
+      break;
+    case "--candidate-kernel":
+      extraCandidateNames.Add(ReadRequiredArgument(commandLineArgs, ref i, a));
+      break;
   }
+}
 
 var http = new HttpClient(new HttpClientHandler { AutomaticDecompression = DecompressionMethods.All });
 http.DefaultRequestHeaders.UserAgent.ParseAdd("SpiceNet-SsdCatalogCrawler/1.4 (+https://github.com/3Dmondo/SpiceNet)");
 
 var config = Configuration.Default;
 var context = BrowsingContext.New(config);
+
+if (inspectKernels) {
+  var resolvedCatalogPath = catalogPath ?? Path.Combine("docs", "SsdCatalog", "ssd_catalog.json");
+  var catalog = LoadCatalog(resolvedCatalogPath);
+  var inspectionOptions = new KernelInspectionOptions(
+    CatalogPath: resolvedCatalogPath,
+    InspectKernels: true,
+    CandidateSet: candidateSet ?? KernelInspectionSelector.Milestone11CandidateSet,
+    IncludeSmallBodies: includeSmallBodies,
+    SmallBodyMaxSizeMb: smallBodyMaxSizeMb,
+    KernelCacheRoot: kernelCacheRoot,
+    MaxExplicitDownloadSizeMb: maxExplicitDownloadSizeMb,
+    ForceDownload: forceDownload,
+    InspectFallbackKernels: inspectFallbackKernels,
+    ExtraCandidateNames: extraCandidateNames,
+    OutputPath: Path.Combine("docs", "SsdCatalog", "kernel_inspection.json"));
+  var report = await KernelInspectionWorkflow.RunAsync(catalog, inspectionOptions, http);
+  Console.WriteLine($"Kernel inspection written to {inspectionOptions.OutputPath}");
+  Console.WriteLine($"Inspected kernels: {report.Kernels.Length}");
+  Console.WriteLine($"Skipped kernels: {report.SkippedKernels.Length}");
+  return;
+}
 
 var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 var queue = new Queue<string>();
@@ -333,6 +399,26 @@ static string GetDirectoryUrl(DirNode node) {
   }
   return RootUrl + string.Join('/', stack) + '/';
 }
+static CatalogRoot LoadCatalog(string path) {
+  if (!File.Exists(path))
+    throw new FileNotFoundException($"SSD catalog file not found: {path}", path);
+  var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+  return JsonSerializer.Deserialize<CatalogRoot>(File.ReadAllText(path), options)
+    ?? throw new InvalidDataException($"Unable to deserialize SSD catalog: {path}");
+}
+static string ReadRequiredArgument(string[] args, ref int index, string flag) {
+  var nextIndex = index + 1;
+  if (nextIndex >= args.Length || args[nextIndex].StartsWith("--", StringComparison.Ordinal))
+    throw new ArgumentException($"Missing value for {flag}.");
+  index = nextIndex;
+  return args[index];
+}
+static double ReadPositiveDoubleArgument(string[] args, ref int index, string flag) {
+  var raw = ReadRequiredArgument(args, ref index, flag);
+  if (!double.TryParse(raw, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value) || value <= 0)
+    throw new ArgumentException($"Invalid positive number for {flag}: {raw}");
+  return value;
+}
 
 record CatalogRoot(string Root, DateTime GeneratedUtc, int FileCount, List<CatalogEntry> Files);
 record CatalogEntry(string Name, string Url, string RelativePath, DateTime? LastModified, string? SizeDisplay, long? SizeBytes, DateTime CollectedUtc);
@@ -363,3 +449,5 @@ sealed class DirNode
     child.AddFile(parts, index + 1, entry);
   }
 }
+
+

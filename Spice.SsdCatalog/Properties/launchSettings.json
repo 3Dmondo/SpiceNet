@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Spice.SsdCatalog": {
+      "commandName": "Project",
+      "commandLineArgs": "--catalog docs\\SsdCatalog\\ssd_catalog.json --inspect-kernels --candidate-set milestone-11-major-moons --candidate-kernel jup344.bsp --candidate-kernel sat143.bsp --candidate-kernel ura111.bsp --candidate-kernel nep101.bsp --candidate-kernel nep103.bsp --candidate-kernel nep104.bsp --candidate-kernel jup365.bsp --candidate-kernel sat427l.bsp --candidate-kernel Triton.nep097.30kyr.bsp --include-small-bodies --small-body-max-size-mb 75 --kernel-cache-root artifacts\\kernel-cache\\ssd --max-explicit-download-size-mb 2600",
+      "workingDirectory": "$(SolutionDir)"
+    }
+  }
+}

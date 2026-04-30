@@ -19,7 +19,7 @@ The accepted Milestone 5 `SpiceNet` baseline is now:
 
 At this step the CLI:
 
-- loads an SPK kernel and optionally loads an LSK kernel
+- loads one or more SPK kernels and optionally loads an LSK kernel
 - validates the requested generation window and output path
 - defaults to a 1950 through 2050 benchmark window with 50-year chunk planning
 - defaults to the Sun, planets, and Moon body set
@@ -33,7 +33,7 @@ At this step the CLI:
 - emits first-pass body metadata in the manifest when radii, GM, pole, and prime-meridian assignments are available
 - supports a metadata-only export mode so parsed body metadata can be versioned without checking NAIF source kernels into git
 - records stable source-file provenance in the manifest using file names, byte lengths, and SHA-256 hashes instead of machine-specific local paths
-- can also record canonical source URLs for SPK, LSK, and metadata kernels when the calling script provides them
+- can also record canonical source URLs for repeated SPK, LSK, and metadata kernels when the calling script provides them
 - honors `SOURCE_DATE_EPOCH` for reproducible `GeneratedAtUtc` values in generated outputs
 - accepts an optional `--profile-name` so generated artifacts can carry a stable dataset/profile label
 - falls back to planetary barycenter query ids when a requested display body is not directly available in the kernel
@@ -75,6 +75,18 @@ dotnet run --project Spice.WebDataGenerator -- `
   --body 10 --body 399 --body 301
 ```
 
+Optional repeated SPK input, with source URLs matched by order:
+
+```powershell
+dotnet run --project Spice.WebDataGenerator -- `
+  --spk .\kernels\de440s.bsp `
+  --spk .\kernels\jup345.bsp `
+  --spk-source-url https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp `
+  --spk-source-url https://ssd.jpl.nasa.gov/ftp/eph/satellites/bsp/jup345.bsp `
+  --output .\artifacts\web-data\major-moons `
+  --center 0 `
+  --body 399 --body 301 --body 501 --body 502 --body 503 --body 504
+```
 Optional repeated metadata-kernel input:
 
 ```powershell

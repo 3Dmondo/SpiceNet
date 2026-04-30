@@ -57,7 +57,7 @@ internal static class Program
     }
 
     Console.WriteLine(GeneratorName);
-    Console.WriteLine($"SPK: {options.SpkPath}");
+    Console.WriteLine($"SPK: {string.Join(", ", options.SpkPaths)}");
     Console.WriteLine($"LSK: {options.LskPath}");
     Console.WriteLine($"Output: {options.OutputPath}");
     if (options.MetadataOnly) {
@@ -108,16 +108,20 @@ internal static class Program
     }
 
     using var service = new EphemerisService();
-    var spkPath = RequireSpkPath(options);
+    var spkPaths = RequireSpkPaths(options);
 
     if (!string.IsNullOrWhiteSpace(options.LskPath)) {
       service.Load(options.LskPath);
     }
 
-    service.Load(spkPath);
+    foreach (var spkPath in spkPaths) {
+      service.Load(spkPath);
+    }
 
     if (options.DumpDafComments) {
-      DumpDafComments(spkPath);
+      foreach (var spkPath in spkPaths) {
+        DumpDafComments(spkPath);
+      }
       return 0;
     }
 
@@ -187,7 +191,7 @@ internal static class Program
 
   static MercuryBenchmarkReport RunMercuryBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
-    var spkPath = RequireSpkPath(options);
+    var spkPath = FormatSpkPaths(options);
     var generatedAt = ResolveGeneratedAtUtc();
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
@@ -243,7 +247,7 @@ internal static class Program
 
   static ConfiguredCadenceBenchmarkReport RunConfiguredCadenceBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
-    var spkPath = RequireSpkPath(options);
+    var spkPath = FormatSpkPaths(options);
     var generatedAt = ResolveGeneratedAtUtc();
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
@@ -280,7 +284,7 @@ internal static class Program
 
   static ConfiguredChunkYearBenchmarkReport RunConfiguredChunkYearBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
-    var spkPath = RequireSpkPath(options);
+    var spkPath = FormatSpkPaths(options);
     var generatedAt = ResolveGeneratedAtUtc();
     var results = new List<ConfiguredChunkYearResult>();
 
@@ -336,7 +340,7 @@ internal static class Program
 
   static BodyBenchmarkReport RunBodyBenchmark(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
-    var spkPath = RequireSpkPath(options);
+    var spkPath = FormatSpkPaths(options);
     var generatedAt = ResolveGeneratedAtUtc();
     var startUtc = CreateChunkBoundary(options.StartYear);
     var endUtc = CreateChunkBoundary(options.EndYear);
@@ -485,7 +489,7 @@ internal static class Program
 
   static GenerationOutput WriteGenerationOutput(EphemerisService service, GeneratorOptions options, MetadataKernelPool? metadataKernelPool)
   {
-    var spkPath = RequireSpkPath(options);
+    var spkPath = FormatSpkPaths(options);
     var generatedAt = ResolveGeneratedAtUtc();
     var referenceUtc = CreateChunkBoundary(options.StartYear);
     var bodySettings = BuildBodyExportSettings(service, options, referenceUtc);
@@ -752,10 +756,17 @@ internal static class Program
 
   static ManifestSourceFile[] BuildGenerationSourceFiles(GeneratorOptions options)
   {
-    var files = new List<ManifestSourceFile>
-    {
-      BuildManifestSourceFile("spk", RequireSpkPath(options), options.SpkSourceUrl)
-    };
+    var files = options.SpkPaths
+      .Select((path, index) => new
+      {
+        Path = path,
+        SourceUrl = index < options.SpkSourceUrls.Count
+          ? options.SpkSourceUrls[index]
+          : null
+      })
+      .OrderBy(static (entry) => Path.GetFileName(entry.Path), StringComparer.OrdinalIgnoreCase)
+      .Select(static (entry) => BuildManifestSourceFile("spk", entry.Path, entry.SourceUrl))
+      .ToList();
 
     if (!string.IsNullOrWhiteSpace(options.LskPath)) {
       files.Add(BuildManifestSourceFile("lsk", options.LskPath, options.LskSourceUrl));
@@ -1071,8 +1082,13 @@ internal static class Program
   static double RadiansToDegrees(double radians)
     => radians * 180d / Math.PI;
 
-  static string RequireSpkPath(GeneratorOptions options)
-    => options.SpkPath ?? throw new InvalidOperationException("An SPK path is required for ephemeris generation modes.");
+  static IReadOnlyList<string> RequireSpkPaths(GeneratorOptions options)
+    => options.SpkPaths.Count > 0
+      ? options.SpkPaths
+      : throw new InvalidOperationException("At least one SPK path is required for ephemeris generation modes.");
+
+  static string FormatSpkPaths(GeneratorOptions options)
+    => string.Join(", ", RequireSpkPaths(options));
 
   static double[] FlattenStateSamples(IReadOnlyList<StateSample> stateSamples)
   {
@@ -1112,6 +1128,8 @@ internal static class Program
     error = null;
 
     var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+    var spkPaths = new List<string>();
+    var spkSourceUrls = new List<string>();
     var bodyIds = new List<int>();
     var metadataKernelPaths = new List<string>();
     var metadataKernelSourceUrls = new List<string>();
@@ -1119,6 +1137,28 @@ internal static class Program
 
     for (int index = 0; index < args.Length; index++) {
       var current = args[index];
+
+      if (string.Equals(current, "--spk", StringComparison.OrdinalIgnoreCase)) {
+        if (!TryReadValue(args, ref index, out var spkValue)) {
+          error = "Missing value for --spk.";
+          options = default;
+          return false;
+        }
+
+        spkPaths.Add(spkValue);
+        continue;
+      }
+
+      if (string.Equals(current, "--spk-source-url", StringComparison.OrdinalIgnoreCase)) {
+        if (!TryReadValue(args, ref index, out var spkSourceUrlValue)) {
+          error = "Missing value for --spk-source-url.";
+          options = default;
+          return false;
+        }
+
+        spkSourceUrls.Add(spkSourceUrlValue);
+        continue;
+      }
 
       if (string.Equals(current, "--body", StringComparison.OrdinalIgnoreCase)) {
         if (!TryReadValue(args, ref index, out var bodyValue)) {
@@ -1227,8 +1267,7 @@ internal static class Program
     }
 
     var metadataOnly = values.ContainsKey("--metadata-only");
-    values.TryGetValue("--spk", out var spkPath);
-    if (!metadataOnly && string.IsNullOrWhiteSpace(spkPath)) {
+    if (!metadataOnly && spkPaths.Count == 0) {
       error = "Missing required --spk <path> argument.";
       options = default;
       return false;
@@ -1245,7 +1284,6 @@ internal static class Program
     }
 
     values.TryGetValue("--profile-name", out var profileName);
-    values.TryGetValue("--spk-source-url", out var spkSourceUrl);
     values.TryGetValue("--lsk-source-url", out var lskSourceUrl);
 
     if (endYear <= startYear) {
@@ -1266,10 +1304,12 @@ internal static class Program
       return false;
     }
 
-    if (!string.IsNullOrWhiteSpace(spkPath) && !File.Exists(spkPath)) {
-      error = $"SPK file not found: {spkPath}";
-      options = default;
-      return false;
+    foreach (var spkPath in spkPaths) {
+      if (!File.Exists(spkPath)) {
+        error = $"SPK file not found: {spkPath}";
+        options = default;
+        return false;
+      }
     }
 
     values.TryGetValue("--lsk", out var lskPath);
@@ -1285,6 +1325,12 @@ internal static class Program
         options = default;
         return false;
       }
+    }
+
+    if (spkSourceUrls.Count > 0 && spkSourceUrls.Count != spkPaths.Count) {
+      error = "--spk-source-url must be provided once per --spk, in the same order.";
+      options = default;
+      return false;
     }
 
     if (metadataKernelSourceUrls.Count > 0 &&
@@ -1339,7 +1385,7 @@ internal static class Program
     }
 
     options = new GeneratorOptions(
-      SpkPath: spkPath,
+      SpkPaths: spkPaths.ToArray(),
       LskPath: lskPath,
       OutputPath: outputPath,
       StartYear: startYear,
@@ -1350,7 +1396,7 @@ internal static class Program
       BodyIds: selectedBodyIds,
       UsesDefaultBodySet: bodyIds.Count == 0,
       ProfileName: profileName,
-      SpkSourceUrl: spkSourceUrl,
+      SpkSourceUrls: spkSourceUrls.ToArray(),
       LskSourceUrl: lskSourceUrl,
       MetadataKernelPaths: metadataKernelPaths.ToArray(),
       MetadataKernelSourceUrls: metadataKernelSourceUrls.ToArray(),
@@ -1510,7 +1556,7 @@ internal static class Program
         --output <dir>       Output directory for generated manifest and chunk files.
 
       Optional:
-        --spk <path>         Path to the planetary SPK kernel, such as de440s.bsp. Required for ephemeris generation modes.
+        --spk <path>         Path to an SPK kernel, such as de440s.bsp. Repeat to load multiple SPKs. Required for ephemeris generation modes.
         --lsk <path>         Optional leap-second kernel path. Ignored by the current approximate benchmark time conversion.
         --start-year <year>  Coverage start year. Default: 1950.
         --end-year <year>    Coverage end year. Default: 2050.
@@ -1519,7 +1565,7 @@ internal static class Program
         --center <naif-id>   Center body id for generated states. Default: 10.
         --body <naif-id>     Body NAIF id to include. Repeat to override the default body set.
         --profile-name       Optional stable label describing the generation profile or dataset flavor.
-        --spk-source-url     Optional canonical source URL for the SPK file used in provenance output.
+        --spk-source-url     Optional canonical source URL matching one --spk entry. Repeat in the same order as --spk.
         --lsk-source-url     Optional canonical source URL for the LSK file used in provenance output.
         --metadata-kernel    Path to a text kernel with body metadata assignments. Repeat to merge multiple kernels with last-one-wins precedence.
         --metadata-kernel-source-url
@@ -1565,10 +1611,29 @@ internal static class Program
     [299] = "Venus",
     [399] = "Earth",
     [301] = "Moon",
+    [401] = "Phobos",
+    [402] = "Deimos",
     [499] = "Mars",
+    [501] = "Io",
+    [502] = "Europa",
+    [503] = "Ganymede",
+    [504] = "Callisto",
     [599] = "Jupiter",
+    [601] = "Mimas",
+    [602] = "Enceladus",
+    [603] = "Tethys",
+    [604] = "Dione",
+    [605] = "Rhea",
+    [606] = "Titan",
+    [608] = "Iapetus",
     [699] = "Saturn",
+    [701] = "Ariel",
+    [702] = "Umbriel",
+    [703] = "Titania",
+    [704] = "Oberon",
+    [705] = "Miranda",
     [799] = "Uranus",
+    [801] = "Triton",
     [899] = "Neptune"
   };
   static readonly IReadOnlyDictionary<int, int> QueryFallbackBodyIds = new Dictionary<int, int>
@@ -1583,7 +1648,7 @@ internal static class Program
   };
 
   readonly record struct GeneratorOptions(
-    string? SpkPath,
+    IReadOnlyList<string> SpkPaths,
     string? LskPath,
     string OutputPath,
     int StartYear,
@@ -1594,7 +1659,7 @@ internal static class Program
     IReadOnlyList<int> BodyIds,
     bool UsesDefaultBodySet,
     string? ProfileName,
-    string? SpkSourceUrl,
+    IReadOnlyList<string> SpkSourceUrls,
     string? LskSourceUrl,
     IReadOnlyList<string> MetadataKernelPaths,
     IReadOnlyList<string> MetadataKernelSourceUrls,
@@ -1886,3 +1951,4 @@ internal static class Program
     int BodyId,
     double[] Samples);
 }
+

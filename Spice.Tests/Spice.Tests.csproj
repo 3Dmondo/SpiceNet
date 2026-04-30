@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Spice\Spice.csproj" />
+    <ProjectReference Include="..\Spice.SsdCatalog\Spice.SsdCatalog.csproj" />
   </ItemGroup>
 
 </Project>

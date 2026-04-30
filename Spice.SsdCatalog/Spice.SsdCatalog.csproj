@@ -6,4 +6,12 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Spice\Spice.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Spice.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
 </Project>
